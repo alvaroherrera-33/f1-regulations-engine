@@ -1,0 +1,37 @@
+# Render Blueprint — F1 Regulations RAG Engine Backend
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: f1-regulations-backend
+    runtime: python
+    rootDir: backend
+    plan: free
+
+    buildCommand: >
+      pip install --no-cache-dir torch==2.3.0+cpu
+      --index-url https://download.pytorch.org/whl/cpu &&
+      pip install --no-cache-dir -r requirements.txt
+
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+
+    healthCheckPath: /health
+
+    envVars:
+      - key: DATABASE_URL
+        sync: false          # Set manually in Render dashboard
+
+      - key: OPENROUTER_API_KEY
+        sync: false          # Set manually in Render dashboard
+
+      - key: LLM_MODEL
+        value: openai/gpt-oss-120b
+
+      - key: ALLOWED_ORIGINS
+        sync: false          # e.g. https://your-app.vercel.app,http://localhost:3000
+
+      - key: PYTHONUNBUFFERED
+        value: "1"
+
+      - key: HF_HOME
+        value: /opt/render/project/.cache/huggingface
