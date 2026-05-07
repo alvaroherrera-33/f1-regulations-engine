@@ -1,7 +1,9 @@
 """Chat endpoint for RAG queries."""
 import logging
+import time
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -18,6 +20,50 @@ _AI_UNAVAILABLE = (
 )
 
 
+async def _log_query(
+    db: AsyncSession,
+    *,
+    query: str,
+    intent: str,
+    year: int | None,
+    section: str | None,
+    answer: str | None,
+    retrieved_count: int,
+    research_steps: int,
+    response_time_ms: int,
+    cited_articles: list[str],
+    error_occurred: bool = False,
+):
+    """Insert a row into query_logs. Never raises — logging must not break the response."""
+    try:
+        cited = ",".join(cited_articles) if cited_articles else None
+        await db.execute(
+            text("""
+                INSERT INTO query_logs
+                    (query, intent, year, section, answer, retrieved_count,
+                     research_steps, response_time_ms, cited_articles, error_occurred)
+                VALUES
+                    (:query, :intent, :year, :section, :answer, :retrieved_count,
+                     :research_steps, :response_time_ms, :cited_articles, :error_occurred)
+            """),
+            {
+                "query": query[:2000],
+                "intent": intent,
+                "year": year,
+                "section": section,
+                "answer": answer[:4000] if answer else None,
+                "retrieved_count": retrieved_count,
+                "research_steps": research_steps,
+                "response_time_ms": response_time_ms,
+                "cited_articles": cited,
+                "error_occurred": error_occurred,
+            }
+        )
+        await db.commit()
+    except Exception as exc:
+        logger.warning("Failed to log query: %s", exc)
+
+
 @router.post("/chat", response_model=ChatResponse)
 async def chat(
     request: ChatRequest,
@@ -32,6 +78,8 @@ async def chat(
     3. Agentic retrieval loop (max 3 steps).
     4. Return answer with citations.
     """
+    t_start = time.monotonic()
+
     try:
         from app.llm.client import LLMClient
         llm_client = LLMClient()
@@ -42,6 +90,13 @@ async def chat(
         if intent == "CONVERSATIONAL":
             logger.info("Routing CONVERSATIONAL: %s", request.query[:80])
             answer = await llm_client.generate_conversational_response(request.query)
+            ms = int((time.monotonic() - t_start) * 1000)
+            await _log_query(
+                db, query=request.query, intent="CONVERSATIONAL",
+                year=None, section=None, answer=answer,
+                retrieved_count=0, research_steps=0,
+                response_time_ms=ms, cited_articles=[],
+            )
             return ChatResponse(
                 answer=answer,
                 citations=[],
@@ -55,6 +110,13 @@ async def chat(
         try:
             prepared = await llm_client.prepare_search(request.query)
         except OpenRouterError:
+            ms = int((time.monotonic() - t_start) * 1000)
+            await _log_query(
+                db, query=request.query, intent="REGULATIONS",
+                year=None, section=None, answer=_AI_UNAVAILABLE,
+                retrieved_count=0, research_steps=0,
+                response_time_ms=ms, cited_articles=[], error_occurred=True,
+            )
             return ChatResponse(
                 answer=_AI_UNAVAILABLE,
                 citations=[],
@@ -76,8 +138,16 @@ async def chat(
         )
 
         if not articles:
+            ms = int((time.monotonic() - t_start) * 1000)
+            no_results_msg = "I couldn't find specific regulations matching your query. Could you please clarify your question or adjust the filters (year, section, etc.)?"
+            await _log_query(
+                db, query=request.query, intent="REGULATIONS",
+                year=query_year, section=query_section, answer=no_results_msg,
+                retrieved_count=0, research_steps=0,
+                response_time_ms=ms, cited_articles=[],
+            )
             return ChatResponse(
-                answer="I couldn't find specific regulations matching your query. Could you please clarify your question or adjust the filters (year, section, etc.)?",
+                answer=no_results_msg,
                 citations=[],
                 retrieved_count=0
             )
@@ -113,6 +183,15 @@ async def chat(
                     history=research_history
                 )
             except OpenRouterError:
+                ms = int((time.monotonic() - t_start) * 1000)
+                codes = [a.article_code for a in all_retrieved_articles]
+                await _log_query(
+                    db, query=request.query, intent="REGULATIONS",
+                    year=query_year, section=query_section, answer=_AI_UNAVAILABLE,
+                    retrieved_count=len(all_retrieved_articles),
+                    research_steps=len(research_history),
+                    response_time_ms=ms, cited_articles=codes, error_occurred=True,
+                )
                 return ChatResponse(
                     answer=_AI_UNAVAILABLE,
                     citations=llm_client._extract_citations(all_retrieved_articles),
@@ -130,6 +209,7 @@ async def chat(
             if result.get("action") == "ANSWER":
                 answer = result.get("answer")
                 citations = llm_client._extract_citations(all_retrieved_articles)
+                codes = [a.article_code for a in all_retrieved_articles]
 
                 display_steps = research_history
                 if len(research_history) == 1:
@@ -137,7 +217,16 @@ async def chat(
                     if any(k in thought for k in ["greeting", "hola", "spanish", "not a specific question", "common courtesy"]):
                         display_steps = []
                         citations = []
+                        codes = []
 
+                ms = int((time.monotonic() - t_start) * 1000)
+                await _log_query(
+                    db, query=request.query, intent="REGULATIONS",
+                    year=query_year, section=query_section, answer=answer,
+                    retrieved_count=len(all_retrieved_articles),
+                    research_steps=len(research_history),
+                    response_time_ms=ms, cited_articles=codes,
+                )
                 return ChatResponse(
                     answer=answer,
                     citations=citations,
@@ -157,6 +246,15 @@ async def chat(
                 articles=all_retrieved_articles
             )
         except OpenRouterError:
+            ms = int((time.monotonic() - t_start) * 1000)
+            codes = [a.article_code for a in all_retrieved_articles]
+            await _log_query(
+                db, query=request.query, intent="REGULATIONS",
+                year=query_year, section=query_section, answer=_AI_UNAVAILABLE,
+                retrieved_count=len(all_retrieved_articles),
+                research_steps=len(research_history),
+                response_time_ms=ms, cited_articles=codes, error_occurred=True,
+            )
             return ChatResponse(
                 answer=_AI_UNAVAILABLE,
                 citations=llm_client._extract_citations(all_retrieved_articles),
@@ -164,6 +262,15 @@ async def chat(
                 research_steps=research_history
             )
 
+        ms = int((time.monotonic() - t_start) * 1000)
+        codes = [a.article_code for a in all_retrieved_articles]
+        await _log_query(
+            db, query=request.query, intent="REGULATIONS",
+            year=query_year, section=query_section, answer=final_answer,
+            retrieved_count=len(all_retrieved_articles),
+            research_steps=len(research_history),
+            response_time_ms=ms, cited_articles=codes,
+        )
         return ChatResponse(
             answer=final_answer,
             citations=final_citations,
@@ -173,6 +280,16 @@ async def chat(
 
     except Exception as e:
         logger.error("Unexpected error in chat endpoint: %s", e, exc_info=True)
+        ms = int((time.monotonic() - t_start) * 1000)
+        try:
+            await _log_query(
+                db, query=request.query, intent="UNKNOWN",
+                year=None, section=None, answer=str(e),
+                retrieved_count=0, research_steps=0,
+                response_time_ms=ms, cited_articles=[], error_occurred=True,
+            )
+        except Exception:
+            pass
         raise HTTPException(
             status_code=500,
             detail=f"An error occurred while processing your query: {str(e)}"
