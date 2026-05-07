@@ -39,6 +39,25 @@ class ChatResponse(BaseModel):
     citations: List[Citation]
     retrieved_count: int = 0
     research_steps: List[dict] = []  # List of {'thought': str, 'action': str, 'query': str}
+    query_id: Optional[int] = None  # DB row ID for feedback submission
+
+
+class FeedbackRequest(BaseModel):
+    """User feedback on a chat response."""
+    query_id: int
+    was_helpful: bool
+
+
+class StatsResponse(BaseModel):
+    """Aggregate query statistics."""
+    total_queries: int
+    regulation_queries: int
+    conversational_queries: int
+    errors: int
+    avg_response_ms: int
+    positive_feedback: int
+    negative_feedback: int
+    last_query_at: Optional[datetime] = None
 
 
 class Article(BaseModel):

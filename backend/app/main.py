@@ -88,6 +88,26 @@ async def system_status():
     )
 
 
+@app.get("/warmup")
+async def warmup():
+    """
+    Keep-alive / warm-up endpoint.
+
+    Calling this endpoint ensures the embedding model is loaded in memory so
+    that the first real user query doesn't pay the cold-start penalty.
+    Set a cron job (e.g. UptimeRobot) to ping this every 10 minutes.
+    """
+    from ingestion.local_embeddings import get_embeddings_generator
+    try:
+        gen = get_embeddings_generator()
+        # A tiny embed call to force the model weights into RAM
+        gen.generate(["warmup"])
+        return {"status": "warm", "model": "all-MiniLM-L6-v2"}
+    except Exception as exc:
+        logger.warning("Warmup failed: %s", exc)
+        return {"status": "cold", "error": str(exc)}
+
+
 @app.get("/")
 async def root():
     """Root endpoint."""

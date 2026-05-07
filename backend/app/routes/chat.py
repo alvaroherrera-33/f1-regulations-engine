@@ -1,13 +1,14 @@
 """Chat endpoint for RAG queries."""
 import logging
 import time
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.models import ChatRequest, ChatResponse
+from app.models import ChatRequest, ChatResponse, FeedbackRequest, StatsResponse
 from app.retrieval.retriever import retrieve_articles
 from app.llm.client import generate_answer_with_citations, OpenRouterError
 
@@ -33,11 +34,11 @@ async def _log_query(
     response_time_ms: int,
     cited_articles: list[str],
     error_occurred: bool = False,
-):
-    """Insert a row into query_logs. Never raises — logging must not break the response."""
+) -> Optional[int]:
+    """Insert a row into query_logs. Returns the new row ID, or None on failure."""
     try:
         cited = ",".join(cited_articles) if cited_articles else None
-        await db.execute(
+        result = await db.execute(
             text("""
                 INSERT INTO query_logs
                     (query, intent, year, section, answer, retrieved_count,
@@ -45,6 +46,7 @@ async def _log_query(
                 VALUES
                     (:query, :intent, :year, :section, :answer, :retrieved_count,
                      :research_steps, :response_time_ms, :cited_articles, :error_occurred)
+                RETURNING id
             """),
             {
                 "query": query[:2000],
@@ -60,8 +62,11 @@ async def _log_query(
             }
         )
         await db.commit()
+        row = result.fetchone()
+        return row[0] if row else None
     except Exception as exc:
         logger.warning("Failed to log query: %s", exc)
+        return None
 
 
 @router.post("/chat", response_model=ChatResponse)
@@ -91,7 +96,7 @@ async def chat(
             logger.info("Routing CONVERSATIONAL: %s", request.query[:80])
             answer = await llm_client.generate_conversational_response(request.query)
             ms = int((time.monotonic() - t_start) * 1000)
-            await _log_query(
+            qid = await _log_query(
                 db, query=request.query, intent="CONVERSATIONAL",
                 year=None, section=None, answer=answer,
                 retrieved_count=0, research_steps=0,
@@ -101,7 +106,8 @@ async def chat(
                 answer=answer,
                 citations=[],
                 retrieved_count=0,
-                research_steps=[]
+                research_steps=[],
+                query_id=qid,
             )
 
         logger.info("Routing REGULATIONS: %s", request.query[:80])
@@ -140,7 +146,7 @@ async def chat(
         if not articles:
             ms = int((time.monotonic() - t_start) * 1000)
             no_results_msg = "I couldn't find specific regulations matching your query. Could you please clarify your question or adjust the filters (year, section, etc.)?"
-            await _log_query(
+            qid = await _log_query(
                 db, query=request.query, intent="REGULATIONS",
                 year=query_year, section=query_section, answer=no_results_msg,
                 retrieved_count=0, research_steps=0,
@@ -149,7 +155,8 @@ async def chat(
             return ChatResponse(
                 answer=no_results_msg,
                 citations=[],
-                retrieved_count=0
+                retrieved_count=0,
+                query_id=qid,
             )
 
         # Agentic Research Loop (max 3 steps)
@@ -220,7 +227,7 @@ async def chat(
                         codes = []
 
                 ms = int((time.monotonic() - t_start) * 1000)
-                await _log_query(
+                qid = await _log_query(
                     db, query=request.query, intent="REGULATIONS",
                     year=query_year, section=query_section, answer=answer,
                     retrieved_count=len(all_retrieved_articles),
@@ -231,7 +238,8 @@ async def chat(
                     answer=answer,
                     citations=citations,
                     retrieved_count=len(all_retrieved_articles),
-                    research_steps=display_steps
+                    research_steps=display_steps,
+                    query_id=qid,
                 )
 
             elif result.get("action") == "SEARCH":
@@ -264,7 +272,7 @@ async def chat(
 
         ms = int((time.monotonic() - t_start) * 1000)
         codes = [a.article_code for a in all_retrieved_articles]
-        await _log_query(
+        qid = await _log_query(
             db, query=request.query, intent="REGULATIONS",
             year=query_year, section=query_section, answer=final_answer,
             retrieved_count=len(all_retrieved_articles),
@@ -275,7 +283,8 @@ async def chat(
             answer=final_answer,
             citations=final_citations,
             retrieved_count=len(all_retrieved_articles),
-            research_steps=research_history
+            research_steps=research_history,
+            query_id=qid,
         )
 
     except Exception as e:
@@ -294,6 +303,66 @@ async def chat(
             status_code=500,
             detail=f"An error occurred while processing your query: {str(e)}"
         )
+
+
+@router.post("/chat/feedback")
+async def submit_feedback(
+    feedback: FeedbackRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Submit thumbs-up / thumbs-down feedback for a previous chat response.
+
+    The query_id is returned in every ChatResponse and links back to the
+    query_logs row created when the answer was generated.
+    """
+    try:
+        await db.execute(
+            text("UPDATE query_logs SET was_helpful = :helpful WHERE id = :id"),
+            {"helpful": feedback.was_helpful, "id": feedback.query_id},
+        )
+        await db.commit()
+        return {"status": "ok", "query_id": feedback.query_id}
+    except Exception as exc:
+        logger.warning("Failed to save feedback: %s", exc)
+        raise HTTPException(status_code=500, detail="Could not save feedback.")
+
+
+@router.get("/stats", response_model=StatsResponse)
+async def get_stats(db: AsyncSession = Depends(get_db)):
+    """Return aggregate usage and quality statistics from query_logs."""
+    try:
+        result = await db.execute(text("""
+            SELECT
+                COUNT(*)                                                      AS total_queries,
+                COUNT(*) FILTER (WHERE intent = 'REGULATIONS')               AS regulation_queries,
+                COUNT(*) FILTER (WHERE intent = 'CONVERSATIONAL')            AS conversational_queries,
+                COUNT(*) FILTER (WHERE error_occurred)                       AS errors,
+                COALESCE(ROUND(AVG(response_time_ms))::int, 0)               AS avg_response_ms,
+                COUNT(*) FILTER (WHERE was_helpful = TRUE)                   AS positive_feedback,
+                COUNT(*) FILTER (WHERE was_helpful = FALSE)                  AS negative_feedback,
+                MAX(created_at)                                               AS last_query_at
+            FROM query_logs
+        """))
+        row = result.fetchone()
+        if not row:
+            return StatsResponse(
+                total_queries=0, regulation_queries=0, conversational_queries=0,
+                errors=0, avg_response_ms=0, positive_feedback=0, negative_feedback=0,
+            )
+        return StatsResponse(
+            total_queries=row[0],
+            regulation_queries=row[1],
+            conversational_queries=row[2],
+            errors=row[3],
+            avg_response_ms=row[4],
+            positive_feedback=row[5],
+            negative_feedback=row[6],
+            last_query_at=row[7],
+        )
+    except Exception as exc:
+        logger.error("Failed to fetch stats: %s", exc)
+        raise HTTPException(status_code=500, detail="Could not fetch statistics.")
 
 
 @router.get("/chat/health")

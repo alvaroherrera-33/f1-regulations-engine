@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { sendChatQuery, ChatResponse } from '@/lib/api';
+import { sendChatQuery, submitFeedback, ChatResponse } from '@/lib/api';
 import CitationCard from './CitationCard';
 
 const EXAMPLE_QUERIES = [
@@ -27,6 +27,8 @@ interface Message {
     citations?: any[];
     researchSteps?: { step: number; thought: string; action: string; query: string; }[];
     timestamp: Date;
+    queryId?: number;
+    feedback?: 'up' | 'down';
 }
 
 interface ChatInterfaceProps {
@@ -73,7 +75,14 @@ export default function ChatInterface({ year, section, issue, viewSettings, onOp
         setLoading(true);
         try {
             const response = await sendChatQuery({ query, year: year || undefined, section: section || undefined, issue: issue || undefined });
-            setMessages(prev => [...prev, { role: 'assistant', content: response.answer, citations: response.citations, researchSteps: response.research_steps, timestamp: new Date() }]);
+            setMessages(prev => [...prev, {
+                role: 'assistant',
+                content: response.answer,
+                citations: response.citations,
+                researchSteps: response.research_steps,
+                timestamp: new Date(),
+                queryId: response.query_id,
+            }]);
         } catch (error) {
             setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${error instanceof Error ? error.message : 'Failed to get response'}`, timestamp: new Date() }]);
         } finally {
@@ -85,6 +94,15 @@ export default function ChatInterface({ year, section, issue, viewSettings, onOp
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
+    };
+
+    const handleFeedback = async (msgIndex: number, wasHelpful: boolean) => {
+        const msg = messages[msgIndex];
+        if (!msg.queryId || msg.feedback) return;
+        setMessages(prev => prev.map((m, i) =>
+            i === msgIndex ? { ...m, feedback: wasHelpful ? 'up' : 'down' } : m
+        ));
+        try { await submitFeedback(msg.queryId, wasHelpful); } catch { /* silent */ }
     };
 
     return (
@@ -144,6 +162,29 @@ export default function ChatInterface({ year, section, issue, viewSettings, onOp
                                             )}
                                         </div>
                                     ))}
+                                </div>
+                            )}
+                            {msg.role === 'assistant' && msg.queryId && (
+                                <div style={styles.feedbackRow}>
+                                    {msg.feedback ? (
+                                        <span style={styles.feedbackThanks}>
+                                            {msg.feedback === 'up' ? '✅ Thanks for the feedback!' : '🙏 Thanks, we\'ll improve!'}
+                                        </span>
+                                    ) : (
+                                        <>
+                                            <span style={styles.feedbackLabel}>Was this helpful?</span>
+                                            <button
+                                                onClick={() => handleFeedback(i, true)}
+                                                style={styles.feedbackBtn}
+                                                title="Helpful"
+                                            >👍</button>
+                                            <button
+                                                onClick={() => handleFeedback(i, false)}
+                                                style={styles.feedbackBtn}
+                                                title="Not helpful"
+                                            >👎</button>
+                                        </>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -229,4 +270,8 @@ const styles: Record<string, React.CSSProperties> = {
     inputContainer: { padding: '0.75rem 1rem', borderTop: '1px solid #333', display: 'flex', gap: '0.75rem', flexShrink: 0 },
     textarea: { flex: 1, background: '#0a0a0a', border: '1px solid #333', borderRadius: '8px', padding: '0.75rem', color: '#fff', fontSize: '0.92rem', resize: 'none', fontFamily: 'inherit' },
     sendButton: { background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', border: 'none', borderRadius: '8px', color: '#fff', padding: '0.75rem 1.5rem', fontSize: '0.95rem', fontWeight: 'bold', cursor: 'pointer', alignSelf: 'flex-end' },
+    feedbackRow: { display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem', paddingTop: '0.6rem', borderTop: '1px solid #2a2a2a' },
+    feedbackLabel: { fontSize: '0.78rem', color: '#666' },
+    feedbackBtn: { background: 'transparent', border: '1px solid #333', borderRadius: '6px', cursor: 'pointer', fontSize: '1rem', padding: '0.2rem 0.5rem', lineHeight: 1, transition: 'border-color 0.15s' },
+    feedbackThanks: { fontSize: '0.78rem', color: '#888', fontStyle: 'italic' },
 };

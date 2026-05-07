@@ -28,6 +28,7 @@ export interface ChatResponse {
         action: string;
         query: string;
     }[];
+    query_id?: number;
 }
 
 export interface UploadResponse {
@@ -109,11 +110,42 @@ export interface StatusResponse {
     embeddings_count: number;
 }
 
+export interface StatsResponse {
+    total_queries: number;
+    regulation_queries: number;
+    conversational_queries: number;
+    errors: number;
+    avg_response_ms: number;
+    positive_feedback: number;
+    negative_feedback: number;
+    last_query_at: string | null;
+}
+
 /**
  * Get system indexing status
  */
 export async function getStatus(): Promise<StatusResponse> {
     const response = await fetch(`${API_URL}/status`);
     if (!response.ok) throw new Error('Status check failed');
+    return response.json();
+}
+
+/**
+ * Submit thumbs-up / thumbs-down feedback for a chat response
+ */
+export async function submitFeedback(queryId: number, wasHelpful: boolean): Promise<void> {
+    await fetch(`${API_URL}/api/chat/feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query_id: queryId, was_helpful: wasHelpful }),
+    });
+}
+
+/**
+ * Get aggregate query statistics
+ */
+export async function getStats(): Promise<StatsResponse> {
+    const response = await fetch(`${API_URL}/api/stats`);
+    if (!response.ok) throw new Error('Stats fetch failed');
     return response.json();
 }

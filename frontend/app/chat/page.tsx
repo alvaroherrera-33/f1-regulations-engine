@@ -70,6 +70,7 @@ export default function ChatPage() {
                             <li>Check citations for exact references</li>
                         </ul>
                     </div>
+                    <a href="/stats" style={styles.statsLink}>📊 View System Stats</a>
                 </div>
             )}
 
@@ -98,5 +99,6 @@ const styles: Record<string, React.CSSProperties> = {
     info: { background: '#1a1a1a', border: '1px solid #333', borderRadius: '8px', padding: '1rem' },
     infoTitle: { fontSize: '0.9rem', marginBottom: '0.6rem' },
     infoList: { fontSize: '0.82rem', lineHeight: '1.8', color: '#aaa', paddingLeft: '1.1rem', margin: 0 },
+    statsLink: { display: 'block', textAlign: 'center' as const, color: '#667eea', fontSize: '0.82rem', textDecoration: 'none', padding: '0.5rem', border: '1px solid #222', borderRadius: '6px' },
     main: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 },
 };
