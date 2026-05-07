@@ -15,8 +15,9 @@ class HybridRetriever:
     """Hybrid retrieval: vector similarity + full-text keyword search + parent enrichment."""
 
     # Cosine distance threshold — drop only articles that are truly unrelated.
-    # (cosine distance: 0.0 = identical, 2.0 = opposite; 0.85 keeps moderately similar articles)
-    SIMILARITY_THRESHOLD = 0.85
+    # (cosine distance: 0.0 = identical, 2.0 = opposite; 0.75 gives better recall
+    #  while still filtering totally unrelated articles)
+    SIMILARITY_THRESHOLD = 0.75
 
     def __init__(self, db: AsyncSession):
         """Initialize with database session."""

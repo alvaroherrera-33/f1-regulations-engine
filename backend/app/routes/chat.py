@@ -167,7 +167,7 @@ async def chat(
                 year=query_year,
                 section=query_section,
                 issue=request.issue,
-                top_k=5
+                top_k=8
             )
 
             seen_codes = {a.article_code for a in all_retrieved_articles}
