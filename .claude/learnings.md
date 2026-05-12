@@ -143,6 +143,40 @@ Technical 2026: Issues 11, 12, 14, 15
 
 ---
 
+## Mejoras de retrieval implementadas (2026-05-12)
+
+### 12. websearch_to_tsquery en FTS
+- **Decisión:** Cambiar `plainto_tsquery` por `websearch_to_tsquery` en `_retrieve_by_fulltext()`.
+- **Por qué:** `websearch_to_tsquery` genera queries más inteligentes: respeta comillas para frases exactas, interpreta `-` como exclusión, y maneja multi-término mejor.
+- **Cambio:** 1 línea en `retriever.py`.
+
+### 13. Section-aware RRF boost
+- **Decisión:** Cuando `prepare_search()` detecta una sección, multiplicar el RRF score por 1.2x para artículos de esa sección.
+- **Por qué:** Sin esto, artículos de otras secciones con terminología similar (e.g., "weight" aparece en Technical Y Financial) contaminan los resultados.
+- **Implementación:** `detected_section` se pasa a `_merge_and_deduplicate()`. NO cambia k=60.
+
+### 14. Context trimming para el LLM
+- **Decisión:** Limitar el contexto enviado al LLM a MAX_CONTEXT_ARTICLES=12 artículos, y truncar artículos individuales >2000 chars a ~1500 (en boundary de frase).
+- **Por qué:** Con el agentic loop acumulando artículos de múltiples pasos, el contexto crecía demasiado. El LLM responde mejor con menos contexto pero más relevante.
+- **Implementación:** En `_build_context()` de `client.py`.
+
+### 15. Prompt tuning del agentic step
+- **Decisión:** Actualizar AGENTIC_PROMPT con reglas de citación estrictas y guard contra hallucinations.
+- **Cambios clave:** (1) Exigir citas con article_code exacto, (2) instrucción de "I don't have enough info" en vez de inventar, (3) no mezclar regulaciones de diferentes años.
+
+### 16. Chunking de artículos largos para embeddings
+- **Decisión:** Artículos >1500 chars se dividen en chunks de ~800 chars con overlap de 200. Cada chunk genera su propio embedding pero mantiene el mismo article_id.
+- **Por qué:** Un embedding de 384 dims no captura bien un artículo de 3000+ chars que cubre múltiples temas.
+- **Implementación:** `ingestion/chunker.py` + cambios en `pipeline.py`.
+- **Requiere:** Re-generar embeddings (no re-parsear). La tabla `article_embeddings` ya soporta múltiples rows por article_id.
+
+### 17. Eval framework — normalización de códigos de artículo
+- **Bug encontrado:** Los artículos técnicos en la DB usan prefijo de sección (C4.1, C3.5) pero el test set esperaba códigos sin prefijo (4.1, 3.5). El eval daba 0% precision/recall artificialmente.
+- **Fix:** `_normalize_code()` en `run_eval.py` y `run_single.py` — strip single-letter prefix antes de comparar.
+- **Nota:** Sporting y Financial pueden usar códigos diferentes (números planos como "55", "6").
+
+---
+
 ## Datos del proyecto
 
 - **98 PDFs** de regulaciones FIA en `archives/` (2023-2026)

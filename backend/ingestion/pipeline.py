@@ -8,6 +8,7 @@ from app.database import async_session
 from app.models import Document, ArticleDB, ArticleEmbedding
 from ingestion.pdf_parser import parse_pdf, ParsedArticle
 from ingestion.local_embeddings import LocalEmbeddingsGenerator
+from ingestion.chunker import chunk_articles
 
 
 class IngestionPipeline:
@@ -59,23 +60,31 @@ class IngestionPipeline:
                 "articles_count": 0
             }
         
-        # Step 3: Generate embeddings
+        # Step 3: Store articles first (we need article IDs for embeddings)
+        print("Storing articles in database...")
+        article_ids = await self._store_articles(articles, document)
+
+        # Step 4: Chunk long articles for better embedding quality
+        chunks = chunk_articles(articles)
+        long_count = sum(1 for a in articles if len(a.content) > 1500)
+        print(f"Chunked {len(articles)} articles into {len(chunks)} chunks "
+              f"({long_count} articles were split)")
+
+        # Step 5: Generate embeddings (one per chunk)
         print("Generating embeddings...")
-        texts = [f"{art.title}\n{art.content}" for art in articles]
+        texts = [chunk.text for chunk in chunks]
         embeddings = await self.embeddings_generator.generate(texts)
         print(f"Generated {len(embeddings)} embeddings")
-        
-        # Step 4: Store articles and embeddings
-        print("Storing in database...")
-        article_ids = await self._store_articles(articles, document)
-        await self._store_embeddings(article_ids, embeddings)
+
+        # Step 6: Store embeddings mapped to article IDs via chunk.article_index
+        await self._store_chunk_embeddings(article_ids, chunks, embeddings)
         await self.db.commit()
-        
+
         print(f"Ingestion complete for document {document_id}")
-        
+
         return {
             "status": "success",
-            "message": f"Successfully ingested {len(articles)} articles",
+            "message": f"Successfully ingested {len(articles)} articles ({len(chunks)} chunks)",
             "articles_count": len(articles),
             "embeddings_count": len(embeddings)
         }
@@ -107,12 +116,31 @@ class IngestionPipeline:
         
         return article_ids
     
+    async def _store_chunk_embeddings(
+        self,
+        article_ids: List[int],
+        chunks: list,
+        embeddings: List[List[float]],
+    ):
+        """Store embeddings mapped back to articles via chunk.article_index.
+
+        Each chunk carries an article_index that points into article_ids.
+        Multiple chunks can share the same article_id (long articles).
+        """
+        for chunk, embedding in zip(chunks, embeddings):
+            article_id = article_ids[chunk.article_index]
+            stmt = insert(ArticleEmbedding).values(
+                article_id=article_id,
+                embedding=embedding,
+            )
+            await self.db.execute(stmt)
+
     async def _store_embeddings(
         self,
         article_ids: List[int],
         embeddings: List[List[float]]
     ):
-        """Store embeddings in database."""
+        """Store embeddings in database (legacy 1:1 mapping)."""
         for article_id, embedding in zip(article_ids, embeddings):
             stmt = insert(ArticleEmbedding).values(
                 article_id=article_id,

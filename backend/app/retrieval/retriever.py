@@ -53,12 +53,14 @@ class HybridRetriever:
         )
 
         # Step 3: Merge & deduplicate (prefer latest issue and vector results)
-        articles = self._merge_and_deduplicate(vector_articles, fts_articles, top_k=top_k)
+        articles = self._merge_and_deduplicate(
+            vector_articles, fts_articles, top_k=top_k, detected_section=section
+        )
         logger.debug("Retrieval: deduped to %d unique articles (top_k=%d)", len(articles), top_k)
 
         # Step 4: Enrich with parent articles (increases context depth)
         articles = await self._enrich_with_parents(articles, filters)
-        
+
         return articles
 
     # ------------------------------------------------------------------ #
@@ -104,7 +106,7 @@ class HybridRetriever:
         Falls back gracefully to an empty list if the query produces no tsquery tokens.
         """
         try:
-            ts_query = func.plainto_tsquery("english", query)
+            ts_query = func.websearch_to_tsquery("english", query)
             ts_vector = func.to_tsvector("english", ArticleDB.content)
             ts_rank = func.ts_rank(ts_vector, ts_query).label("rank")
 
@@ -125,16 +127,24 @@ class HybridRetriever:
             return []
 
     def _merge_and_deduplicate(
-        self, vector_results: List[Article], fts_results: List[Article], top_k: int = 7
+        self,
+        vector_results: List[Article],
+        fts_results: List[Article],
+        top_k: int = 7,
+        detected_section: Optional[str] = None,
     ) -> List[Article]:
         """
         Merge results using Reciprocal Rank Fusion (RRF).
         RRF Score = sum(1 / (k + rank_i)) where k=60.
-        
-        Also handles strict deduplication: for the same (code, section, year), 
+
+        When detected_section is provided, articles matching that section
+        get a 1.2x score boost to prioritize same-section results.
+
+        Also handles strict deduplication: for the same (code, section, year),
         we ONLY keep the one with the highest issue number.
         """
         k_rrf = 60
+        SECTION_BOOST = 1.2
         scores: dict[tuple[str, str, int], float] = {}
         # Map canonical key to the best actual Article object (highest issue)
         best_articles: dict[tuple[str, str, int], Article] = {}
@@ -143,10 +153,10 @@ class HybridRetriever:
             for rank, article in enumerate(results, start=1):
                 # Canonical key: (article_code, section, year)
                 key = (article.article_code, article.section, article.year)
-                
+
                 # Update RRF score
                 scores[key] = scores.get(key, 0.0) + (1.0 / (k_rrf + rank))
-                
+
                 # Keep the instance with the highest issue number
                 if key not in best_articles or article.issue > best_articles[key].issue:
                     best_articles[key] = article
@@ -154,9 +164,16 @@ class HybridRetriever:
         process_results(vector_results)
         process_results(fts_results)
 
+        # Apply section boost: articles matching detected_section get 1.2x
+        if detected_section:
+            for key in scores:
+                _code, art_section, _year = key
+                if art_section and art_section.lower() == detected_section.lower():
+                    scores[key] *= SECTION_BOOST
+
         # Sort by RRF score descending
         sorted_keys = sorted(scores.keys(), key=lambda x: scores[x], reverse=True)
-        
+
         # Take top_k
         return [best_articles[key] for key in sorted_keys[:top_k]]
 

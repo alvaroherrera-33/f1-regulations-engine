@@ -20,12 +20,19 @@ _SERVICE_UNAVAILABLE_MSG = (
     "Please try again in a few moments."
 )
 
-AGENTIC_PROMPT = """You are an agentic researchers specializing in FIA Formula 1 regulations.
+AGENTIC_PROMPT = """You are an expert researcher specializing in FIA Formula 1 regulations.
 Your goal is to answer the user's question with 100% accuracy using ONLY the provided articles.
 
 You can perform up to 3 research steps. In each step, you can either:
 1. SEARCH: If the current articles are insufficient, missing a cross-reference, or if you need to verify a specific detail mentioned (e.g., "as defined in Article X"), request a new search.
 2. ANSWER: If you have sufficient information to provide a definitive, citation-backed answer.
+
+CITATION RULES:
+- ALWAYS cite articles using the exact article_code from the context, e.g. [Article C4.1] or [Article 54].
+- Each factual claim MUST have a citation. No exceptions.
+- If you don't have enough information to answer accurately, say "I don't have enough information in the current regulations to answer this definitively" rather than guessing.
+- Do NOT invent or hallucinate article numbers. Only cite codes that appear in CURRENT CONTEXT.
+- Pay attention to the year and section of each article — do not mix regulations from different years unless the question asks for comparison.
 
 CRITICAL: If you see a reference like "Article C3.14" or "Appendix 5" which is NOT in your context but seems vital, you MUST perform a SEARCH for that specific term.
 
@@ -274,9 +281,17 @@ class LLMClient:
     # Private utilities
     # ------------------------------------------------------------------
 
+    # Maximum number of articles to include in LLM context
+    MAX_CONTEXT_ARTICLES = 12
+    # Truncate individual article content beyond this length
+    MAX_ARTICLE_CHARS = 2000
+
     def _build_context(self, articles: List[Article]) -> str:
+        # Trim to top N articles if we have too many
+        trimmed = articles[:self.MAX_CONTEXT_ARTICLES]
+
         context_parts = []
-        for rank, article in enumerate(articles, start=1):
+        for rank, article in enumerate(trimmed, start=1):
             lines = [
                 f"[Relevance #{rank}] Article {article.article_code}",
                 f"Section: {article.section} Regulations {article.year} (Issue {article.issue})",
@@ -284,7 +299,17 @@ class LLMClient:
             ]
             if article.parent_code:
                 lines.append(f"Parent Article: {article.parent_code}")
-            context_parts.append("\n".join(lines) + f"\n\n{article.content}\n")
+
+            content = article.content
+            if len(content) > self.MAX_ARTICLE_CHARS:
+                # Truncate at a sentence boundary if possible
+                truncated = content[:self.MAX_ARTICLE_CHARS]
+                last_period = max(truncated.rfind(". "), truncated.rfind(".\n"))
+                if last_period > self.MAX_ARTICLE_CHARS // 2:
+                    truncated = truncated[:last_period + 1]
+                content = truncated + "\n[...truncated]"
+
+            context_parts.append("\n".join(lines) + f"\n\n{content}\n")
         return "\n---\n".join(context_parts)
 
     def _extract_citations(self, articles: List[Article]) -> List[Citation]:
