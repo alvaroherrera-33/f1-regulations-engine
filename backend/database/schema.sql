@@ -38,7 +38,7 @@ CREATE TABLE article_embeddings (
     article_id INTEGER REFERENCES articles(id) ON DELETE CASCADE,
     embedding vector(384) NOT NULL,  -- sentence-transformers/all-MiniLM-L6-v2 dimension
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(article_id)
+    -- No UNIQUE on article_id: chunked articles have multiple embeddings
 );
 
 -- Indexes for performance
