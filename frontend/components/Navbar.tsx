@@ -7,6 +7,7 @@ const NAV_LINKS = [
     { href: '/',        label: 'Home' },
     { href: '/chat',    label: 'Chat' },
     { href: '/upload',  label: 'Upload' },
+    { href: '/stats',   label: 'Stats' },
     { href: '/docs',    label: 'API Docs', external: true },
 ];
 
@@ -16,7 +17,9 @@ export default function Navbar() {
     return (
         <nav style={styles.nav}>
             <Link href="/" style={styles.logo}>
-                <span style={styles.logoIcon}>🏎️</span>
+                <span style={styles.logoIcon}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#eb0000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 17h14M5 17l-1-4h16l-1 4M5 17H3v2h18v-2h-2M7 13l1.5-6h7L17 13M9 17v2M15 17v2"/></svg>
+                </span>
                 <span style={styles.logoText}>
                     F1 Regs <span style={styles.logoAccent}>Engine</span>
                 </span>

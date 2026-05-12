@@ -29,6 +29,9 @@ interface Message {
     timestamp: Date;
     queryId?: number;
     feedback?: 'up' | 'down';
+    retrievedCount?: number;
+    researchStepCount?: number;
+    responseTimeMs?: number;
 }
 
 interface ChatInterfaceProps {
@@ -73,8 +76,10 @@ export default function ChatInterface({ year, section, issue, viewSettings, onOp
         setMessages(prev => [...prev, userMessage]);
         setInput('');
         setLoading(true);
+        const t0 = Date.now();
         try {
             const response = await sendChatQuery({ query, year: year || undefined, section: section || undefined, issue: issue || undefined });
+            const elapsed = Date.now() - t0;
             setMessages(prev => [...prev, {
                 role: 'assistant',
                 content: response.answer,
@@ -82,6 +87,9 @@ export default function ChatInterface({ year, section, issue, viewSettings, onOp
                 researchSteps: response.research_steps,
                 timestamp: new Date(),
                 queryId: response.query_id,
+                retrievedCount: response.retrieved_count,
+                researchStepCount: response.research_steps?.length || 0,
+                responseTimeMs: elapsed,
             }]);
         } catch (error) {
             setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${error instanceof Error ? error.message : 'Failed to get response'}`, timestamp: new Date() }]);
@@ -115,7 +123,7 @@ export default function ChatInterface({ year, section, issue, viewSettings, onOp
                             ☰
                         </button>
                     )}
-                    <h2 style={styles.title}>💬 Chat with Regulations</h2>
+                    <h2 style={styles.title}>Chat with Regulations</h2>
                 </div>
                 {messages.length > 0 && (
                     <button onClick={() => setMessages([])} style={styles.clearButton}>Clear</button>
@@ -126,7 +134,9 @@ export default function ChatInterface({ year, section, issue, viewSettings, onOp
             <div style={styles.messagesContainer}>
                 {messages.length === 0 && (
                     <div style={styles.emptyState}>
-                        <div style={styles.emptyIcon}>🏎️</div>
+                        <div style={styles.emptyIcon}>
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#eb0000" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 17h14M5 17l-1-4h16l-1 4M5 17H3v2h18v-2h-2M7 13l1.5-6h7L17 13M9 17v2M15 17v2"/></svg>
+                        </div>
                         <h3 style={styles.emptyTitle}>Ask a question about F1 regulations</h3>
                         <p style={styles.emptyText}>Try one of these examples or type your own:</p>
                         <div style={styles.exampleGrid}>
@@ -143,7 +153,7 @@ export default function ChatInterface({ year, section, issue, viewSettings, onOp
                     <div key={i} style={styles.messageWrapper}>
                         <div style={getMessageStyle(msg.role)}>
                             <div style={styles.messageHeader}>
-                                <span style={styles.messageRole}>{msg.role === 'user' ? '👤 You' : '🤖 Assistant'}</span>
+                                <span style={styles.messageRole}>{msg.role === 'user' ? 'You' : 'Assistant'}</span>
                                 <span style={styles.messageTime}>{msg.timestamp.toLocaleTimeString()}</span>
                             </div>
                             <div style={styles.messageContent}>
@@ -153,22 +163,35 @@ export default function ChatInterface({ year, section, issue, viewSettings, onOp
                             </div>
                             {msg.researchSteps && msg.researchSteps.length > 0 && (
                                 <div style={styles.researchContainer}>
-                                    <h5 style={styles.researchTitle}>🔍 Research Process</h5>
+                                    <h5 style={styles.researchTitle}>Research Process</h5>
                                     {msg.researchSteps.map((step, si) => (
                                         <div key={si} style={styles.researchStep}>
                                             <div style={styles.researchThought}><strong>Step {step.step}:</strong> {step.thought}</div>
                                             {step.action === 'SEARCH' && (
-                                                <div style={styles.researchAction}>📡 Searching: <code>{step.query}</code></div>
+                                                <div style={styles.researchAction}>Searching: <code>{step.query}</code></div>
                                             )}
                                         </div>
                                     ))}
+                                </div>
+                            )}
+                            {msg.role === 'assistant' && msg.retrievedCount != null && (
+                                <div style={styles.metricsRow}>
+                                    <span>{msg.retrievedCount} articles</span>
+                                    <span style={styles.metricDot} />
+                                    <span>{msg.researchStepCount || 1} {(msg.researchStepCount || 1) === 1 ? 'step' : 'steps'}</span>
+                                    {msg.responseTimeMs != null && (
+                                        <>
+                                            <span style={styles.metricDot} />
+                                            <span>{(msg.responseTimeMs / 1000).toFixed(1)}s</span>
+                                        </>
+                                    )}
                                 </div>
                             )}
                             {msg.role === 'assistant' && msg.queryId && (
                                 <div style={styles.feedbackRow}>
                                     {msg.feedback ? (
                                         <span style={styles.feedbackThanks}>
-                                            {msg.feedback === 'up' ? '✅ Thanks for the feedback!' : '🙏 Thanks, we\'ll improve!'}
+                                            {msg.feedback === 'up' ? 'Thanks for the feedback!' : 'Thanks, we\'ll improve!'}
                                         </span>
                                     ) : (
                                         <>
@@ -177,12 +200,12 @@ export default function ChatInterface({ year, section, issue, viewSettings, onOp
                                                 onClick={() => handleFeedback(i, true)}
                                                 style={styles.feedbackBtn}
                                                 title="Helpful"
-                                            >👍</button>
+                                            >Yes</button>
                                             <button
                                                 onClick={() => handleFeedback(i, false)}
                                                 style={styles.feedbackBtn}
                                                 title="Not helpful"
-                                            >👎</button>
+                                            >No</button>
                                         </>
                                     )}
                                 </div>
@@ -190,7 +213,7 @@ export default function ChatInterface({ year, section, issue, viewSettings, onOp
                         </div>
                         {msg.citations && msg.citations.length > 0 && (
                             <div style={{ ...styles.citations, ...(viewSettings.density === 'compact' ? { gap: '0.25rem' } : {}) }}>
-                                <h4 style={styles.citationsTitle}>📚 Sources ({msg.citations.length})</h4>
+                                <h4 style={styles.citationsTitle}>Sources ({msg.citations.length})</h4>
                                 {msg.citations.map((c, ci) => <CitationCard key={ci} citation={c} index={ci + 1} />)}
                             </div>
                         )}
@@ -243,14 +266,14 @@ const styles: Record<string, React.CSSProperties> = {
     clearButton: { background: 'transparent', border: '1px solid #444', borderRadius: '6px', color: '#aaa', padding: '0.4rem 0.9rem', fontSize: '0.82rem', cursor: 'pointer' },
     messagesContainer: { flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' },
     emptyState: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, textAlign: 'center', padding: '2rem' },
-    emptyIcon: { fontSize: '3.5rem', marginBottom: '1rem' },
+    emptyIcon: { marginBottom: '1rem', display: 'flex', justifyContent: 'center' },
     emptyTitle: { fontSize: '1.2rem', marginBottom: '0.5rem' },
     emptyText: { fontSize: '0.9rem', color: '#aaa', marginBottom: '1.5rem' },
     exampleGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.75rem', maxWidth: '700px', width: '100%' },
     exampleChip: { background: '#111', border: '1px solid #333', borderRadius: '8px', color: '#ccc', padding: '0.75rem 1rem', fontSize: '0.85rem', cursor: 'pointer', textAlign: 'left', lineHeight: '1.4', transition: 'border-color 0.15s' },
     messageWrapper: { display: 'flex', flexDirection: 'column', gap: '0.75rem' },
     message: { borderRadius: '12px', padding: '1rem', maxWidth: '88%' },
-    userMessage: { alignSelf: 'flex-end', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', marginLeft: 'auto' },
+    userMessage: { alignSelf: 'flex-end', background: '#1e293b', marginLeft: 'auto' },
     assistantMessage: { alignSelf: 'flex-start', background: '#1a1a1a', border: '1px solid #333' },
     messageHeader: { display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.82rem', opacity: 0.8 },
     messageRole: { fontWeight: 'bold' },
@@ -260,16 +283,18 @@ const styles: Record<string, React.CSSProperties> = {
     researchTitle: { margin: '0 0 0.5rem 0', color: '#888', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' },
     researchStep: { marginBottom: '0.5rem', paddingLeft: '0.5rem', borderLeft: '2px solid #444' },
     researchThought: { color: '#ccc', marginBottom: '0.25rem' },
-    researchAction: { color: '#667eea', fontSize: '0.82rem', fontStyle: 'italic' },
-    citations: { marginLeft: '1rem', paddingLeft: '1rem', borderLeft: '3px solid #667eea' },
-    citationsTitle: { fontSize: '0.88rem', marginBottom: '0.75rem', color: '#667eea' },
+    researchAction: { color: '#eb0000', fontSize: '0.82rem', fontStyle: 'italic' },
+    citations: { marginLeft: '1rem', paddingLeft: '1rem', borderLeft: '3px solid #eb0000' },
+    citationsTitle: { fontSize: '0.88rem', marginBottom: '0.75rem', color: '#eb0000' },
     loadingWrapper: { display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', background: '#111', border: '1px solid #222', borderRadius: '12px', alignSelf: 'flex-start', animation: 'fadeIn 0.3s ease' },
     loadingDots: { display: 'flex', gap: '4px', alignItems: 'center' },
-    dot: { width: '7px', height: '7px', borderRadius: '50%', background: '#667eea', animation: 'bounce 1.2s infinite ease-in-out' },
+    dot: { width: '7px', height: '7px', borderRadius: '50%', background: '#eb0000', animation: 'bounce 1.2s infinite ease-in-out' },
     loadingText: { fontSize: '0.85rem', color: '#888' },
     inputContainer: { padding: '0.75rem 1rem', borderTop: '1px solid #333', display: 'flex', gap: '0.75rem', flexShrink: 0 },
     textarea: { flex: 1, background: '#0a0a0a', border: '1px solid #333', borderRadius: '8px', padding: '0.75rem', color: '#fff', fontSize: '0.92rem', resize: 'none', fontFamily: 'inherit' },
-    sendButton: { background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', border: 'none', borderRadius: '8px', color: '#fff', padding: '0.75rem 1.5rem', fontSize: '0.95rem', fontWeight: 'bold', cursor: 'pointer', alignSelf: 'flex-end' },
+    sendButton: { background: '#eb0000', border: 'none', borderRadius: '8px', color: '#fff', padding: '0.75rem 1.5rem', fontSize: '0.95rem', fontWeight: 'bold', cursor: 'pointer', alignSelf: 'flex-end' },
+    metricsRow: { display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.6rem', fontSize: '0.75rem', color: '#555', fontVariantNumeric: 'tabular-nums' },
+    metricDot: { width: '3px', height: '3px', borderRadius: '50%', background: '#444', flexShrink: 0 },
     feedbackRow: { display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem', paddingTop: '0.6rem', borderTop: '1px solid #2a2a2a' },
     feedbackLabel: { fontSize: '0.78rem', color: '#666' },
     feedbackBtn: { background: 'transparent', border: '1px solid #333', borderRadius: '6px', cursor: 'pointer', fontSize: '1rem', padding: '0.2rem 0.5rem', lineHeight: 1, transition: 'border-color 0.15s' },

@@ -29,7 +29,7 @@ export default function StatsPage() {
             <div style={styles.container}>
                 <div style={styles.header}>
                     <a href="/chat" style={styles.backLink}>← Back to Chat</a>
-                    <h1 style={styles.title}>📊 System Stats</h1>
+                    <h1 style={styles.title}>System Stats</h1>
                     <p style={styles.subtitle}>Live metrics from production</p>
                 </div>
 
@@ -40,7 +40,7 @@ export default function StatsPage() {
                     <>
                         {/* DB Coverage */}
                         <section style={styles.section}>
-                            <h2 style={styles.sectionTitle}>📚 Knowledge Base</h2>
+                            <h2 style={styles.sectionTitle}>Knowledge Base</h2>
                             <div style={styles.grid}>
                                 <Stat label="Documents" value={status.documents_count} />
                                 <Stat label="Articles" value={status.articles_count.toLocaleString()} />
@@ -51,7 +51,7 @@ export default function StatsPage() {
 
                         {/* Query Volume */}
                         <section style={styles.section}>
-                            <h2 style={styles.sectionTitle}>💬 Query Volume</h2>
+                            <h2 style={styles.sectionTitle}>Query Volume</h2>
                             <div style={styles.grid}>
                                 <Stat label="Total Queries" value={stats.total_queries} />
                                 <Stat label="Regulations" value={stats.regulation_queries} />
@@ -62,7 +62,7 @@ export default function StatsPage() {
 
                         {/* Performance */}
                         <section style={styles.section}>
-                            <h2 style={styles.sectionTitle}>⚡ Performance</h2>
+                            <h2 style={styles.sectionTitle}>Performance</h2>
                             <div style={styles.grid}>
                                 <Stat
                                     label="Avg Response Time"
@@ -75,7 +75,7 @@ export default function StatsPage() {
 
                         {/* Feedback */}
                         <section style={styles.section}>
-                            <h2 style={styles.sectionTitle}>👍 User Feedback</h2>
+                            <h2 style={styles.sectionTitle}>User Feedback</h2>
                             <div style={styles.grid}>
                                 <Stat label="Helpful" value={stats.positive_feedback} highlight={stats.positive_feedback > 0} />
                                 <Stat label="Not Helpful" value={stats.negative_feedback} warn={stats.negative_feedback > stats.positive_feedback} />
@@ -119,7 +119,7 @@ const styles: Record<string, React.CSSProperties> = {
     page: { minHeight: '100vh', background: '#0a0a0a', color: '#e0e0e0', fontFamily: 'system-ui, sans-serif', padding: '2rem 1rem' },
     container: { maxWidth: '800px', margin: '0 auto' },
     header: { marginBottom: '2rem' },
-    backLink: { color: '#667eea', textDecoration: 'none', fontSize: '0.9rem' },
+    backLink: { color: '#eb0000', textDecoration: 'none', fontSize: '0.9rem' },
     title: { fontSize: '1.8rem', margin: '0.5rem 0 0.25rem', color: '#fff' },
     subtitle: { color: '#666', margin: 0, fontSize: '0.9rem' },
     loading: { color: '#666', textAlign: 'center', padding: '3rem' },

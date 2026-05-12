@@ -5,7 +5,7 @@ export default function UploadPage() {
         <main style={styles.main}>
             <div style={styles.header}>
                 <h1 style={styles.title}>
-                    📄 Upload Regulations
+                    Upload Regulations
                 </h1>
                 <p style={styles.subtitle}>
                     Upload FIA Formula 1 regulation PDFs for ingestion

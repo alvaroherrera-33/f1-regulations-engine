@@ -53,7 +53,7 @@ export default function ChatPage() {
                         </button>
                     )}
                     <div style={styles.sidebarHeader}>
-                        <h2 style={styles.sidebarTitle}>🎯 Controls</h2>
+                        <h2 style={styles.sidebarTitle}>Controls</h2>
                         <p style={styles.sidebarSubtitle}>Manage search and display preferences</p>
                     </div>
                     <FilterControls
@@ -63,14 +63,14 @@ export default function ChatPage() {
                     />
                     <ViewControls settings={viewSettings} onSettingsChange={setViewSettings} />
                     <div style={styles.info}>
-                        <h3 style={styles.infoTitle}>💡 Tips</h3>
+                        <h3 style={styles.infoTitle}>Tips</h3>
                         <ul style={styles.infoList}>
                             <li>Be specific in your questions</li>
                             <li>Autofilter detects year/section automatically</li>
                             <li>Check citations for exact references</li>
                         </ul>
                     </div>
-                    <a href="/stats" style={styles.statsLink}>📊 View System Stats</a>
+                    <a href="/stats" style={styles.statsLink}>View System Stats</a>
                 </div>
             )}
 
@@ -99,6 +99,6 @@ const styles: Record<string, React.CSSProperties> = {
     info: { background: '#1a1a1a', border: '1px solid #333', borderRadius: '8px', padding: '1rem' },
     infoTitle: { fontSize: '0.9rem', marginBottom: '0.6rem' },
     infoList: { fontSize: '0.82rem', lineHeight: '1.8', color: '#aaa', paddingLeft: '1.1rem', margin: 0 },
-    statsLink: { display: 'block', textAlign: 'center' as const, color: '#667eea', fontSize: '0.82rem', textDecoration: 'none', padding: '0.5rem', border: '1px solid #222', borderRadius: '6px' },
+    statsLink: { display: 'block', textAlign: 'center' as const, color: '#eb0000', fontSize: '0.82rem', textDecoration: 'none', padding: '0.5rem', border: '1px solid #222', borderRadius: '6px' },
     main: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 },
 };

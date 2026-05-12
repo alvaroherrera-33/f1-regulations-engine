@@ -98,7 +98,7 @@ export default function UploadForm() {
 
             {error && (
                 <div style={styles.error}>
-                    ⚠️ {error}
+                    {error}
                 </div>
             )}
 

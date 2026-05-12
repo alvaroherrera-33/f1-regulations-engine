@@ -14,7 +14,7 @@ interface ViewControlsProps {
 export default function ViewControls({ settings, onSettingsChange }: ViewControlsProps) {
     return (
         <div style={styles.container}>
-            <h3 style={styles.title}>🎨 View Settings</h3>
+            <h3 style={styles.title}>View Settings</h3>
             
             <div style={styles.controlGroup}>
                 <label style={styles.label}>

@@ -20,7 +20,7 @@ export default function Home() {
             <div style={styles.hero}>
                 <div style={styles.heroBadge}>2026 Ready</div>
                 <h1 style={styles.title}>
-                    🏎️ F1 Regulations <span style={styles.titleAccent}>Engine</span>
+                    F1 Regulations <span style={styles.titleAccent}>Engine</span>
                 </h1>
                 <p style={styles.subtitle}>
                     A legal-grade retrieval system for FIA Formula 1 Regulations.
@@ -35,19 +35,16 @@ export default function Home() {
             {/* Feature Grid */}
             <div style={styles.grid}>
                 <Link href="/chat" style={styles.card}>
-                    <div style={styles.cardIcon}>💬</div>
                     <h2 style={styles.cardTitle}>Agentic Chat</h2>
                     <p style={styles.cardText}>Multistep reasoning to resolve complex regulatory cross-references automatically.</p>
                 </Link>
 
                 <div style={styles.card}>
-                    <div style={styles.cardIcon}>🔍</div>
                     <h2 style={styles.cardTitle}>Hybrid Search</h2>
                     <p style={styles.cardText}>Vector similarity + full-text search merged with Reciprocal Rank Fusion (RRF).</p>
                 </div>
 
                 <Link href="/upload" style={styles.card}>
-                    <div style={styles.cardIcon}>📄</div>
                     <h2 style={styles.cardTitle}>PDF Ingestion</h2>
                     <p style={styles.cardText}>Upload any FIA regulation PDF and it's indexed and searchable in seconds.</p>
                 </Link>
@@ -90,7 +87,6 @@ const styles: Record<string, React.CSSProperties> = {
     secondaryButton: { background: 'transparent', color: '#fff', padding: '0.9rem 2rem', borderRadius: '8px', fontSize: '1rem', fontWeight: '600', textDecoration: 'none', border: '1px solid #444' },
     grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '4rem' },
     card: { padding: '2rem', background: '#111', border: '1px solid #222', borderRadius: '16px', textDecoration: 'none', color: 'inherit', display: 'block' },
-    cardIcon: { fontSize: '2rem', marginBottom: '1rem' },
     cardTitle: { fontSize: '1.3rem', marginBottom: '0.5rem', color: '#fff' },
     cardText: { fontSize: '0.9rem', opacity: 0.6, lineHeight: '1.5' },
     statusSection: { padding: '2rem', background: '#0a0a0a', border: '1px solid #222', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '1.5rem' },
