@@ -1,7 +1,8 @@
 {
   "metadata": {
-    "version": "1.0",
+    "version": "1.1",
     "created": "2026-05-07",
+    "updated": "2026-05-12",
     "description": "Evaluation test set for F1 Regulations RAG Engine. Each query has expected article codes and key facts to verify retrieval quality and answer accuracy.",
     "coverage": {
       "technical": 8,
@@ -23,23 +24,23 @@
     },
     {
       "id": "tech_02",
-      "query": "What are the overall dimensions limits for a Formula 1 car?",
+      "query": "What are the fundamental dimensions and coordinate conventions in the F1 Technical Regulations?",
       "expected_section": "Technical",
-      "expected_year": null,
-      "expected_articles": ["4.2", "4.3"],
-      "key_facts": ["width", "height", "mm"],
+      "expected_year": 2026,
+      "expected_articles": ["C2", "C2.1"],
+      "key_facts": ["dimension", "coordinate", "plane"],
       "difficulty": "easy",
-      "notes": "Should retrieve dimension-related sub-articles"
+      "notes": "Section C2 = CONVENTIONS AND FUNDAMENTAL DIMENSIONS in 2026 Technical regs"
     },
     {
       "id": "tech_03",
-      "query": "How does the DRS system work and when can drivers use it?",
+      "query": "What are the rear wing and bodywork aerodynamic regulations?",
       "expected_section": "Technical",
-      "expected_year": null,
-      "expected_articles": ["3"],
-      "key_facts": ["rear wing", "adjustable", "detection", "zone"],
+      "expected_year": 2026,
+      "expected_articles": ["C3", "C3.9"],
+      "key_facts": ["rear wing", "bodywork", "aerodynamic"],
       "difficulty": "medium",
-      "notes": "DRS spans bodywork articles, may cross-reference sporting regs"
+      "notes": "DRS was eliminated in 2026. C3 covers bodywork. C3.9+ covers rear bodywork/wing."
     },
     {
       "id": "tech_04",
@@ -85,11 +86,11 @@
       "id": "tech_08",
       "query": "What safety requirements must the survival cell and crash structures meet?",
       "expected_section": "Technical",
-      "expected_year": null,
-      "expected_articles": ["15", "16"],
+      "expected_year": 2026,
+      "expected_articles": ["C12", "C13"],
       "key_facts": ["survival cell", "impact", "crash", "test"],
       "difficulty": "hard",
-      "notes": "Safety structure articles, potentially multiple sub-articles"
+      "notes": "C12 = structural requirements, C13 = impact tests (C13.2 = Survival Cell Frontal Impact Test)"
     },
     {
       "id": "sport_01",
@@ -115,11 +116,11 @@
       "id": "sport_03",
       "query": "What are the qualifying format rules and how is the grid determined?",
       "expected_section": "Sporting",
-      "expected_year": null,
-      "expected_articles": ["44", "45"],
+      "expected_year": 2025,
+      "expected_articles": ["39", "39.1", "39.2"],
       "key_facts": ["qualifying", "Q1", "Q2", "Q3", "eliminated"],
       "difficulty": "medium",
-      "notes": "Qualifying session format"
+      "notes": "2025 Sporting: Art 39 = QUALIFYING AND SPRINT QUALIFYING SESSIONS. In 2026, qualifying is in B3 area."
     },
     {
       "id": "sport_04",
@@ -155,11 +156,11 @@
       "id": "fin_01",
       "query": "What is the cost cap limit for F1 teams?",
       "expected_section": "Financial",
-      "expected_year": null,
-      "expected_articles": ["4"],
-      "key_facts": ["cost cap", "USD", "million"],
+      "expected_year": 2026,
+      "expected_articles": ["2.2", "2.3"],
+      "key_facts": ["cost cap", "USD"],
       "difficulty": "easy",
-      "notes": "Direct lookup of the cap amount"
+      "notes": "Art 2.2 = costs must not exceed cap. Art 2.3 = defines the actual cap amount (US Dollars 95,000,000)."
     },
     {
       "id": "fin_02",
@@ -195,11 +196,11 @@
       "id": "fin_05",
       "query": "How are related party transactions handled in the financial regulations?",
       "expected_section": "Financial",
-      "expected_year": null,
-      "expected_articles": ["4"],
-      "key_facts": ["related party", "transaction", "fair value", "arm's length"],
+      "expected_year": 2026,
+      "expected_articles": ["4", "4.1"],
+      "key_facts": ["related party", "transaction", "fair value"],
       "difficulty": "hard",
-      "notes": "Specific financial concept, requires precise retrieval"
+      "notes": "Related party provisions are within Article 4 (Excluded/Adjusted costs) sub-articles."
     },
     {
       "id": "fin_06",
