@@ -9,34 +9,38 @@
 
 ## Estado actual (2026-05-12)
 
-### Fase 1 — COMPLETADA
-- `backend/eval/test_set.json`: 20 queries (8 Tech, 6 Sporting, 6 Financial)
-- `backend/eval/run_eval.py`: script completo de evaluación con métricas P/R/F
-- `backend/eval/run_single.py`: ejecutor query-por-query (para entornos con timeout)
-- **Fix importante:** Code normalization — el eval ahora normaliza prefijos de sección (C4.1 → 4.1) para matching correcto
-- **Baseline parcial:** tech_01 = P=7% R=100% F=100%. Pendiente ejecutar las 20 queries completas localmente
+### Fase 1 — COMPLETADA ✅
+- `backend/eval/test_set.json` v1.1: 20 queries corregidas (8 Tech, 6 Sporting, 6 Financial)
+- `backend/eval/run_eval.py` + `run_single.py`: scripts de evaluación con P/R/F
+- **Baseline (eval_v2_final.json):** P=9.3%, R=70.8%, F=57.9% — 11/20 con 100% recall
 
-### Fase 2 — CÓDIGO COMPLETADO (pendiente: re-ingestión + eval)
-- ✅ 2.1 Chunking: `backend/ingestion/chunker.py` creado, `pipeline.py` actualizado
+### Fase 2 — COMPLETADA ✅
+- ✅ 2.1 Chunking: `chunker.py` + `pipeline.py` + **re-ingestión ejecutada**
+  - 3672 artículos → 4305 chunks (240 artículos largos divididos)
+  - Unique constraint `article_embeddings_article_id_key` eliminada para soportar múltiples chunks
+  - Embeddings generados con `fastembed` (ONNX, all-MiniLM-L6-v2, 384-dim)
 - ✅ 2.2 `websearch_to_tsquery` en `retriever.py`
 - ✅ 2.3 Cache de embeddings (ya existía en `local_embeddings.py`)
 - ✅ 2.4 Prompt tuning en `client.py` (AGENTIC_PROMPT mejorado)
 - ✅ 2.5 Section-aware RRF boost (1.2x) en `_merge_and_deduplicate()`
 - ✅ 2.6 Context trimming (MAX_CONTEXT_ARTICLES=12, MAX_ARTICLE_CHARS=2000)
-- ⏳ 2.7 Cobertura Technical 2025 — pendiente auditoría de archives/
+- ⏳ 2.7 Cobertura Technical 2025 Issues 1 & 3 — PDFs en archives/, pendiente ingestión
 
-### Para completar la Fase 2:
-1. **Ejecutar baseline completo localmente:**
-   ```bash
-   cd backend
-   pip install httpx
-   python -m eval.run_eval --url https://f1-regulations-engine.onrender.com -v -o eval_baseline.json
-   ```
-2. **Re-ingestar para activar chunking:** Los cambios de 2.1 requieren re-generar embeddings
-3. **Ejecutar eval post-cambios** y comparar con baseline
-4. **Deploy** los cambios del retriever/LLM client a Render
+### Fase 3 — COMPLETADA ✅
+- ✅ 3.1 Emojis eliminados de todos los componentes
+- ✅ 3.2 Tipografía Inter via next/font/google
+- ✅ 3.3 Paleta: morado #667eea → rojo F1 #eb0000 + azul oscuro #1e293b
+- ✅ 3.4 Página /about con diagrama de arquitectura SVG
+- ✅ 3.5 Métricas en cada respuesta: "N articles · N steps · Xs"
+- ✅ 3.6 Navbar: links a Stats y About
 
-### Fases 3 y 4 — PENDIENTES
+### Fase 4 — COMPLETADA ✅
+- ✅ 4.1 Warmup ping cada 10 min (scheduled task)
+- ✅ 4.2 Admin endpoint: GET /api/admin/embedding-stats
+
+### Pendiente
+- Ejecutar eval post-chunking completo (localmente, sandbox timeout insuficiente)
+- Ingestar Technical 2025 Issues 1 & 3
 
 ---
 
