@@ -38,9 +38,25 @@
 - ✅ 4.1 Warmup ping cada 10 min (scheduled task)
 - ✅ 4.2 Admin endpoint: GET /api/admin/embedding-stats
 
+### Technical 2025 Coverage — COMPLETADA ✅
+- ✅ Issue 1: 316 articles, 375 embeddings (25 chunked)
+- ✅ Issue 2: 315 articles, 346 embeddings (already existed)
+- ✅ Issue 3: 316 articles, 375 embeddings (25 chunked)
+
+### Eval Post-Chunking — COMPLETADA ✅
+- **eval_post_chunking_final.json** (20 queries, 2026-05-13)
+- Avg Recall: 56.7%, Avg Fact Accuracy: 78.8%, Avg Time: 24.4s
+- Perfect Recall: 8/20 queries
+- Technical: R=75% F=75%, Sporting: R=72% F=79%, Financial: R=17% F=83%
+- By difficulty: Easy R=70%, Medium R=48%, Hard R=60%
+- Baseline comparison (eval_v2_final): P=9.3%, R=70.8%, F=57.9%
+- Post-chunking: R=56.7%, F=78.8% → fact accuracy improved +20.9pp, recall dropped 14.1pp
+- Financial recall very low (17%) — retriever finds Financial articles but not the specific expected sub-articles
+- Precision low across the board (~7%) — system over-retrieves many related articles (by design, agentic loop does multiple searches)
+
 ### Pendiente
-- Ejecutar eval post-chunking completo (localmente, sandbox timeout insuficiente)
-- Ingestar Technical 2025 Issues 1 & 3
+- Improve Financial regulations retrieval (test_set expected_articles may need review)
+- Consider adding more test queries for edge cases
 
 ---
 

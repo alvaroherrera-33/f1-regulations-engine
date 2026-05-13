@@ -1,0 +1,926 @@
+[
+  {
+    "id": "tech_01",
+    "query": "What is the minimum weight of an F1 car in 2026?",
+    "difficulty": "easy",
+    "recall": 1.0,
+    "precision": 0.08333333333333333,
+    "fact_accuracy": 1.0,
+    "expected": [
+      "4.1"
+    ],
+    "cited": [
+      "1",
+      "4",
+      "10",
+      "5.12",
+      "2026",
+      "4.1",
+      "1.6",
+      "12.1",
+      "5.124",
+      "4.5",
+      "12",
+      "5"
+    ],
+    "hits": [
+      "4.1"
+    ],
+    "key_facts_found": 2,
+    "key_facts_total": 2,
+    "time": 6.936343669891357,
+    "steps": [
+      {
+        "step": 1,
+        "thought": "Article C4.1 provides the minimum mass values for 2026, specifying 726\u202fkg plus nominal tyre mass for Sprint Qualifying and Qualifying, and 724\u202fkg plus nominal tyre mass for all other sessions.",
+        "action": "ANSWER",
+        "query": "What is the minimum weight of an F1 car in 2026?"
+      }
+    ],
+    "retrieved_count": 12
+  },
+  {
+    "id": "tech_02",
+    "query": "What are the fundamental dimensions and coordinate conventions in the F1 Technical Regulations?",
+    "difficulty": "easy",
+    "recall": 1.0,
+    "precision": 0.125,
+    "fact_accuracy": 1.0,
+    "expected": [
+      "2",
+      "2.1"
+    ],
+    "cited": [
+      "17.2",
+      "1.6",
+      "2.1",
+      "13.1",
+      "4",
+      "17.5",
+      "17",
+      "13",
+      "1",
+      "2",
+      "2022",
+      "2.4",
+      "2026",
+      "4.5",
+      "1.2",
+      "1.5"
+    ],
+    "hits": [
+      "2",
+      "2.1"
+    ],
+    "key_facts_found": 3,
+    "key_facts_total": 3,
+    "time": 21.21277117729187,
+    "steps": [
+      {
+        "step": 1,
+        "thought": "The question asks for the fundamental dimensions and coordinate conventions defined in the F1 Technical Regulations. The provided context includes a reference to Article C2 titled 'CONVENTIONS AND FUNDAMENTAL DIMENSIONS', but the article's text is not included, so the specific details are missing. I need to search for the content of Article C2 to retrieve the required information.",
+        "action": "SEARCH",
+        "query": "What are the fundamental dimensions and coordinate conventions in the F1 Technical Regulations?"
+      },
+      {
+        "step": 2,
+        "thought": "The question requires the specific details of fundamental dimensions and coordinate conventions defined in Article C2, but the article's text is not present in the current context. I need to retrieve the content of Article C2.",
+        "action": "SEARCH",
+        "query": "Article C2 CONVENTIONS AND FUNDAMENTAL DIMENSIONS FIA Formula 1 Technical Regulations 2026 coordinate conventions"
+      },
+      {
+        "step": 3,
+        "thought": "The question requires the specific details of fundamental dimensions and coordinate conventions defined in Article C2, but the article's text is not present in the current context. I need to retrieve the content of Article C2 to answer accurately.",
+        "action": "SEARCH",
+        "query": "Article C2 CONVENTIONS AND FUNDAMENTAL DIMENSIONS FIA Formula 1 Technical Regulations 2026"
+      }
+    ],
+    "retrieved_count": 17
+  },
+  {
+    "id": "tech_03",
+    "query": "What are the rear wing and bodywork aerodynamic regulations?",
+    "difficulty": "medium",
+    "recall": 0.5,
+    "precision": 0.125,
+    "fact_accuracy": 1.0,
+    "expected": [
+      "3",
+      "3.9"
+    ],
+    "cited": [
+      "3.14",
+      "3.17",
+      "3.10",
+      "3.11",
+      "3.1",
+      "3.19",
+      "3",
+      "3.3"
+    ],
+    "hits": [
+      "3"
+    ],
+    "key_facts_found": 3,
+    "key_facts_total": 3,
+    "time": 34.90203356742859,
+    "steps": [
+      {
+        "step": 1,
+        "thought": "The current context contains detailed regulations for the rear wing adjuster system (C3.11.6) and several bodywork aerodynamic rules (C3.1, C3.3, C3.4, C3.14, C3.17, C3.19). These provide sufficient information to answer the question.",
+        "action": "ANSWER",
+        "query": "What are the rear wing and bodywork aerodynamic regulations?"
+      }
+    ],
+    "retrieved_count": 8
+  },
+  {
+    "id": "tech_04",
+    "query": "What are the fuel flow rate limits for the power unit?",
+    "difficulty": "medium",
+    "recall": 0.5,
+    "precision": 0.05,
+    "fact_accuracy": 0.6666666666666666,
+    "expected": [
+      "6",
+      "5"
+    ],
+    "cited": [
+      "3.10",
+      "1.7",
+      "16.3",
+      "2026",
+      "1.3",
+      "2.5",
+      "16.2",
+      "5.12",
+      "5",
+      "1.1",
+      "10",
+      "5.9",
+      "1",
+      "16.4",
+      "5.11",
+      "16",
+      "16.5",
+      "3",
+      "2022",
+      "2"
+    ],
+    "hits": [
+      "5"
+    ],
+    "key_facts_found": 2,
+    "key_facts_total": 3,
+    "time": 25.26672863960266,
+    "steps": [
+      {
+        "step": 1,
+        "thought": "The current articles mention fuel flow meters but do not specify the numerical fuel flow rate limits for the power unit. I need to search for the regulation that defines the fuel flow rate limits.",
+        "action": "SEARCH",
+        "query": "maximum fuel flow rate power unit"
+      },
+      {
+        "step": 2,
+        "thought": "The provided articles mention fuel flow meters but do not specify the numerical fuel flow rate limits for the power unit. I need to locate the regulation that defines the fuel flow rate limits.",
+        "action": "SEARCH",
+        "query": "FIA Formula 1 Technical Regulations fuel flow rate limit power unit"
+      },
+      {
+        "step": 3,
+        "thought": "The provided articles mention the requirement for a fuel flow meter but do not state the numerical fuel flow rate limits for the power unit. I need to locate the specific regulation that defines those limits.",
+        "action": "SEARCH",
+        "query": "fuel flow rate limit power unit FIA Technical Regulations"
+      }
+    ],
+    "retrieved_count": 23
+  },
+  {
+    "id": "tech_05",
+    "query": "Explain the regulations around the floor and diffuser aerodynamics",
+    "difficulty": "medium",
+    "recall": 0.0,
+    "precision": 0.0,
+    "fact_accuracy": 1.0,
+    "expected": [
+      "3.5",
+      "3.6"
+    ],
+    "cited": [
+      "5.15",
+      "12.7",
+      "5",
+      "3.2",
+      "12",
+      "3.16",
+      "14",
+      "2026",
+      "3.3",
+      "3"
+    ],
+    "hits": [],
+    "key_facts_found": 3,
+    "key_facts_total": 3,
+    "time": 16.433559894561768,
+    "steps": [
+      {
+        "step": 1,
+        "thought": "The current articles contain multiple sections that together define the floor and diffuser aerodynamic regulations: front floor structure mounting and deformation limits (C12.7), general aerodynamic component restrictions (3.2.2 and C3.4), material restrictions on floor areas (3.16.4), and geometric legality tolerances (C3.3.2). No additional search is required.",
+        "action": "ANSWER",
+        "query": "Explain the regulations around the floor and diffuser aerodynamics"
+      }
+    ],
+    "retrieved_count": 12
+  },
+  {
+    "id": "tech_06",
+    "query": "What changes were introduced to the power unit regulations for 2026?",
+    "difficulty": "hard",
+    "recall": 1.0,
+    "precision": 0.07142857142857142,
+    "fact_accuracy": 0.3333333333333333,
+    "expected": [
+      "5"
+    ],
+    "cited": [
+      "3.10",
+      "4",
+      "2026",
+      "3.11",
+      "1.3",
+      "3",
+      "1",
+      "2022",
+      "1.7",
+      "5",
+      "8",
+      "4.3",
+      "10",
+      "1.5"
+    ],
+    "hits": [
+      "5"
+    ],
+    "key_facts_found": 1,
+    "key_facts_total": 3,
+    "time": 25.03774905204773,
+    "steps": [
+      {
+        "step": 1,
+        "thought": "The current articles provide details on modification procedures, ADUO, homologation updates, but do not give a comprehensive overview of all changes introduced to the power unit regulations for 2026. Need additional sources summarizing the 2026 PU regulation changes.",
+        "action": "SEARCH",
+        "query": "What changes were introduced to the power unit regulations for 2026?"
+      },
+      {
+        "step": 2,
+        "thought": "The current articles contain multiple specific provisions that together describe the main changes to the 2026 Power Unit (PU) regulations: new approval and modification procedures, sealed\u2011perimeter restrictions, updated homologation and reference PU requirements, the introduction of the ADUO (Additional Development and Upgrade Opportunities) system, cost\u2011cap adjustment rules and the need for prior PU\u2011manufacturer approval of substantive changes. These details are sufficient to answer the question.",
+        "action": "ANSWER",
+        "query": "2026 Formula 1 power unit regulation changes 2026 technical regulations overview"
+      }
+    ],
+    "retrieved_count": 15
+  },
+  {
+    "id": "tech_07",
+    "query": "What are the tyre specifications and how many sets are allowed per weekend?",
+    "difficulty": "medium",
+    "recall": 1.0,
+    "precision": 0.125,
+    "fact_accuracy": 0.0,
+    "expected": [
+      "10"
+    ],
+    "cited": [
+      "10.8",
+      "50",
+      "4",
+      "4.7",
+      "3.4",
+      "3",
+      "10",
+      "4.1"
+    ],
+    "hits": [
+      "10"
+    ],
+    "key_facts_found": 0,
+    "key_facts_total": 3,
+    "time": 13.44271445274353,
+    "steps": [
+      {
+        "step": 1,
+        "thought": "The provided articles give details on minimum car mass, nominal tyre mass, and the number of tyres per axle (50), but they do not specify the full tyre specifications (e.g., dimensions, construction) nor the allowed number of tyre sets per weekend. Therefore I cannot answer the question definitively with the current regulations.",
+        "action": "ANSWER",
+        "query": "What are the tyre specifications and how many sets are allowed per weekend?"
+      }
+    ],
+    "retrieved_count": 8
+  },
+  {
+    "id": "tech_08",
+    "query": "What safety requirements must the survival cell and crash structures meet?",
+    "difficulty": "hard",
+    "recall": 1.0,
+    "precision": 0.18181818181818182,
+    "fact_accuracy": 1.0,
+    "expected": [
+      "13",
+      "12"
+    ],
+    "cited": [
+      "13",
+      "13.4",
+      "13.5",
+      "13.1",
+      "9",
+      "12",
+      "13.3",
+      "9.11",
+      "12.7",
+      "12.2",
+      "12.3"
+    ],
+    "hits": [
+      "13",
+      "12"
+    ],
+    "key_facts_found": 4,
+    "key_facts_total": 4,
+    "time": 27.65708637237549,
+    "steps": [
+      {
+        "step": 1,
+        "thought": "The provided articles contain detailed safety requirements for the Survival Cell and its crash structures, including static load tests, construction material specifications, mounting rules, and restrictions on additional load paths. I can answer using these sources.",
+        "action": "ANSWER",
+        "query": "What safety requirements must the survival cell and crash structures meet?"
+      }
+    ],
+    "retrieved_count": 11
+  },
+  {
+    "id": "sport_01",
+    "query": "How are championship points awarded after a race?",
+    "difficulty": "easy",
+    "recall": 1.0,
+    "precision": 0.05263157894736842,
+    "fact_accuracy": 0.0,
+    "expected": [
+      "6"
+    ],
+    "cited": [
+      "9.2",
+      "30",
+      "42.1",
+      "2.1",
+      "7",
+      "42",
+      "7.2",
+      "23",
+      "32.1",
+      "6.2",
+      "32",
+      "5",
+      "2025",
+      "26",
+      "9",
+      "2",
+      "6",
+      "23.6",
+      "5.1"
+    ],
+    "hits": [
+      "6"
+    ],
+    "key_facts_found": 0,
+    "key_facts_total": 4,
+    "time": 8.761207342147827,
+    "steps": [
+      {
+        "step": 1,
+        "thought": "The current context does not contain any article detailing the points allocation system after a race. I need to locate the specific regulation that describes how championship points are awarded.",
+        "action": "SEARCH",
+        "query": "championship points allocation race classification FIA Sporting Regulations"
+      },
+      {
+        "step": 2,
+        "thought": "Error parsing LLM response.",
+        "action": "ANSWER",
+        "query": "FIA Formula 1 Sporting Regulations 2025 points awarded after a race championship points allocation article"
+      }
+    ],
+    "retrieved_count": 19
+  },
+  {
+    "id": "sport_02",
+    "query": "What happens during a Safety Car period?",
+    "difficulty": "medium",
+    "recall": 0.5,
+    "precision": 0.1,
+    "fact_accuracy": 1.0,
+    "expected": [
+      "56",
+      "55"
+    ],
+    "cited": [
+      "58",
+      "55.15",
+      "55",
+      "55.7",
+      "55.17",
+      "58.5",
+      "58.13",
+      "58.10",
+      "55.10",
+      "55.3"
+    ],
+    "hits": [
+      "55"
+    ],
+    "key_facts_found": 4,
+    "key_facts_total": 4,
+    "time": 21.774857997894287,
+    "steps": [
+      {
+        "step": 1,
+        "thought": "The provided articles contain detailed procedures for the deployment, conduct, and conclusion of a Safety Car period, so I can answer directly.",
+        "action": "ANSWER",
+        "query": "What happens during a Safety Car period?"
+      }
+    ],
+    "retrieved_count": 10
+  },
+  {
+    "id": "sport_03",
+    "query": "What are the qualifying format rules and how is the grid determined?",
+    "difficulty": "medium",
+    "recall": 0.3333333333333333,
+    "precision": 0.05263157894736842,
+    "fact_accuracy": 1.0,
+    "expected": [
+      "39.2",
+      "39",
+      "39.1"
+    ],
+    "cited": [
+      "23.4",
+      "42",
+      "2.4",
+      "42.1",
+      "2.1",
+      "26.2",
+      "5",
+      "2025",
+      "2",
+      "5.1",
+      "30",
+      "9.2",
+      "26",
+      "39.4",
+      "9",
+      "2024",
+      "2.3",
+      "23",
+      "39"
+    ],
+    "hits": [
+      "39"
+    ],
+    "key_facts_found": 5,
+    "key_facts_total": 5,
+    "time": 35.702659130096436,
+    "steps": [
+      {
+        "step": 1,
+        "thought": "The current context mentions grid formation referencing Articles 39.2, 39.4, and 42.3, but does not provide the qualifying format rules themselves. I need to locate those articles to answer fully.",
+        "action": "SEARCH",
+        "query": "qualifying format grid determination FIA Sporting Regulations"
+      },
+      {
+        "step": 2,
+        "thought": "The current context references qualifying format in Articles 39.2 and 39.4, and grid formation in Article 42.1, but the text of Articles 39.2, 39.4, and 42.3 is not present. I need to retrieve those articles to provide a complete answer.",
+        "action": "SEARCH",
+        "query": "\"Article 39.2\" \"qualifying\" \"Formula One\" 2025 Sporting Regulations"
+      },
+      {
+        "step": 3,
+        "thought": "The current context includes the grid formation rule (Article 42.1) but references qualifying format details in Articles 39.2, 39.4, and the grid procedure in Article 42.3, which are not present. I need to retrieve those articles to answer the qualifying format rules and grid determination.",
+        "action": "SEARCH",
+        "query": "2025 Formula One Sporting Regulations Article 39.2 qualifying session format"
+      }
+    ],
+    "retrieved_count": 19
+  },
+  {
+    "id": "sport_04",
+    "query": "What penalties can stewards impose for rule violations?",
+    "difficulty": "medium",
+    "recall": 1.0,
+    "precision": 0.07692307692307693,
+    "fact_accuracy": 1.0,
+    "expected": [
+      "54"
+    ],
+    "cited": [
+      "18",
+      "B1",
+      "54.4",
+      "37.5",
+      "58",
+      "B1.10",
+      "58.9",
+      "56",
+      "54.3",
+      "37",
+      "54.2",
+      "54",
+      "18.1"
+    ],
+    "hits": [
+      "54"
+    ],
+    "key_facts_found": 4,
+    "key_facts_total": 4,
+    "time": 23.089625358581543,
+    "steps": [
+      {
+        "step": 1,
+        "thought": "The regulations list the specific penalties stewards may impose. Article 54.3 enumerates the four standard time\u2011related penalties and mentions a grid\u2011place penalty if the driver cannot serve them. Other articles reference the use of these penalties for particular infringements (e.g., unnecessary overtaking, wheel\u2011fitting violations). This provides a complete answer.",
+        "action": "ANSWER",
+        "query": "What penalties can stewards impose for rule violations?"
+      }
+    ],
+    "retrieved_count": 13
+  },
+  {
+    "id": "sport_05",
+    "query": "What are the pit stop regulations and speed limits in the pit lane?",
+    "difficulty": "easy",
+    "recall": 0.5,
+    "precision": 0.09090909090909091,
+    "fact_accuracy": 0.75,
+    "expected": [
+      "34",
+      "35"
+    ],
+    "cited": [
+      "34",
+      "26",
+      "34.4",
+      "34.9",
+      "57",
+      "34.7",
+      "55",
+      "34.1",
+      "26.13",
+      "57.2",
+      "55.11"
+    ],
+    "hits": [
+      "34"
+    ],
+    "key_facts_found": 3,
+    "key_facts_total": 4,
+    "time": 23.80084228515625,
+    "steps": [
+      {
+        "step": 1,
+        "thought": "The provided articles contain the key regulations on pit lane speed limits, lane usage, work restrictions, age limits, and procedures when the pit exit is closed, which together answer the question.",
+        "action": "ANSWER",
+        "query": "What are the pit stop regulations and speed limits in the pit lane?"
+      }
+    ],
+    "retrieved_count": 11
+  },
+  {
+    "id": "sport_06",
+    "query": "How does the red flag procedure work and what happens to the race?",
+    "difficulty": "hard",
+    "recall": 1.0,
+    "precision": 0.041666666666666664,
+    "fact_accuracy": 1.0,
+    "expected": [
+      "57"
+    ],
+    "cited": [
+      "2",
+      "62",
+      "48.1",
+      "42.1",
+      "48",
+      "5",
+      "26.1",
+      "57.1",
+      "56",
+      "56.1",
+      "5.1",
+      "42",
+      "30",
+      "26",
+      "59.1",
+      "57",
+      "2025",
+      "2.1",
+      "59",
+      "37",
+      "62.3",
+      "37.2",
+      "2024",
+      "2026"
+    ],
+    "hits": [
+      "57"
+    ],
+    "key_facts_found": 4,
+    "key_facts_total": 4,
+    "time": 40.92857241630554,
+    "steps": [
+      {
+        "step": 1,
+        "thought": "The current context only includes Article 57.1 which mentions that red flags are shown to suspend a sprint session or race when immediate danger exists. It does not detail the full red flag procedure (e.g., how cars return to the pits, how the race is restarted, classification rules). I need to search for additional articles covering the red flag procedure.",
+        "action": "SEARCH",
+        "query": "How does the red flag procedure work and what happens to the race?"
+      },
+      {
+        "step": 2,
+        "thought": "The current context only includes Article 57.1, which states that a red flag suspends a sprint session or race and that the clerk orders red flags and abort lights. It does not detail the subsequent procedure (e.g., how cars return to the pits, how the race is restarted, classification rules after a red flag). Additional articles covering the full red flag procedure are needed.",
+        "action": "SEARCH",
+        "query": "FIA Formula 1 Sporting Regulations 2025 red flag procedure Article 57"
+      },
+      {
+        "step": 3,
+        "thought": "The current context only includes Article 57.1, which states that a red flag suspends a sprint session or race and that the clerk orders red flags and abort lights. It does not provide the full red flag procedure, such as how cars return to the pits, how the race is restarted, or classification rules after a red flag. Additional articles covering the complete red flag procedure are needed.",
+        "action": "SEARCH",
+        "query": "FIA Formula 1 Sporting Regulations 2025 red flag procedure restart classification Article 57"
+      }
+    ],
+    "retrieved_count": 24
+  },
+  {
+    "id": "fin_01",
+    "query": "What is the cost cap limit for F1 teams?",
+    "difficulty": "easy",
+    "recall": 0.0,
+    "precision": 0.0,
+    "fact_accuracy": 0.5,
+    "expected": [
+      "2.2",
+      "2.3"
+    ],
+    "cited": [
+      "8.11",
+      "2",
+      "12.4",
+      "12.1",
+      "1.5",
+      "9",
+      "2.1",
+      "1.2",
+      "8.2",
+      "12",
+      "8.4",
+      "9.2",
+      "8.3",
+      "8.5",
+      "12.3",
+      "8.10",
+      "1",
+      "8.6",
+      "8"
+    ],
+    "hits": [],
+    "key_facts_found": 1,
+    "key_facts_total": 2,
+    "time": 33.605472803115845,
+    "steps": [
+      {
+        "step": 1,
+        "thought": "The current articles discuss the cost cap framework and sanctions but do not specify the actual monetary limit for the F1 team cost cap.",
+        "action": "SEARCH",
+        "query": "cost cap limit financial regulations"
+      },
+      {
+        "step": 2,
+        "thought": "The provided articles describe the cost cap framework, sanctions, and administration but do not state the actual monetary limit for the F1 team cost cap. I need to locate the specific article that defines the cost cap amount.",
+        "action": "SEARCH",
+        "query": "FIA Formula 1 2026 cost cap limit amount"
+      },
+      {
+        "step": 3,
+        "thought": "The current articles describe the cost cap framework and sanctions but do not state the actual monetary limit for the F1 team cost cap. I need to locate the specific article that defines the cost cap amount.",
+        "action": "SEARCH",
+        "query": "\"cost cap\" limit F1 team\""
+      }
+    ],
+    "retrieved_count": 20
+  },
+  {
+    "id": "fin_02",
+    "query": "What costs are excluded from the cost cap calculation?",
+    "difficulty": "medium",
+    "recall": 0.0,
+    "precision": 0.0,
+    "fact_accuracy": 1.0,
+    "expected": [
+      "3",
+      "4"
+    ],
+    "cited": [
+      "1.7",
+      "6.12",
+      "1",
+      "5",
+      "12.1",
+      "9",
+      "9.1",
+      "6",
+      "1.2",
+      "8.6",
+      "6.30",
+      "9.2",
+      "8",
+      "1.4",
+      "1.5",
+      "12",
+      "6.14",
+      "6.10"
+    ],
+    "hits": [],
+    "key_facts_found": 4,
+    "key_facts_total": 4,
+    "time": 23.998168230056763,
+    "steps": [
+      {
+        "step": 1,
+        "thought": "The current excerpts define some cost categories but do not provide the comprehensive list of costs excluded from the cost cap calculation. I need to locate the specific article that enumerates excluded costs.",
+        "action": "SEARCH",
+        "query": "cost cap excluded expenses FIA financial regulations"
+      },
+      {
+        "step": 2,
+        "thought": "The current excerpts define some cost categories but do not provide the full list of costs excluded from the cost cap calculation. I need to locate the specific article that enumerates all excluded costs.",
+        "action": "SEARCH",
+        "query": "\"cost cap\" \"excluded\" costs\" Financial Regulations\""
+      },
+      {
+        "step": 3,
+        "thought": "The current excerpts define some cost categories but do not provide the comprehensive list of costs excluded from the cost cap calculation. I need to locate the specific article that enumerates excluded costs.",
+        "action": "SEARCH",
+        "query": "\"cost cap\" \"excluded\" costs\" Financial Regulations\""
+      }
+    ],
+    "retrieved_count": 20
+  },
+  {
+    "id": "fin_03",
+    "query": "What reporting obligations do teams have under financial regulations?",
+    "difficulty": "medium",
+    "recall": 0.5,
+    "precision": 0.09090909090909091,
+    "fact_accuracy": 1.0,
+    "expected": [
+      "5",
+      "6"
+    ],
+    "cited": [
+      "6.10",
+      "10.1",
+      "2.1",
+      "6",
+      "2",
+      "6.12",
+      "10",
+      "8.6",
+      "6.25",
+      "8",
+      "8.4"
+    ],
+    "hits": [
+      "6"
+    ],
+    "key_facts_found": 4,
+    "key_facts_total": 4,
+    "time": 26.309593677520752,
+    "steps": [
+      {
+        "step": 1,
+        "thought": "The provided articles contain multiple clauses that detail the reporting obligations of F1 Teams, including submission of reporting documentation, accuracy, record retention, cooperation with the Cost Cap Administration, and compliance with demands for information and electronic devices.",
+        "action": "ANSWER",
+        "query": "team financial reporting obligations cost cap regulations"
+      }
+    ],
+    "retrieved_count": 13
+  },
+  {
+    "id": "fin_04",
+    "query": "What penalties exist for breaching the cost cap?",
+    "difficulty": "medium",
+    "recall": 0.5,
+    "precision": 0.125,
+    "fact_accuracy": 0.75,
+    "expected": [
+      "9",
+      "8"
+    ],
+    "cited": [
+      "6",
+      "6.26",
+      "8.5",
+      "12",
+      "6.28",
+      "8.11",
+      "8",
+      "8.3"
+    ],
+    "hits": [
+      "8"
+    ],
+    "key_facts_found": 3,
+    "key_facts_total": 4,
+    "time": 22.567091941833496,
+    "steps": [
+      {
+        "step": 1,
+        "thought": "The provided articles describe the range of penalties for cost\u2011cap breaches: Financial Penalties are the default sanction; Minor Sporting Penalties can be added when aggravating factors exist; both can be applied to procedural breaches and minor overspend breaches; the Cost Cap Administration can also propose sanctions and enter an Accepted Breach Agreement (ABA). This is sufficient to answer the question.",
+        "action": "ANSWER",
+        "query": "What penalties exist for breaching the cost cap?"
+      }
+    ],
+    "retrieved_count": 9
+  },
+  {
+    "id": "fin_05",
+    "query": "How are related party transactions handled in the financial regulations?",
+    "difficulty": "hard",
+    "recall": 0.0,
+    "precision": 0.0,
+    "fact_accuracy": 1.0,
+    "expected": [
+      "4",
+      "4.1"
+    ],
+    "cited": [
+      "12.1",
+      "11.1",
+      "9.3",
+      "9.1",
+      "2",
+      "6",
+      "1.3",
+      "1.7",
+      "6.1",
+      "1",
+      "2.1",
+      "12",
+      "9",
+      "11"
+    ],
+    "hits": [],
+    "key_facts_found": 3,
+    "key_facts_total": 3,
+    "time": 25.190907955169678,
+    "steps": [
+      {
+        "step": 1,
+        "thought": "The regulations detail the treatment of related party transactions in Article D6.1.1, specifying how they are accounted for in Relevant Costs.",
+        "action": "ANSWER",
+        "query": "How are related party transactions handled in the financial regulations?"
+      }
+    ],
+    "retrieved_count": 15
+  },
+  {
+    "id": "fin_06",
+    "query": "What are the rules around power unit cost allocation between teams and manufacturers?",
+    "difficulty": "hard",
+    "recall": 0.0,
+    "precision": 0.0,
+    "fact_accuracy": 0.75,
+    "expected": [
+      "3",
+      "4"
+    ],
+    "cited": [
+      "2.9",
+      "6.1",
+      "2.2",
+      "10",
+      "6",
+      "2.1",
+      "2",
+      "13"
+    ],
+    "hits": [],
+    "key_facts_found": 3,
+    "key_facts_total": 4,
+    "time": 30.86483931541443,
+    "steps": [
+      {
+        "step": 1,
+        "thought": "The current articles contain the necessary provisions on how Power Unit (PU) costs are allocated between teams and manufacturers, including the need to recharge PU activities at Fair Value and the treatment of related\u2011party PU transactions.",
+        "action": "ANSWER",
+        "query": "What are the rules around power unit cost allocation between teams and manufacturers?"
+      }
+    ],
+    "retrieved_count": 10
+  }
+]
