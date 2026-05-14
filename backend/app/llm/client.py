@@ -3,6 +3,7 @@ import asyncio
 import httpx
 import json
 import logging
+import re
 from typing import List
 
 from app.config import settings
@@ -29,7 +30,8 @@ You can perform up to 3 research steps. In each step, you can either:
 
 CITATION RULES:
 - ALWAYS cite articles using the exact article_code from the context, e.g. [Article C4.1] or [Article 54].
-- Each factual claim MUST have a citation. No exceptions.
+- Cite ONLY the articles that directly answer the question. Do NOT cite every article in context — only those whose content you actually reference in your answer.
+- Aim for precision: typically 2-5 citations is appropriate. Only cite more if the question genuinely spans many articles.
 - If you don't have enough information to answer accurately, say "I don't have enough information in the current regulations to answer this definitively" rather than guessing.
 - Do NOT invent or hallucinate article numbers. Only cite codes that appear in CURRENT CONTEXT.
 - Pay attention to the year and section of each article — do not mix regulations from different years unless the question asks for comparison.
@@ -239,7 +241,7 @@ class LLMClient:
                 timeout=60.0,
             )
             answer = data["choices"][0]["message"]["content"]
-            return answer, self._extract_citations(articles)
+            return answer, self._extract_citations(articles, answer)
         except OpenRouterError:
             raise
 
@@ -312,9 +314,32 @@ class LLMClient:
             context_parts.append("\n".join(lines) + f"\n\n{content}\n")
         return "\n---\n".join(context_parts)
 
-    def _extract_citations(self, articles: List[Article]) -> List[Citation]:
+    # Pattern to find [Article X.Y.z] citations in LLM answers
+    _CITATION_PATTERN = re.compile(r'\[Article\s+([A-Za-z]*\d+(?:\.\d+)*(?:\.[a-z])?)\]')
+
+    def _extract_cited_codes(self, answer: str) -> set[str]:
+        """Extract article codes actually cited in the LLM's answer text."""
+        return set(self._CITATION_PATTERN.findall(answer))
+
+    def _extract_citations(
+        self, articles: List[Article], answer: str | None = None
+    ) -> List[Citation]:
+        """Build Citation objects from articles.
+
+        If *answer* is provided, only articles whose code appears as
+        ``[Article X.Y]`` in the text are included (precision filter).
+        Falls back to all articles when *answer* is None or empty.
+        """
+        cited_codes: set[str] | None = None
+        if answer:
+            cited_codes = self._extract_cited_codes(answer)
+
         citations = []
         for article in articles:
+            # If we have cited codes from the answer, skip articles not cited
+            if cited_codes and article.article_code not in cited_codes:
+                continue
+
             max_len = 1800
             raw = article.content[:max_len]
             last_period = max(raw.rfind(". "), raw.rfind(".\n"), raw.rfind("! "), raw.rfind("? "))

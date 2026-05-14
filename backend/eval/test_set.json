@@ -2,7 +2,7 @@
   "metadata": {
     "version": "1.1",
     "created": "2026-05-07",
-    "updated": "2026-05-12",
+    "updated": "2026-05-14",
     "description": "Evaluation test set for F1 Regulations RAG Engine. Each query has expected article codes and key facts to verify retrieval quality and answer accuracy.",
     "coverage": {
       "technical": 8,
@@ -156,61 +156,58 @@
       "id": "fin_01",
       "query": "What is the cost cap limit for F1 teams?",
       "expected_section": "Financial",
-      "expected_year": 2026,
-      "expected_articles": ["2.2", "2.3"],
+      "expected_year": null,
+      "expected_articles": ["2.3", "D4.1", "D8"],
       "key_facts": ["cost cap", "USD"],
       "difficulty": "easy",
-      "notes": "Art 2.2 = costs must not exceed cap. Art 2.3 = defines the actual cap amount (US Dollars 95,000,000)."
+      "notes": "2025: Art 2.3 has the cap amount. 2026: D4.1 (currency tables) or D8 (administration). No year filter to allow both."
     },
     {
       "id": "fin_02",
       "query": "What costs are excluded from the cost cap calculation?",
       "expected_section": "Financial",
       "expected_year": null,
-      "expected_articles": ["3", "4"],
+      "expected_articles": ["3", "D5", "D6"],
       "key_facts": ["excluded", "cost", "driver", "marketing"],
       "difficulty": "medium",
-      "notes": "Exclusion list spans multiple sub-articles"
+      "notes": "2025: Art 3/4 exclusions. 2026: D5 (exclusions) + D6 (adjustments). Accept any."
     },
     {
       "id": "fin_03",
       "query": "What reporting obligations do teams have under financial regulations?",
       "expected_section": "Financial",
       "expected_year": null,
-      "expected_articles": ["5", "6"],
+      "expected_articles": ["6", "D7", "D8"],
       "key_facts": ["report", "submission", "audit", "deadline"],
       "difficulty": "medium",
-      "notes": "Reporting requirements articles"
+      "notes": "2025: Art 5/6. 2026: D7 (reporting) + D8 (administration). Accept any."
     },
     {
       "id": "fin_04",
       "query": "What penalties exist for breaching the cost cap?",
       "expected_section": "Financial",
       "expected_year": null,
-      "expected_articles": ["8", "9"],
+      "expected_articles": ["8", "D10", "D12"],
       "key_facts": ["breach", "penalty", "minor", "material"],
       "difficulty": "medium",
-      "notes": "Breach categories and penalties"
+      "notes": "2025: Art 8/9. 2026: D10 (breaches) + D12 (sanctions). Accept any."
     },
     {
       "id": "fin_05",
       "query": "How are related party transactions handled in the financial regulations?",
       "expected_section": "Financial",
       "expected_year": 2026,
-      "expected_articles": ["4", "4.1"],
+      "expected_articles": ["D5", "D6", "D6.1"],
       "key_facts": ["related party", "transaction", "fair value"],
       "difficulty": "hard",
-      "notes": "Related party provisions are within Article 4 (Excluded/Adjusted costs) sub-articles."
+      "notes": "2026 Section D: D5 (exclusions) and D6 (adjustments) contain related party provisions."
     },
     {
       "id": "fin_06",
       "query": "What are the rules around power unit cost allocation between teams and manufacturers?",
       "expected_section": "Financial",
       "expected_year": null,
-      "expected_articles": ["4", "3"],
+      "expected_articles": ["E2", "E3", "2", "3"],
       "key_facts": ["power unit", "cost", "manufacturer", "supply"],
       "difficulty": "hard",
-      "notes": "Cross-reference between financial and technical concepts"
-    }
-  ]
-}
+      "notes": "2026 PU Financial: Section E (E2/E3). 2025 PU Fina

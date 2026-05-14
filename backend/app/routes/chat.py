@@ -201,7 +201,7 @@ async def chat(
                 )
                 return ChatResponse(
                     answer=_AI_UNAVAILABLE,
-                    citations=llm_client._extract_citations(all_retrieved_articles),
+                    citations=llm_client._extract_citations(all_retrieved_articles, None),
                     retrieved_count=len(all_retrieved_articles),
                     research_steps=research_history
                 )
@@ -215,8 +215,8 @@ async def chat(
 
             if result.get("action") == "ANSWER":
                 answer = result.get("answer")
-                citations = llm_client._extract_citations(all_retrieved_articles)
-                codes = [a.article_code for a in all_retrieved_articles]
+                citations = llm_client._extract_citations(all_retrieved_articles, answer)
+                codes = [c.article_code for c in citations]
 
                 display_steps = research_history
                 if len(research_history) == 1:

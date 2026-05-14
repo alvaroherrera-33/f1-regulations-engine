@@ -81,4 +81,26 @@ def main():
     else:
         existing = {"timestamp": time.strftime("%Y-%m-%d %H:%M:%S"), "results": []}
 
-    # S
+    # Skip if already done
+    done_ids = {r["id"] for r in existing["results"]}
+    q = queries[idx]
+    if q["id"] in done_ids:
+        print(f"SKIP {q['id']} (already done)")
+        return
+
+    print(f"[{idx+1}/{len(queries)}] {q['id']}: {q['query'][:70]}...", flush=True)
+    result = evaluate_query(q)
+    existing["results"].append(result)
+
+    with open(RESULTS_FILE, "w") as f:
+        json.dump(existing, f, indent=2)
+
+    err = result.get("error", "")
+    if err:
+        print(f"  ERROR: {err}", flush=True)
+    else:
+        print(f"  P={result['P']:.0%} R={result['R']:.0%} F={result['F']:.0%} {result['ms']/1000:.1f}s", flush=True)
+
+
+if __name__ == "__main__":
+    main()

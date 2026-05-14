@@ -8,6 +8,7 @@ const NAV_LINKS = [
     { href: '/chat',    label: 'Chat' },
     { href: '/upload',  label: 'Upload' },
     { href: '/stats',   label: 'Stats' },
+    { href: '/about',   label: 'About' },
     { href: '/docs',    label: 'API Docs', external: true },
 ];
 
