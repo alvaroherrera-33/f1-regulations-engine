@@ -120,7 +120,7 @@
       "expected_articles": ["39", "39.1", "39.2"],
       "key_facts": ["qualifying", "Q1", "Q2", "Q3", "eliminated"],
       "difficulty": "medium",
-      "notes": "2025 Sporting: Art 39 = QUALIFYING AND SPRINT QUALIFYING SESSIONS. In 2026, qualifying is in B3 area."
+      "notes": "2025 Sporting: Art 39 = QUALIFYING AND SPRINT QUALIFYING SESSIONS"
     },
     {
       "id": "sport_04",
@@ -160,7 +160,7 @@
       "expected_articles": ["2.3", "D4.1", "D8"],
       "key_facts": ["cost cap", "USD"],
       "difficulty": "easy",
-      "notes": "2025: Art 2.3 has the cap amount. 2026: D4.1 (currency tables) or D8 (administration). No year filter to allow both."
+      "notes": "2025: Art 2.3 has the cap amount. 2026: D4.1 or D8. No year filter."
     },
     {
       "id": "fin_02",
@@ -170,7 +170,7 @@
       "expected_articles": ["3", "D5", "D6"],
       "key_facts": ["excluded", "cost", "driver", "marketing"],
       "difficulty": "medium",
-      "notes": "2025: Art 3/4 exclusions. 2026: D5 (exclusions) + D6 (adjustments). Accept any."
+      "notes": "2025: Art 3/4 exclusions. 2026: D5 + D6. Accept any."
     },
     {
       "id": "fin_03",
@@ -180,7 +180,7 @@
       "expected_articles": ["6", "D7", "D8"],
       "key_facts": ["report", "submission", "audit", "deadline"],
       "difficulty": "medium",
-      "notes": "2025: Art 5/6. 2026: D7 (reporting) + D8 (administration). Accept any."
+      "notes": "2025: Art 5/6. 2026: D7 + D8. Accept any."
     },
     {
       "id": "fin_04",
@@ -190,7 +190,7 @@
       "expected_articles": ["8", "D10", "D12"],
       "key_facts": ["breach", "penalty", "minor", "material"],
       "difficulty": "medium",
-      "notes": "2025: Art 8/9. 2026: D10 (breaches) + D12 (sanctions). Accept any."
+      "notes": "2025: Art 8/9. 2026: D10 + D12. Accept any."
     },
     {
       "id": "fin_05",
@@ -200,7 +200,7 @@
       "expected_articles": ["D5", "D6", "D6.1"],
       "key_facts": ["related party", "transaction", "fair value"],
       "difficulty": "hard",
-      "notes": "2026 Section D: D5 (exclusions) and D6 (adjustments) contain related party provisions."
+      "notes": "2026 Section D: D5 and D6 contain related party provisions."
     },
     {
       "id": "fin_06",
@@ -210,4 +210,7 @@
       "expected_articles": ["E2", "E3", "2", "3"],
       "key_facts": ["power unit", "cost", "manufacturer", "supply"],
       "difficulty": "hard",
-      "notes": "2026 PU Financial: Section E (E2/E3). 2025 PU Fina
+      "notes": "2026 PU Financial: Section E (E2/E3). 2025 PU Financial: Art 2/3. Accept any."
+    }
+  ]
+}

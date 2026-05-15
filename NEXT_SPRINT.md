@@ -54,9 +54,22 @@
 - Financial recall very low (17%) — retriever finds Financial articles but not the specific expected sub-articles
 - Precision low across the board (~7%) — system over-retrieves many related articles (by design, agentic loop does multiple searches)
 
+### Eval v3 — Citation Filter (2026-05-15) ✅
+- Citation precision fix deployed: `_extract_citations()` now filters to only articles cited in LLM answer
+- AGENTIC_PROMPT updated: "cite only directly relevant articles (2-5)"
+- **eval_v3** (18/20 queries, 2 timeout):
+  - Avg Recall: 48.1%, Avg Precision: 11.7%, Avg Fact Acc: 55.1%
+  - Perfect Recall: 6/18
+  - Technical: R=50% P=19%, Sporting: R=72% P=8%, Financial: R=8% P=2%
+  - Precision improved from 7% → 11.7% (citation filter working)
+  - Avg citations per response: 14 → 9.9
+  - Recall/fact accuracy drops likely due to LLM non-determinism between runs
+
 ### Pendiente
-- Improve Financial regulations retrieval (test_set expected_articles may need review)
+- Financial recall still very low (8%) — retriever + LLM struggle with D/E prefix articles
+- LLM still over-cites (avg 9.9 citations vs target 2-5) — consider stronger prompt or post-processing
 - Consider adding more test queries for edge cases
+- Audit Sporting 2026 coverage (only 1 doc/150 articles vs 2 docs/816 for 2025)
 
 ---
 
