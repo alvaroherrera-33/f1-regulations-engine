@@ -317,9 +317,36 @@ class LLMClient:
     # Pattern to find [Article X.Y.z] citations in LLM answers
     _CITATION_PATTERN = re.compile(r'\[Article\s+([A-Za-z]*\d+(?:\.\d+)*(?:\.[a-z])?)\]')
 
-    def _extract_cited_codes(self, answer: str) -> set[str]:
-        """Extract article codes actually cited in the LLM's answer text."""
-        return set(self._CITATION_PATTERN.findall(answer))
+    # Hard cap on citation cards returned to the frontend
+    MAX_CITATIONS = 8
+
+    def _extract_cited_codes_ordered(self, answer: str) -> list[str]:
+        """Extract article codes cited in the answer, in order of first appearance, deduplicated."""
+        seen: set[str] = set()
+        ordered: list[str] = []
+        for code in self._CITATION_PATTERN.findall(answer):
+            if code not in seen:
+                seen.add(code)
+                ordered.append(code)
+        return ordered
+
+    @staticmethod
+    def _prune_parent_codes(codes: list[str]) -> list[str]:
+        """Remove parent codes when a more specific child is also cited.
+
+        E.g. if both 'C3' and 'C3.9' are cited, drop 'C3' because
+        the child is more specific and the parent adds noise.
+        """
+        code_set = set(codes)
+        pruned = []
+        for code in codes:
+            # Check if any other code starts with this code + "."
+            is_parent = any(
+                other.startswith(code + ".") for other in code_set if other != code
+            )
+            if not is_parent:
+                pruned.append(code)
+        return pruned
 
     def _extract_citations(
         self, articles: List[Article], answer: str | None = None
@@ -328,40 +355,13 @@ class LLMClient:
 
         If *answer* is provided, only articles whose code appears as
         ``[Article X.Y]`` in the text are included (precision filter).
+        Parent codes are pruned when children exist, and a hard cap
+        of MAX_CITATIONS is applied.
         Falls back to all articles when *answer* is None or empty.
         """
-        cited_codes: set[str] | None = None
+        cited_codes_ordered: list[str] | None = None
         if answer:
-            cited_codes = self._extract_cited_codes(answer)
+            raw_codes = self._extract_cited_codes_ordered(answer)
+            cited_codes_ordered = self._prune_parent_codes(raw_codes)
 
-        citations = []
-        for article in articles:
-            # If we have cited codes from the answer, skip articles not cited
-            if cited_codes and article.article_code not in cited_codes:
-                continue
-
-            max_len = 1800
-            raw = article.content[:max_len]
-            last_period = max(raw.rfind(". "), raw.rfind(".\n"), raw.rfind("! "), raw.rfind("? "))
-            if last_period > 200:
-                excerpt = raw[: last_period + 1]
-            else:
-                excerpt = raw + ("..." if len(article.content) > max_len else "")
-            citations.append(Citation(
-                article_code=article.article_code,
-                title=article.title,
-                excerpt=excerpt,
-                year=article.year,
-                section=article.section,
-                issue=article.issue,
-            ))
-        return citations
-
-
-async def generate_answer_with_citations(
-    query: str,
-    articles: List[Article],
-) -> tuple[str, List[Citation]]:
-    """Convenience function used by the fallback path in chat.py."""
-    client = LLMClient()
-    return await client.generate_answer(query, articles)
+        # Build a lookup for
