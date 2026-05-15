@@ -65,11 +65,33 @@
   - Avg citations per response: 14 → 9.9
   - Recall/fact accuracy drops likely due to LLM non-determinism between runs
 
+### Eval v4 — Citation Cap + Parent Matching (2026-05-15) ✅
+- MAX_CITATIONS=8 cap deployed, parent code pruning active
+- Parent-matching scoring in eval (D12.1 counts as matching D12)
+- **eval_v4** (19/20 queries, 1 timeout):
+  - Avg Recall: 47.4%, Avg Precision: 44.1%, Avg Fact Acc: 82.1%
+  - Perfect Recall: 5/19
+  - Technical: R=36% P=39% F=81%, Sporting: R=78% P=52% F=83%, Financial: R=30% P=42% F=82%
+  - **Precision jumped 9.3% → 44.1%** (4.7x improvement from citation filtering + cap)
+  - **Fact accuracy: 82.1%** (best across all evals, +24.2pp vs baseline)
+  - **Avg citations: 4.2** (in target range 2-5, down from ~20 in baseline)
+  - Recall dropped vs baseline (47.4% vs 70.8%) — expected trade-off: only LLM-cited articles count
+
+### Comparison Across Evals
+| Metric | Baseline | PostChunk | v3 | v4 |
+|--------|----------|-----------|-----|-----|
+| Recall | 70.8% | 56.7% | 48.1% | 47.4% |
+| Precision | 9.3% | ~7% | 11.7% | **44.1%** |
+| Fact Accuracy | 57.9% | 78.8% | 55.1% | **82.1%** |
+| Avg Citations | ~20 | ~14 | 9.9 | **4.2** |
+
 ### Pendiente
-- Financial recall still very low (8%) — retriever + LLM struggle with D/E prefix articles
-- LLM still over-cites (avg 9.9 citations vs target 2-5) — consider stronger prompt or post-processing
-- Consider adding more test queries for edge cases
-- Audit Sporting 2026 coverage (only 1 doc/150 articles vs 2 docs/816 for 2025)
+- Technical recall low (36%) — broad queries (floor/diffuser, PU, tyres) retrieve wrong articles
+- Financial recall still low (30%) — D/E prefix articles + numeric-only titles hurt retrieval
+- fin_01 and fin_05: 0% recall — cost cap amount and related party queries miss expected articles
+- tech_02 consistently times out (coordinate conventions query triggers expensive multi-step search)
+- LLM sometimes doesn't use [Article X.Y] format → 0 citations returned (tech_04)
+- Consider enriching Financial article embeddings with parent titles to improve retrieval
 
 ---
 
@@ -228,55 +250,4 @@ Contenido:
 - Cómo funciona la búsqueda híbrida + RRF
 - Link al repo de GitHub
 
-### 3.5 Métricas visibles en cada respuesta del chat
-
-**Archivos:** `frontend/components/ChatInterface.tsx`, `frontend/lib/api.ts`
-
-Mostrar debajo de cada respuesta: "8 articles · 2 steps · 3.2s"
-
-Los datos ya están en `ChatResponse` (`retrieved_count`, `research_steps`). Solo falta calcular tiempo en el frontend y renderizarlo.
-
-### 3.6 Navbar: añadir link a About y Stats
-
-**Archivo:** `frontend/components/Navbar.tsx`
-
-Añadir "About" y "Stats" a `NAV_LINKS`.
-
----
-
-## FASE 4 — Operaciones (~1h) 🟢
-
-### 4.1 UptimeRobot para cold start
-
-Configurar ping a `https://f1-regulations-engine.onrender.com/warmup` cada 10 minutos.
-
-### 4.2 Verificar post-ingestión
-
-```sql
-SELECT section, year, COUNT(*) FROM articles
-WHERE LENGTH(content) < 50
-GROUP BY section, year;
--- Esperado: 0 filas
-```
-
----
-
-## Orden de ejecución recomendado
-
-```
-Fase 1 (Eval) → Baseline
-    ↓
-Fase 2 (RAG) → Eval post-cambios → comparar con baseline
-    ↓
-Fase 3 (UI) → independiente del RAG
-    ↓
-Fase 4 (Ops) → cierre
-```
-
-## Qué NO tocar
-
-- RRF k=60 (parámetro académico estándar)
-- Lógica de deduplicación del retriever (funciona correctamente)
-- El parser sin leer `.claude/learnings.md` primero
-- DATABASE_URL de producción (Session Pooler, no direct connection)
-- Embeddings model (all-MiniLM-L6-v2) — cambiar requiere re-embeber todo
+### 3.5 Métricas visibles en cada respuesta del 

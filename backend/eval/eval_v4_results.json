@@ -1,0 +1,52 @@
+{
+  "metadata": {
+    "version": "v4",
+    "date": "2026-05-15",
+    "description": "Citation cap (MAX_CITATIONS=8) + parent code pruning + parent-matching scoring",
+    "commit": "a3521cf",
+    "notes": "tech_02 timed out. Re-ran tech_04-07 after Render deployed new code."
+  },
+  "summary": {
+    "queries_completed": 19,
+    "queries_timeout": 1,
+    "avg_recall": 0.474,
+    "avg_precision": 0.441,
+    "avg_fact_accuracy": 0.821,
+    "avg_time_s": 24.0,
+    "avg_citations": 4.2,
+    "perfect_recall": 5
+  },
+  "by_section": {
+    "Technical": {"queries": 7, "recall": 0.36, "precision": 0.39, "fact_accuracy": 0.81},
+    "Sporting": {"queries": 6, "recall": 0.78, "precision": 0.52, "fact_accuracy": 0.83},
+    "Financial": {"queries": 6, "recall": 0.30, "precision": 0.42, "fact_accuracy": 0.82}
+  },
+  "comparison": {
+    "baseline": {"recall": 0.708, "precision": 0.093, "fact_accuracy": 0.579, "avg_citations": 20},
+    "post_chunking": {"recall": 0.567, "precision": 0.07, "fact_accuracy": 0.788, "avg_citations": 14},
+    "v3": {"recall": 0.481, "precision": 0.117, "fact_accuracy": 0.551, "avg_citations": 9.9},
+    "v4": {"recall": 0.474, "precision": 0.441, "fact_accuracy": 0.821, "avg_citations": 4.2}
+  },
+  "results": [
+    {"id": "tech_01", "recall": 1.0, "precision": 1.0, "fact_accuracy": 1.0, "citations": 1, "time_s": 5.9},
+    {"id": "tech_02", "timeout": true},
+    {"id": "tech_03", "recall": 0.5, "precision": 1.0, "fact_accuracy": 1.0, "citations": 8, "time_s": 35.0},
+    {"id": "tech_04", "recall": 0.0, "precision": 0.0, "fact_accuracy": 0.67, "citations": 0, "time_s": 32.2},
+    {"id": "tech_05", "recall": 0.0, "precision": 0.0, "fact_accuracy": 1.0, "citations": 1, "time_s": 25.2},
+    {"id": "tech_06", "recall": 0.0, "precision": 0.0, "fact_accuracy": 0.33, "citations": 3, "time_s": 33.1},
+    {"id": "tech_07", "recall": 0.0, "precision": 0.0, "fact_accuracy": 0.67, "citations": 2, "time_s": 6.9},
+    {"id": "tech_08", "recall": 1.0, "precision": 0.75, "fact_accuracy": 1.0, "citations": 8, "time_s": 28.4},
+    {"id": "sport_01", "recall": 1.0, "precision": 1.0, "fact_accuracy": 0.5, "citations": 2, "time_s": 20.5},
+    {"id": "sport_02", "recall": 0.5, "precision": 0.62, "fact_accuracy": 1.0, "citations": 8, "time_s": 23.0},
+    {"id": "sport_03", "recall": 0.67, "precision": 0.25, "fact_accuracy": 1.0, "citations": 8, "time_s": 24.8},
+    {"id": "sport_04", "recall": 1.0, "precision": 0.5, "fact_accuracy": 1.0, "citations": 2, "time_s": 28.9},
+    {"id": "sport_05", "recall": 0.5, "precision": 0.5, "fact_accuracy": 0.75, "citations": 8, "time_s": 24.2},
+    {"id": "sport_06", "recall": 1.0, "precision": 0.25, "fact_accuracy": 0.75, "citations": 4, "time_s": 31.1},
+    {"id": "fin_01", "recall": 0.0, "precision": 0.0, "fact_accuracy": 0.5, "citations": 8, "time_s": 20.0},
+    {"id": "fin_02", "recall": 0.33, "precision": 1.0, "fact_accuracy": 1.0, "citations": 2, "time_s": 34.9},
+    {"id": "fin_03", "recall": 0.67, "precision": 0.5, "fact_accuracy": 0.75, "citations": 8, "time_s": 21.8},
+    {"id": "fin_04", "recall": 0.33, "precision": 0.67, "fact_accuracy": 1.0, "citations": 3, "time_s": 28.5},
+    {"id": "fin_05", "recall": 0.0, "precision": 0.0, "fact_accuracy": 0.67, "citations": 0, "time_s": 22.5},
+    {"id": "fin_06", "recall": 0.5, "precision": 0.33, "fact_accuracy": 1.0, "citations": 3, "time_s": 8.4}
+  ]
+}
