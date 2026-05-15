@@ -364,4 +364,52 @@ class LLMClient:
             raw_codes = self._extract_cited_codes_ordered(answer)
             cited_codes_ordered = self._prune_parent_codes(raw_codes)
 
+        # Build a lookup for fast article matching
+        article_map: dict[str, Article] = {a.article_code: a for a in articles}
+
+        citations = []
+        if cited_codes_ordered:
+            # Iterate in order of appearance in answer text
+            for code in cited_codes_ordered:
+                if code not in article_map:
+                    continue
+                if len(citations) >= self.MAX_CITATIONS:
+                    break
+                article = article_map[code]
+                citations.append(self._make_citation(article))
+        else:
+            # Fallback: return all (capped)
+            for article in articles[:self.MAX_CITATIONS]:
+                citations.append(self._make_citation(article))
+
+        return citations
+
+    @staticmethod
+    def _make_citation(article: "Article") -> Citation:
+        """Create a Citation from an Article, truncating content at a sentence boundary."""
+        max_len = 1800
+        raw = article.content[:max_len]
+        last_period = max(raw.rfind(". "), raw.rfind(".\n"), raw.rfind("! "), raw.rfind("? "))
+        if last_period > 200:
+            excerpt = raw[:last_period + 1]
+        else:
+            excerpt = raw + ("..." if len(article.content) > max_len else "")
+        return Citation(
+            article_code=article.article_code,
+            title=article.title,
+            excerpt=excerpt,
+            year=article.year,
+            section=article.section,
+            issue=article.issue,
+        )
+
+
+async def generate_answer_with_citations(
+    query: str,
+    articles: List[Article],
+) -> tuple[str, List[Citation]]:
+    """Convenience function used by the fallback path in chat.py."""
+    client = LLMClient()
+    return await client.generate_answer(query, articles)
+
         # Build a lookup for
