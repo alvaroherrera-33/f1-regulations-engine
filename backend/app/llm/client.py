@@ -314,20 +314,32 @@ class LLMClient:
             context_parts.append("\n".join(lines) + f"\n\n{content}\n")
         return "\n---\n".join(context_parts)
 
-    # Pattern to find [Article X.Y.z] citations in LLM answers
+    # Primary pattern: [Article X.Y.z] (preferred format)
     _CITATION_PATTERN = re.compile(r'\[Article\s+([A-Za-z]*\d+(?:\.\d+)*(?:\.[a-z])?)\]')
+    # Fallback pattern: "Article X.Y" without brackets (common LLM deviation)
+    _CITATION_FALLBACK = re.compile(r'(?<!\[)Article\s+([A-Za-z]*\d+(?:\.\d+)*(?:\.[a-z])?)(?!\])')
 
     # Hard cap on citation cards returned to the frontend
     MAX_CITATIONS = 8
 
     def _extract_cited_codes_ordered(self, answer: str) -> list[str]:
-        """Extract article codes cited in the answer, in order of first appearance, deduplicated."""
+        """Extract article codes cited in the answer, in order of first appearance, deduplicated.
+
+        Tries the preferred [Article X.Y] format first. If that yields nothing,
+        falls back to unbracketed 'Article X.Y' mentions.
+        """
         seen: set[str] = set()
         ordered: list[str] = []
         for code in self._CITATION_PATTERN.findall(answer):
             if code not in seen:
                 seen.add(code)
                 ordered.append(code)
+        # Fallback: if no bracketed citations found, try unbracketed
+        if not ordered:
+            for code in self._CITATION_FALLBACK.findall(answer):
+                if code not in seen:
+                    seen.add(code)
+                    ordered.append(code)
         return ordered
 
     @staticmethod
@@ -411,5 +423,3 @@ async def generate_answer_with_citations(
     """Convenience function used by the fallback path in chat.py."""
     client = LLMClient()
     return await client.generate_answer(query, articles)
-
-        # Build a lookup for
