@@ -21,18 +21,22 @@ export default function ComparePage() {
     const [result, setResult] = useState<{ a: ArticleVersion | null; b: ArticleVersion | null } | null>(null);
     const [error, setError] = useState('');
 
-    const compare = async () => {
-        if (!code.trim()) return;
+    const compare = async (overrideCode?: string) => {
+        const target = (overrideCode ?? code).trim();
+        if (!target) return;
         setLoading(true);
         setError('');
         setResult(null);
         try {
-            const res = await fetch(API + '/api/compare?code=' + encodeURIComponent(code.trim()) + '&year_a=' + yearA + '&year_b=' + yearB);
-            if (!res.ok) throw new Error('Not found');
+            const res = await fetch(API + '/api/compare?code=' + encodeURIComponent(target) + '&year_a=' + yearA + '&year_b=' + yearB);
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.detail || 'Not found');
+            }
             const data = await res.json();
             setResult({ a: data.version_a, b: data.version_b });
-        } catch {
-            setError('Could not find that article. Check the code and try again.');
+        } catch (e: any) {
+            setError(e.message || 'Could not find that article. Check the code and try again.');
         } finally {
             setLoading(false);
         }
@@ -76,7 +80,7 @@ export default function ComparePage() {
 
                 <div style={styles.chips}>
                     {CHIPS.map(c => (
-                        <button key={c} className="example-btn" onClick={() => { setCode(c); }} style={styles.chip}>{c}</button>
+                        <button key={c} className="example-btn" onClick={() => { setCode(c); compare(c); }} style={styles.chip}>{c}</button>
                     ))}
                 </div>
 
@@ -141,6 +145,4 @@ const styles: Record<string, React.CSSProperties> = {
     panelYear: { fontSize: '0.72rem', color: '#eb0000', fontWeight: 600 },
     panelCode: { fontFamily: 'monospace', fontSize: '0.82rem', color: '#ccc', fontWeight: 600 },
     panelBadge: { background: 'rgba(255,255,255,0.04)', borderRadius: '4px', padding: '0.12rem 0.4rem', fontSize: '0.68rem', color: '#666', fontWeight: 500 },
-    panelTitle: { fontSize: '0.9rem', color: '#ccc', fontWeight: 500, marginBottom: '0.75rem', lineHeight: 1.4 },
-    panelContent: { fontSize: '0.82rem', color: '#888', lineHeight: 1.7, whiteSpace: 'pre-wrap' },
-};
+    pan
