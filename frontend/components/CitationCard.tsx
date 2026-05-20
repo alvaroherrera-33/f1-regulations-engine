@@ -18,8 +18,8 @@ export default function CitationCard({ citation, index }: CitationCardProps) {
 
     const handleCopy = async () => {
         const text = [
-            `[${citation.article_code}] ${citation.title}`,
-            `${citation.section} Regulations ${citation.year} -- Issue ${citation.issue}`,
+            '[' + citation.article_code + '] ' + citation.title,
+            citation.section + ' Regulations ' + citation.year + ' - Issue ' + citation.issue,
             '',
             citation.excerpt,
         ].join('\n');
@@ -71,16 +71,16 @@ export default function CitationCard({ citation, index }: CitationCardProps) {
 }
 
 const styles: Record<string, React.CSSProperties> = {
-    card: { background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: '10px', padding: '1rem', marginBottom: '0.75rem' },
-    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem', flexWrap: 'wrap', gap: '0.5rem' },
-    headerLeft: { display: 'flex', alignItems: 'center', gap: '0.5rem' },
-    headerRight: { display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' },
-    number: { background: '#667eea', color: '#fff', borderRadius: '50%', width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.72rem', fontWeight: 'bold', flexShrink: 0 },
-    code: { fontFamily: 'monospace', fontSize: '0.9rem', color: '#eb0000', fontWeight: 'bold' },
-    badge: { background: 'rgba(235,0,0,0.07)', border: '1px solid rgba(235,0,0,0.18)', borderRadius: '4px', padding: '0.15rem 0.45rem', fontSize: '0.68rem', color: '#ff6666', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.04em' },
-    copyBtn: { background: 'transparent', border: '1px solid #444', borderRadius: '4px', color: '#888', padding: '0.15rem 0.5rem', fontSize: '0.7rem', cursor: 'pointer', whiteSpace: 'nowrap' },
-    copyBtnDone: { borderColor: '#22c55e', color: '#22c55e' },
-    title: { fontSize: '0.95rem', marginBottom: '0.6rem', color: '#e8e8e8', fontWeight: '600', lineHeight: '1.4' },
-    excerpt: { fontSize: '0.87rem', lineHeight: '1.65', color: '#bbb', marginBottom: '0.5rem', paddingLeft: '0.85rem', borderLeft: '2px solid #333' },
-    toggleBtn: { background: 'transparent', border: 'none', color: '#667eea', cursor: 'pointer', fontSize: '0.78rem', padding: 0 },
+    card: { background: 'transparent', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '0.75rem 0', marginBottom: '0' },
+    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem', flexWrap: 'wrap', gap: '0.4rem' },
+    headerLeft: { display: 'flex', alignItems: 'center', gap: '0.4rem' },
+    headerRight: { display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' },
+    number: { color: '#555', fontSize: '0.7rem', fontWeight: 500, flexShrink: 0, fontVariantNumeric: 'tabular-nums' },
+    code: { fontFamily: 'monospace', fontSize: '0.82rem', color: '#eb0000', fontWeight: 600 },
+    badge: { background: 'rgba(255,255,255,0.04)', borderRadius: '4px', padding: '0.12rem 0.4rem', fontSize: '0.68rem', color: '#666', fontWeight: 500, letterSpacing: '0.02em' },
+    copyBtn: { background: 'transparent', border: 'none', color: '#444', padding: '0.1rem 0.3rem', fontSize: '0.68rem', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'color 0.15s' },
+    copyBtnDone: { color: '#22c55e' },
+    title: { fontSize: '0.85rem', marginBottom: '0.35rem', color: '#ccc', fontWeight: 500, lineHeight: 1.4 },
+    excerpt: { fontSize: '0.8rem', lineHeight: 1.6, color: '#888', marginBottom: '0.3rem' },
+    toggleBtn: { background: 'transparent', border: 'none', color: '#eb0000', cursor: 'pointer', fontSize: '0.72rem', padding: 0, opacity: 0.7 },
 };

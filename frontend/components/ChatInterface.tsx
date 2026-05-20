@@ -2,20 +2,17 @@
 
 import { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { sendChatQuery, submitFeedback, ChatResponse } from '@/lib/api';
+import { sendChatQuery, submitFeedback } from '@/lib/api';
 import CitationCard from './CitationCard';
 
-const EXAMPLE_QUERIES = [
+const EXAMPLES = [
     'What is the minimum weight of an F1 car in 2026?',
-    'How does the DRS system work?',
+    'How does DRS work under current regulations?',
+    'Explain the cost cap rules',
     'What are the power unit fuel flow limits?',
-    'Explain the cost cap regulations',
-    'What changed in 2026 technical regulations?',
-    'How are points awarded after a race?',
 ];
 
 const LOADING_MESSAGES = [
-    'Analyzing query...',
     'Searching regulations...',
     'Reading articles...',
     'Generating answer...',
@@ -25,234 +22,222 @@ interface Message {
     role: 'user' | 'assistant';
     content: string;
     citations?: any[];
-    researchSteps?: { step: number; thought: string; action: string; query: string; }[];
     timestamp: Date;
     queryId?: number;
     feedback?: 'up' | 'down';
     retrievedCount?: number;
-    researchStepCount?: number;
-    responseTimeMs?: number;
+    stepCount?: number;
+    timeMs?: number;
 }
 
-interface ChatInterfaceProps {
+interface Props {
     year: number | null;
     section: string | null;
     issue: number | null;
-    viewSettings: { showMarkdown: boolean; density: 'standard' | 'compact'; fontSize: 'small' | 'medium' | 'large'; };
-    onOpenSidebar?: () => void;
-    showSidebarButton?: boolean;
+    onYearChange: (y: number | null) => void;
+    onSectionChange: (s: string | null) => void;
+    onIssueChange: (i: number | null) => void;
 }
 
-export default function ChatInterface({ year, section, issue, viewSettings, onOpenSidebar, showSidebarButton }: ChatInterfaceProps) {
+export default function ChatInterface({ year, section, issue, onYearChange, onSectionChange, onIssueChange }: Props) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
-    const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
-    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const [loadingIdx, setLoadingIdx] = useState(0);
+    const [showFilters, setShowFilters] = useState(false);
+    const endRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        endRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, loading]);
 
-    // Cycle loading messages
     useEffect(() => {
-        if (!loading) { setLoadingMsgIdx(0); return; }
-        const t = setInterval(() => {
-            setLoadingMsgIdx(i => (i + 1) % LOADING_MESSAGES.length);
-        }, 1800);
+        if (!loading) { setLoadingIdx(0); return; }
+        const t = setInterval(() => setLoadingIdx(i => (i + 1) % LOADING_MESSAGES.length), 2000);
         return () => clearInterval(t);
     }, [loading]);
 
-    const getMessageStyle = (role: 'user' | 'assistant'): React.CSSProperties => ({
-        ...styles.message,
-        ...(role === 'user' ? styles.userMessage : styles.assistantMessage),
-        padding: viewSettings.density === 'compact' ? '0.5rem 0.75rem' : undefined,
-        fontSize: viewSettings.fontSize === 'small' ? '0.85rem' : viewSettings.fontSize === 'large' ? '1.1rem' : undefined,
-    });
+    const hasFilters = year || section || issue;
 
-    const sendQuery = async (query: string) => {
+    const send = async (query: string) => {
         if (!query.trim() || loading) return;
-        const userMessage: Message = { role: 'user', content: query, timestamp: new Date() };
-        setMessages(prev => [...prev, userMessage]);
+        setMessages(prev => [...prev, { role: 'user', content: query, timestamp: new Date() }]);
         setInput('');
         setLoading(true);
         const t0 = Date.now();
         try {
-            const response = await sendChatQuery({ query, year: year || undefined, section: section || undefined, issue: issue || undefined });
-            const elapsed = Date.now() - t0;
+            const res = await sendChatQuery({
+                query,
+                year: year || undefined,
+                section: section || undefined,
+                issue: issue || undefined,
+            });
             setMessages(prev => [...prev, {
                 role: 'assistant',
-                content: response.answer,
-                citations: response.citations,
-                researchSteps: response.research_steps,
+                content: res.answer,
+                citations: res.citations,
                 timestamp: new Date(),
-                queryId: response.query_id,
-                retrievedCount: response.retrieved_count,
-                researchStepCount: response.research_steps?.length || 0,
-                responseTimeMs: elapsed,
+                queryId: res.query_id,
+                retrievedCount: res.retrieved_count,
+                stepCount: res.research_steps?.length || 1,
+                timeMs: Date.now() - t0,
             }]);
-        } catch (error) {
-            setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${error instanceof Error ? error.message : 'Failed to get response'}`, timestamp: new Date() }]);
+        } catch (e: any) {
+            setMessages(prev => [...prev, {
+                role: 'assistant',
+                content: 'Something went wrong: ' + (e.message || 'Unknown error'),
+                timestamp: new Date(),
+            }]);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleSend = () => sendQuery(input);
-
-    const handleKeyPress = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
-    };
-
-    const handleFeedback = async (msgIndex: number, wasHelpful: boolean) => {
-        const msg = messages[msgIndex];
+    const handleFeedback = async (idx: number, helpful: boolean) => {
+        const msg = messages[idx];
         if (!msg.queryId || msg.feedback) return;
-        setMessages(prev => prev.map((m, i) =>
-            i === msgIndex ? { ...m, feedback: wasHelpful ? 'up' : 'down' } : m
-        ));
-        try { await submitFeedback(msg.queryId, wasHelpful); } catch { /* silent */ }
+        setMessages(prev => prev.map((m, i) => i === idx ? { ...m, feedback: helpful ? 'up' : 'down' } : m));
+        try { await submitFeedback(msg.queryId, helpful); } catch { /* silent */ }
     };
 
     return (
         <div style={styles.container}>
-            {/* Header */}
-            <div style={styles.header}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    {showSidebarButton && (
-                        <button onClick={onOpenSidebar} style={styles.hamburger} title="Open filters">
-                            ☰
-                        </button>
-                    )}
-                    <h2 style={styles.title}>Chat with Regulations</h2>
-                </div>
-                {messages.length > 0 && (
-                    <button onClick={() => setMessages([])} style={styles.clearButton}>Clear</button>
-                )}
-            </div>
-
             {/* Messages */}
-            <div style={styles.messagesContainer}>
-                {messages.length === 0 && (
-                    <div style={styles.emptyState}>
-                        <div style={styles.emptyIcon}>
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#eb0000" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 17h14M5 17l-1-4h16l-1 4M5 17H3v2h18v-2h-2M7 13l1.5-6h7L17 13M9 17v2M15 17v2"/></svg>
-                        </div>
-                        <h3 style={styles.emptyTitle}>Ask a question about F1 regulations</h3>
-                        <p style={styles.emptyText}>Try one of these examples or type your own:</p>
-                        <div style={styles.exampleGrid}>
-                            {EXAMPLE_QUERIES.map(q => (
-                                <button key={q} style={styles.exampleChip} onClick={() => sendQuery(q)}>
-                                    {q}
-                                </button>
+            <div style={styles.messages}>
+                {messages.length === 0 && !loading && (
+                    <div style={styles.empty}>
+                        <h2 style={styles.emptyTitle}>What do you want to know?</h2>
+                        <p style={styles.emptyHint}>Ask about any F1 regulation - Technical, Sporting, or Financial.</p>
+                        <div style={styles.examples}>
+                            {EXAMPLES.map(q => (
+                                <button key={q} className="example-btn" onClick={() => send(q)} style={styles.exampleBtn}>{q}</button>
                             ))}
                         </div>
                     </div>
                 )}
 
                 {messages.map((msg, i) => (
-                    <div key={i} style={styles.messageWrapper}>
-                        <div style={getMessageStyle(msg.role)}>
-                            <div style={styles.messageHeader}>
-                                <span style={styles.messageRole}>{msg.role === 'user' ? 'You' : 'Assistant'}</span>
-                                <span style={styles.messageTime}>{msg.timestamp.toLocaleTimeString()}</span>
-                            </div>
-                            <div style={styles.messageContent}>
-                                {viewSettings.showMarkdown
-                                    ? <ReactMarkdown>{msg.content}</ReactMarkdown>
-                                    : msg.content}
-                            </div>
-                            {msg.researchSteps && msg.researchSteps.length > 0 && (
-                                <div style={styles.researchContainer}>
-                                    <h5 style={styles.researchTitle}>Research Process</h5>
-                                    {msg.researchSteps.map((step, si) => (
-                                        <div key={si} style={styles.researchStep}>
-                                            <div style={styles.researchThought}><strong>Step {step.step}:</strong> {step.thought}</div>
-                                            {step.action === 'SEARCH' && (
-                                                <div style={styles.researchAction}>Searching: <code>{step.query}</code></div>
-                                            )}
-                                        </div>
-                                    ))}
+                    <div key={i} style={styles.msgWrap}>
+                        <div style={msg.role === 'user' ? styles.userMsg : styles.asstMsg}>
+                            {msg.role === 'user' ? (
+                                <p style={styles.userText}>{msg.content}</p>
+                            ) : (
+                                <div className="prose" style={styles.asstContent}>
+                                    <ReactMarkdown>{msg.content}</ReactMarkdown>
                                 </div>
                             )}
+
+                            {/* Metrics + feedback for assistant */}
                             {msg.role === 'assistant' && msg.retrievedCount != null && (
-                                <div style={styles.metricsRow}>
+                                <div style={styles.metaRow}>
                                     <span>{msg.retrievedCount} articles</span>
-                                    <span style={styles.metricDot} />
-                                    <span>{msg.researchStepCount || 1} {(msg.researchStepCount || 1) === 1 ? 'step' : 'steps'}</span>
-                                    {msg.responseTimeMs != null && (
+                                    <span style={styles.dot} />
+                                    <span>{msg.stepCount} {msg.stepCount === 1 ? 'step' : 'steps'}</span>
+                                    {msg.timeMs != null && (
                                         <>
-                                            <span style={styles.metricDot} />
-                                            <span>{(msg.responseTimeMs / 1000).toFixed(1)}s</span>
+                                            <span style={styles.dot} />
+                                            <span>{(msg.timeMs / 1000).toFixed(1)}s</span>
                                         </>
                                     )}
-                                </div>
-                            )}
-                            {msg.role === 'assistant' && msg.queryId && (
-                                <div style={styles.feedbackRow}>
-                                    {msg.feedback ? (
-                                        <span style={styles.feedbackThanks}>
-                                            {msg.feedback === 'up' ? 'Thanks for the feedback!' : 'Thanks, we\'ll improve!'}
-                                        </span>
-                                    ) : (
+                                    <span style={{ flex: 1 }} />
+                                    {msg.queryId && !msg.feedback && (
                                         <>
-                                            <span style={styles.feedbackLabel}>Was this helpful?</span>
-                                            <button
-                                                onClick={() => handleFeedback(i, true)}
-                                                style={styles.feedbackBtn}
-                                                title="Helpful"
-                                            >Yes</button>
-                                            <button
-                                                onClick={() => handleFeedback(i, false)}
-                                                style={styles.feedbackBtn}
-                                                title="Not helpful"
-                                            >No</button>
+                                            <button onClick={() => handleFeedback(i, true)} style={styles.fbBtn} title="Helpful">&#128077;</button>
+                                            <button onClick={() => handleFeedback(i, false)} style={styles.fbBtn} title="Not helpful">&#128078;</button>
                                         </>
+                                    )}
+                                    {msg.feedback && (
+                                        <span style={styles.fbThanks}>
+                                            {msg.feedback === 'up' ? 'Thanks!' : 'Noted'}
+                                        </span>
                                     )}
                                 </div>
                             )}
                         </div>
+
+                        {/* Citations */}
                         {msg.citations && msg.citations.length > 0 && (
-                            <div style={{ ...styles.citations, ...(viewSettings.density === 'compact' ? { gap: '0.25rem' } : {}) }}>
-                                <h4 style={styles.citationsTitle}>Sources ({msg.citations.length})</h4>
-                                {msg.citations.map((c, ci) => <CitationCard key={ci} citation={c} index={ci + 1} />)}
+                            <div style={styles.citations}>
+                                <p style={styles.citLabel}>Sources ({msg.citations.length})</p>
+                                {msg.citations.map((c, ci) => (
+                                    <CitationCard key={ci} citation={c} index={ci + 1} />
+                                ))}
                             </div>
                         )}
                     </div>
                 ))}
 
-                {/* Loading indicator */}
                 {loading && (
-                    <div style={styles.loadingWrapper}>
-                        <div style={styles.loadingDots}>
-                            {[0, 1, 2].map(i => (
-                                <div key={i} style={{ ...styles.dot, animationDelay: `${i * 0.2}s` }} />
-                            ))}
+                    <div style={styles.loading}>
+                        <div style={styles.dots}>
+                            {[0, 1, 2].map(i => <div key={i} style={{ ...styles.dotAnim, animationDelay: i * 0.15 + 's' }} />)}
                         </div>
-                        <span style={styles.loadingText}>{LOADING_MESSAGES[loadingMsgIdx]}</span>
+                        <span style={styles.loadingText}>{LOADING_MESSAGES[loadingIdx]}</span>
                     </div>
                 )}
 
-                <div ref={messagesEndRef} />
+                <div ref={endRef} />
             </div>
 
-            {/* Input */}
-            <div style={styles.inputContainer}>
-                <textarea
-                    value={input}
-                    onChange={e => setInput(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Ask a question about F1 regulations..."
-                    style={styles.textarea}
-                    rows={3}
-                    disabled={loading}
-                />
-                <button
-                    onClick={handleSend}
-                    disabled={!input.trim() || loading}
-                    style={{ ...styles.sendButton, opacity: !input.trim() || loading ? 0.5 : 1 }}
-                >
-                    {loading ? '...' : 'Send →'}
-                </button>
+            {/* Input area */}
+            <div style={styles.inputArea}>
+                <div style={styles.inputRow}>
+                    <button
+                        onClick={() => setShowFilters(!showFilters)}
+                        style={{ ...styles.filterToggle, ...(hasFilters ? styles.filterToggleActive : {}) }}
+                    >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+                        {hasFilters ? [year, section].filter(Boolean).join(' · ') : 'Filters'}
+                    </button>
+                    <textarea
+                        value={input}
+                        onChange={e => setInput(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input); } }}
+                        placeholder="Ask about F1 regulations..."
+                        style={styles.textarea}
+                        rows={1}
+                        disabled={loading}
+                    />
+                    <button
+                        onClick={() => send(input)}
+                        disabled={!input.trim() || loading}
+                        style={{ ...styles.sendBtn, opacity: !input.trim() || loading ? 0.3 : 1 }}
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    </button>
+                </div>
+
+                {/* Filter dropdown */}
+                {showFilters && (
+                    <div style={styles.filterPanel}>
+                        <select value={year || ''} onChange={e => onYearChange(e.target.value ? +e.target.value : null)} style={styles.filterSelect}>
+                            <option value="">All years</option>
+                            <option value="2026">2026</option>
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
+                            <option value="2023">2023</option>
+                        </select>
+                        <select value={section || ''} onChange={e => onSectionChange(e.target.value || null)} style={styles.filterSelect}>
+                            <option value="">All sections</option>
+                            <option value="Technical">Technical</option>
+                            <option value="Sporting">Sporting</option>
+                            <option value="Financial">Financial</option>
+                        </select>
+                        <input
+                            type="number"
+                            placeholder="Issue #"
+                            value={issue || ''}
+                            onChange={e => onIssueChange(e.target.value ? +e.target.value : null)}
+                            min={1}
+                            style={{ ...styles.filterSelect, width: '80px' }}
+                        />
+                        {hasFilters && (
+                            <button onClick={() => { onYearChange(null); onSectionChange(null); onIssueChange(null); }} style={styles.clearBtn}>
+                                Clear
+                            </button>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -260,43 +245,48 @@ export default function ChatInterface({ year, section, issue, viewSettings, onOp
 
 const styles: Record<string, React.CSSProperties> = {
     container: { display: 'flex', flexDirection: 'column', height: '100%' },
-    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.85rem 1rem', borderBottom: '1px solid #333', flexShrink: 0 },
-    title: { fontSize: '1.1rem', margin: 0 },
-    hamburger: { background: 'transparent', border: '1px solid #444', borderRadius: '6px', color: '#aaa', padding: '0.35rem 0.6rem', fontSize: '1rem', cursor: 'pointer' },
-    clearButton: { background: 'transparent', border: '1px solid #444', borderRadius: '6px', color: '#aaa', padding: '0.4rem 0.9rem', fontSize: '0.82rem', cursor: 'pointer' },
-    messagesContainer: { flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' },
-    emptyState: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, textAlign: 'center', padding: '2rem' },
-    emptyIcon: { marginBottom: '1rem', display: 'flex', justifyContent: 'center' },
-    emptyTitle: { fontSize: '1.2rem', marginBottom: '0.5rem' },
-    emptyText: { fontSize: '0.9rem', color: '#aaa', marginBottom: '1.5rem' },
-    exampleGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.75rem', maxWidth: '700px', width: '100%' },
-    exampleChip: { background: '#111', border: '1px solid #333', borderRadius: '8px', color: '#ccc', padding: '0.75rem 1rem', fontSize: '0.85rem', cursor: 'pointer', textAlign: 'left', lineHeight: '1.4', transition: 'border-color 0.15s' },
-    messageWrapper: { display: 'flex', flexDirection: 'column', gap: '0.75rem' },
-    message: { borderRadius: '12px', padding: '1rem', maxWidth: '88%' },
-    userMessage: { alignSelf: 'flex-end', background: '#1e293b', marginLeft: 'auto' },
-    assistantMessage: { alignSelf: 'flex-start', background: '#1a1a1a', border: '1px solid #333' },
-    messageHeader: { display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.82rem', opacity: 0.8 },
-    messageRole: { fontWeight: 'bold' },
-    messageTime: { fontSize: '0.72rem', opacity: 0.6 },
-    messageContent: { lineHeight: '1.6', whiteSpace: 'pre-wrap' },
-    researchContainer: { marginTop: '0.75rem', padding: '0.75rem', background: '#0d0d0d', borderRadius: '8px', border: '1px solid #222', fontSize: '0.88rem' },
-    researchTitle: { margin: '0 0 0.5rem 0', color: '#888', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' },
-    researchStep: { marginBottom: '0.5rem', paddingLeft: '0.5rem', borderLeft: '2px solid #444' },
-    researchThought: { color: '#ccc', marginBottom: '0.25rem' },
-    researchAction: { color: '#eb0000', fontSize: '0.82rem', fontStyle: 'italic' },
-    citations: { marginLeft: '1rem', paddingLeft: '1rem', borderLeft: '3px solid #eb0000' },
-    citationsTitle: { fontSize: '0.88rem', marginBottom: '0.75rem', color: '#eb0000' },
-    loadingWrapper: { display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', background: '#111', border: '1px solid #222', borderRadius: '12px', alignSelf: 'flex-start', animation: 'fadeIn 0.3s ease' },
-    loadingDots: { display: 'flex', gap: '4px', alignItems: 'center' },
-    dot: { width: '7px', height: '7px', borderRadius: '50%', background: '#eb0000', animation: 'bounce 1.2s infinite ease-in-out' },
-    loadingText: { fontSize: '0.85rem', color: '#888' },
-    inputContainer: { padding: '0.75rem 1rem', borderTop: '1px solid #333', display: 'flex', gap: '0.75rem', flexShrink: 0 },
-    textarea: { flex: 1, background: '#0a0a0a', border: '1px solid #333', borderRadius: '8px', padding: '0.75rem', color: '#fff', fontSize: '0.92rem', resize: 'none', fontFamily: 'inherit' },
-    sendButton: { background: '#eb0000', border: 'none', borderRadius: '8px', color: '#fff', padding: '0.75rem 1.5rem', fontSize: '0.95rem', fontWeight: 'bold', cursor: 'pointer', alignSelf: 'flex-end' },
-    metricsRow: { display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.6rem', fontSize: '0.75rem', color: '#555', fontVariantNumeric: 'tabular-nums' },
-    metricDot: { width: '3px', height: '3px', borderRadius: '50%', background: '#444', flexShrink: 0 },
-    feedbackRow: { display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem', paddingTop: '0.6rem', borderTop: '1px solid #2a2a2a' },
-    feedbackLabel: { fontSize: '0.78rem', color: '#666' },
-    feedbackBtn: { background: 'transparent', border: '1px solid #333', borderRadius: '6px', cursor: 'pointer', fontSize: '1rem', padding: '0.2rem 0.5rem', lineHeight: 1, transition: 'border-color 0.15s' },
-    feedbackThanks: { fontSize: '0.78rem', color: '#888', fontStyle: 'italic' },
+
+    // Messages
+    messages: { flex: 1, overflowY: 'auto', padding: '1.5rem 0', display: 'flex', flexDirection: 'column', gap: '1.5rem' },
+    empty: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, textAlign: 'center', padding: '3rem 1rem' },
+    emptyTitle: { fontSize: '1.4rem', fontWeight: 600, color: '#fff', marginBottom: '0.5rem', letterSpacing: '-0.02em' },
+    emptyHint: { fontSize: '0.9rem', color: '#666', marginBottom: '2rem' },
+    examples: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.5rem', maxWidth: '580px', width: '100%' },
+    exampleBtn: { background: 'transparent', border: '1px solid #222', borderRadius: '8px', color: '#999', padding: '0.7rem 0.85rem', fontSize: '0.82rem', cursor: 'pointer', textAlign: 'left', lineHeight: 1.4, transition: 'border-color 0.15s, color 0.15s' },
+
+    // Messages
+    msgWrap: { display: 'flex', flexDirection: 'column', gap: '0.5rem', animation: 'fadeIn 0.25s ease' },
+    userMsg: { alignSelf: 'flex-end', maxWidth: '75%' },
+    userText: { background: '#1a1a1a', borderRadius: '16px 16px 4px 16px', padding: '0.7rem 1rem', fontSize: '0.9rem', color: '#e0e0e0', lineHeight: 1.5 },
+    asstMsg: { alignSelf: 'flex-start', maxWidth: '100%' },
+    asstContent: { fontSize: '0.9rem', lineHeight: 1.7, color: '#ccc' },
+
+    // Meta & feedback
+    metaRow: { display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem', fontSize: '0.72rem', color: '#555', fontVariantNumeric: 'tabular-nums' },
+    dot: { width: '2px', height: '2px', borderRadius: '50%', background: '#444', flexShrink: 0 },
+    fbBtn: { background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.75rem', padding: '0.15rem 0.3rem', borderRadius: '4px', opacity: 0.5, transition: 'opacity 0.15s' },
+    fbThanks: { fontSize: '0.72rem', color: '#555', fontStyle: 'italic' },
+
+    // Citations
+    citations: { paddingLeft: '0.75rem', borderLeft: '2px solid #1a1a1a' },
+    citLabel: { fontSize: '0.72rem', color: '#555', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 500 },
+
+    // Loading
+    loading: { display: 'flex', alignItems: 'center', gap: '0.75rem', animation: 'fadeIn 0.3s ease' },
+    dots: { display: 'flex', gap: '3px' },
+    dotAnim: { width: '5px', height: '5px', borderRadius: '50%', background: '#eb0000', animation: 'bounce 1.2s infinite ease-in-out' },
+    loadingText: { fontSize: '0.82rem', color: '#555' },
+
+    // Input
+    inputArea: { borderTop: '1px solid rgba(255,255,255,0.06)', padding: '0.75rem 0' },
+    inputRow: { display: 'flex', alignItems: 'center', gap: '0.5rem' },
+    filterToggle: { display: 'inline-flex', alignItems: 'center', gap: '0.35rem', background: 'transparent', border: '1px solid #222', borderRadius: '8px', color: '#666', padding: '0.55rem 0.75rem', fontSize: '0.78rem', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, transition: 'border-color 0.15s, color 0.15s' },
+    filterToggleActive: { borderColor: '#eb0000', color: '#eb0000' },
+    textarea: { flex: 1, background: 'transparent', border: 'none', color: '#e0e0e0', fontSize: '0.9rem', resize: 'none', outline: 'none', fontFamily: 'inherit', lineHeight: 1.5, padding: '0.5rem 0' },
+    sendBtn: { background: '#eb0000', border: 'none', borderRadius: '8px', color: '#fff', padding: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'opacity 0.15s' },
+
+    // Filter panel
+    filterPanel: { display: 'flex', gap: '0.5rem', padding: '0.5rem 0 0', flexWrap: 'wrap', animation: 'fadeIn 0.15s ease' },
+    filterSelect: { background: '#111', border: '1px solid #222', borderRadius: '8px', color: '#ccc', padding: '0.4rem 0.6rem', fontSize: '0.78rem', outline: 'none', transition: 'border-color 0.15s' },
+    clearBtn: { background: 'transparent', border: 'none', color: '#eb0000', fontSize: '0.78rem', cursor: 'pointer', padding: '0.4rem 0.6rem' },
 };

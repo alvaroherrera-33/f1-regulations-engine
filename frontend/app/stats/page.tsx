@@ -28,65 +28,48 @@ export default function StatsPage() {
         <div style={styles.page}>
             <div style={styles.container}>
                 <div style={styles.header}>
-                    <a href="/chat" style={styles.backLink}>← Back to Chat</a>
-                    <h1 style={styles.title}>System Stats</h1>
+                    <h1 style={styles.title}>System stats</h1>
                     <p style={styles.subtitle}>Live metrics from production</p>
                 </div>
 
-                {loading && <div style={styles.loading}>Loading stats...</div>}
-                {error && <div style={styles.error}>Could not load stats: {error}</div>}
+                {loading && <p style={styles.loading}>Loading stats...</p>}
+                {error && <p style={styles.error}>Could not load stats: {error}</p>}
 
                 {!loading && !error && stats && status && (
                     <>
-                        {/* DB Coverage */}
-                        <section style={styles.section}>
-                            <h2 style={styles.sectionTitle}>Knowledge Base</h2>
-                            <div style={styles.grid}>
-                                <Stat label="Documents" value={status.documents_count} />
-                                <Stat label="Articles" value={status.articles_count.toLocaleString()} />
-                                <Stat label="Embeddings" value={status.embeddings_count.toLocaleString()} />
-                                <Stat label="Coverage" value={status.embeddings_count === status.articles_count ? '100%' : `${Math.round((status.embeddings_count / status.articles_count) * 100)}%`} highlight />
-                            </div>
-                        </section>
+                        <Section title="Knowledge Base">
+                            <Stat label="Documents" value={status.documents_count} />
+                            <Stat label="Articles" value={status.articles_count.toLocaleString()} />
+                            <Stat label="Embeddings" value={status.embeddings_count.toLocaleString()} />
+                            <Stat label="Coverage" value={status.embeddings_count === status.articles_count ? '100%' : Math.round((status.embeddings_count / status.articles_count) * 100) + '%'} accent />
+                        </Section>
 
-                        {/* Query Volume */}
-                        <section style={styles.section}>
-                            <h2 style={styles.sectionTitle}>Query Volume</h2>
-                            <div style={styles.grid}>
-                                <Stat label="Total Queries" value={stats.total_queries} />
-                                <Stat label="Regulations" value={stats.regulation_queries} />
-                                <Stat label="Conversational" value={stats.conversational_queries} />
-                                <Stat label="Errors" value={stats.errors} warn={stats.errors > 0} />
-                            </div>
-                        </section>
+                        <Section title="Query Volume">
+                            <Stat label="Total Queries" value={stats.total_queries} />
+                            <Stat label="Regulations" value={stats.regulation_queries} />
+                            <Stat label="Conversational" value={stats.conversational_queries} />
+                            <Stat label="Errors" value={stats.errors} warn={stats.errors > 0} />
+                        </Section>
 
-                        {/* Performance */}
-                        <section style={styles.section}>
-                            <h2 style={styles.sectionTitle}>Performance</h2>
-                            <div style={styles.grid}>
-                                <Stat
-                                    label="Avg Response Time"
-                                    value={stats.avg_response_ms > 0 ? `${(stats.avg_response_ms / 1000).toFixed(1)}s` : '—'}
-                                    warn={stats.avg_response_ms > 15000}
-                                />
-                                <Stat label="Last Query" value={lastQuery} wide />
-                            </div>
-                        </section>
+                        <Section title="Performance">
+                            <Stat
+                                label="Avg Response"
+                                value={stats.avg_response_ms > 0 ? (stats.avg_response_ms / 1000).toFixed(1) + 's' : '---'}
+                                warn={stats.avg_response_ms > 15000}
+                            />
+                            <Stat label="Last Query" value={lastQuery} />
+                        </Section>
 
-                        {/* Feedback */}
-                        <section style={styles.section}>
-                            <h2 style={styles.sectionTitle}>User Feedback</h2>
-                            <div style={styles.grid}>
-                                <Stat label="Helpful" value={stats.positive_feedback} highlight={stats.positive_feedback > 0} />
-                                <Stat label="Not Helpful" value={stats.negative_feedback} warn={stats.negative_feedback > stats.positive_feedback} />
-                                <Stat
-                                    label="Satisfaction Rate"
-                                    value={helpfulRate !== null ? `${helpfulRate}%` : 'No feedback yet'}
-                                    highlight={helpfulRate !== null && helpfulRate >= 70}
-                                    warn={helpfulRate !== null && helpfulRate < 50}
-                                />
-                            </div>
-                        </section>
+                        <Section title="Feedback">
+                            <Stat label="Helpful" value={stats.positive_feedback} accent={stats.positive_feedback > 0} />
+                            <Stat label="Not Helpful" value={stats.negative_feedback} warn={stats.negative_feedback > stats.positive_feedback} />
+                            <Stat
+                                label="Satisfaction"
+                                value={helpfulRate !== null ? helpfulRate + '%' : '---'}
+                                accent={helpfulRate !== null && helpfulRate >= 70}
+                                warn={helpfulRate !== null && helpfulRate < 50}
+                            />
+                        </Section>
                     </>
                 )}
             </div>
@@ -94,20 +77,25 @@ export default function StatsPage() {
     );
 }
 
-function Stat({ label, value, highlight, warn, wide }: {
-    label: string;
-    value: string | number;
-    highlight?: boolean;
-    warn?: boolean;
-    wide?: boolean;
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+    return (
+        <section style={styles.section}>
+            <h2 style={styles.sectionTitle}>{title}</h2>
+            <div className="stack-grid" style={styles.grid}>{children}</div>
+        </section>
+    );
+}
+
+function Stat({ label, value, accent, warn }: {
+    label: string; value: string | number; accent?: boolean; warn?: boolean;
 }) {
     return (
-        <div style={{ ...styles.statCard, ...(wide ? styles.wideCard : {}) }}>
+        <div style={styles.statCard}>
             <div style={styles.statLabel}>{label}</div>
             <div style={{
                 ...styles.statValue,
-                ...(highlight ? styles.statHighlight : {}),
-                ...(warn ? styles.statWarn : {}),
+                ...(accent ? { color: '#4ade80' } : {}),
+                ...(warn ? { color: '#f59e0b' } : {}),
             }}>
                 {value}
             </div>
@@ -116,21 +104,21 @@ function Stat({ label, value, highlight, warn, wide }: {
 }
 
 const styles: Record<string, React.CSSProperties> = {
-    page: { minHeight: '100vh', background: '#0a0a0a', color: '#e0e0e0', fontFamily: 'system-ui, sans-serif', padding: '2rem 1rem' },
-    container: { maxWidth: '800px', margin: '0 auto' },
+    page: { minHeight: 'calc(100vh - 52px)', padding: '2rem 1rem' },
+    container: { maxWidth: '720px', margin: '0 auto' },
+
     header: { marginBottom: '2rem' },
-    backLink: { color: '#eb0000', textDecoration: 'none', fontSize: '0.9rem' },
-    title: { fontSize: '1.8rem', margin: '0.5rem 0 0.25rem', color: '#fff' },
-    subtitle: { color: '#666', margin: 0, fontSize: '0.9rem' },
-    loading: { color: '#666', textAlign: 'center', padding: '3rem' },
-    error: { color: '#e05c5c', background: '#1a0a0a', border: '1px solid #4a1a1a', borderRadius: '8px', padding: '1rem' },
+    title: { fontSize: '1.4rem', fontWeight: 600, color: '#fff', letterSpacing: '-0.02em', marginBottom: '0.3rem' },
+    subtitle: { fontSize: '0.85rem', color: '#555' },
+
+    loading: { color: '#555', textAlign: 'center', padding: '3rem 0', fontSize: '0.9rem' },
+    error: { color: '#eb0000', fontSize: '0.85rem', padding: '1rem', border: '1px solid rgba(235,0,0,0.2)', borderRadius: '8px' },
+
     section: { marginBottom: '2rem' },
-    sectionTitle: { fontSize: '1rem', color: '#888', textTransform: 'uppercase' as const, letterSpacing: '0.08em', marginBottom: '1rem', fontWeight: 600 },
-    grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1rem' },
-    statCard: { background: '#111', border: '1px solid #222', borderRadius: '10px', padding: '1.25rem 1rem' },
-    wideCard: { gridColumn: 'span 2' },
-    statLabel: { fontSize: '0.78rem', color: '#666', marginBottom: '0.5rem', textTransform: 'uppercase' as const, letterSpacing: '0.05em' },
-    statValue: { fontSize: '1.5rem', fontWeight: 700, color: '#ccc' },
-    statHighlight: { color: '#4ade80' },
-    statWarn: { color: '#f59e0b' },
+    sectionTitle: { fontSize: '0.72rem', color: '#555', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 500, marginBottom: '0.75rem' },
+    grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.6rem' },
+
+    statCard: { border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', padding: '1rem' },
+    statLabel: { fontSize: '0.72rem', color: '#555', marginBottom: '0.4rem', letterSpacing: '0.06em', textTransform: 'uppercase' },
+    statValue: { fontSize: '1.3rem', fontWeight: 600, color: '#ccc', fontVariantNumeric: 'tabular-nums' },
 };
