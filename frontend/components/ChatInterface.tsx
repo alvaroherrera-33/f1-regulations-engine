@@ -46,6 +46,7 @@ export default function ChatInterface({ year, section, issue, onYearChange, onSe
     const [loadingIdx, setLoadingIdx] = useState(0);
     const [showFilters, setShowFilters] = useState(false);
     const endRef = useRef<HTMLDivElement>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     useEffect(() => {
         endRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -56,6 +57,20 @@ export default function ChatInterface({ year, section, issue, onYearChange, onSe
         const t = setInterval(() => setLoadingIdx(i => (i + 1) % LOADING_MESSAGES.length), 2000);
         return () => clearInterval(t);
     }, [loading]);
+
+    // Reset textarea height when input is cleared
+    useEffect(() => {
+        if (!input && textareaRef.current) {
+            textareaRef.current.style.height = 'auto';
+        }
+    }, [input]);
+
+    const autoResize = () => {
+        const el = textareaRef.current;
+        if (!el) return;
+        el.style.height = 'auto';
+        el.style.height = Math.min(el.scrollHeight, 150) + 'px';
+    };
 
     const hasFilters = year || section || issue;
 
@@ -107,7 +122,7 @@ export default function ChatInterface({ year, section, issue, onYearChange, onSe
                 {messages.length === 0 && !loading && (
                     <div style={styles.empty}>
                         <h2 style={styles.emptyTitle}>What do you want to know?</h2>
-                        <p style={styles.emptyHint}>Ask about any F1 regulation - Technical, Sporting, or Financial.</p>
+                        <p style={styles.emptyHint}>Ask about any F1 regulation — Technical, Sporting, or Financial.</p>
                         <div style={styles.examples}>
                             {EXAMPLES.map(q => (
                                 <button key={q} className="example-btn" onClick={() => send(q)} style={styles.exampleBtn}>{q}</button>
@@ -190,8 +205,9 @@ export default function ChatInterface({ year, section, issue, onYearChange, onSe
                         {hasFilters ? [year, section].filter(Boolean).join(' · ') : 'Filters'}
                     </button>
                     <textarea
+                        ref={textareaRef}
                         value={input}
-                        onChange={e => setInput(e.target.value)}
+                        onChange={e => { setInput(e.target.value); autoResize(); }}
                         onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input); } }}
                         placeholder="Ask about F1 regulations..."
                         style={styles.textarea}
@@ -250,9 +266,9 @@ const styles: Record<string, React.CSSProperties> = {
     messages: { flex: 1, overflowY: 'auto', padding: '1.5rem 0', display: 'flex', flexDirection: 'column', gap: '1.5rem' },
     empty: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, textAlign: 'center', padding: '3rem 1rem' },
     emptyTitle: { fontSize: '1.4rem', fontWeight: 600, color: '#fff', marginBottom: '0.5rem', letterSpacing: '-0.02em' },
-    emptyHint: { fontSize: '0.9rem', color: '#666', marginBottom: '2rem' },
+    emptyHint: { fontSize: '0.9rem', color: '#777', marginBottom: '2rem' },
     examples: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.5rem', maxWidth: '580px', width: '100%' },
-    exampleBtn: { background: 'transparent', border: '1px solid #222', borderRadius: '8px', color: '#999', padding: '0.7rem 0.85rem', fontSize: '0.82rem', cursor: 'pointer', textAlign: 'left', lineHeight: 1.4, transition: 'border-color 0.15s, color 0.15s' },
+    exampleBtn: { background: 'transparent', border: '1px solid #2a2a2a', borderRadius: '8px', color: '#aaa', padding: '0.7rem 0.85rem', fontSize: '0.82rem', cursor: 'pointer', textAlign: 'left', lineHeight: 1.4, transition: 'border-color 0.15s, color 0.15s' },
 
     // Messages
     msgWrap: { display: 'flex', flexDirection: 'column', gap: '0.5rem', animation: 'fadeIn 0.25s ease' },
@@ -262,28 +278,28 @@ const styles: Record<string, React.CSSProperties> = {
     asstContent: { fontSize: '0.9rem', lineHeight: 1.7, color: '#ccc' },
 
     // Meta & feedback
-    metaRow: { display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem', fontSize: '0.72rem', color: '#555', fontVariantNumeric: 'tabular-nums' },
+    metaRow: { display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem', fontSize: '0.72rem', color: '#666', fontVariantNumeric: 'tabular-nums' },
     dot: { width: '2px', height: '2px', borderRadius: '50%', background: '#444', flexShrink: 0 },
     fbBtn: { background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.75rem', padding: '0.15rem 0.3rem', borderRadius: '4px', opacity: 0.5, transition: 'opacity 0.15s' },
-    fbThanks: { fontSize: '0.72rem', color: '#555', fontStyle: 'italic' },
+    fbThanks: { fontSize: '0.72rem', color: '#666', fontStyle: 'italic' },
 
     // Citations
-    citations: { paddingLeft: '0.75rem', borderLeft: '2px solid #1a1a1a' },
-    citLabel: { fontSize: '0.72rem', color: '#555', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 500 },
+    citations: { paddingLeft: '0.75rem', borderLeft: '2px solid rgba(255,255,255,0.07)' },
+    citLabel: { fontSize: '0.72rem', color: '#777', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 500 },
 
     // Loading
     loading: { display: 'flex', alignItems: 'center', gap: '0.75rem', animation: 'fadeIn 0.3s ease' },
     dots: { display: 'flex', gap: '3px' },
     dotAnim: { width: '5px', height: '5px', borderRadius: '50%', background: '#eb0000', animation: 'bounce 1.2s infinite ease-in-out' },
-    loadingText: { fontSize: '0.82rem', color: '#555' },
+    loadingText: { fontSize: '0.82rem', color: '#666' },
 
     // Input
     inputArea: { borderTop: '1px solid rgba(255,255,255,0.06)', padding: '0.75rem 0' },
-    inputRow: { display: 'flex', alignItems: 'center', gap: '0.5rem' },
-    filterToggle: { display: 'inline-flex', alignItems: 'center', gap: '0.35rem', background: 'transparent', border: '1px solid #222', borderRadius: '8px', color: '#666', padding: '0.55rem 0.75rem', fontSize: '0.78rem', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, transition: 'border-color 0.15s, color 0.15s' },
+    inputRow: { display: 'flex', alignItems: 'flex-end', gap: '0.5rem' },
+    filterToggle: { display: 'inline-flex', alignItems: 'center', gap: '0.35rem', background: 'transparent', border: '1px solid #222', borderRadius: '8px', color: '#666', padding: '0.55rem 0.75rem', fontSize: '0.78rem', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, transition: 'border-color 0.15s, color 0.15s', marginBottom: '2px' },
     filterToggleActive: { borderColor: '#eb0000', color: '#eb0000' },
-    textarea: { flex: 1, background: 'transparent', border: 'none', color: '#e0e0e0', fontSize: '0.9rem', resize: 'none', outline: 'none', fontFamily: 'inherit', lineHeight: 1.5, padding: '0.5rem 0' },
-    sendBtn: { background: '#eb0000', border: 'none', borderRadius: '8px', color: '#fff', padding: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'opacity 0.15s' },
+    textarea: { flex: 1, background: 'transparent', border: 'none', color: '#e0e0e0', fontSize: '0.9rem', resize: 'none', outline: 'none', fontFamily: 'inherit', lineHeight: 1.5, padding: '0.5rem 0', overflowY: 'hidden', maxHeight: '150px' },
+    sendBtn: { background: '#eb0000', border: 'none', borderRadius: '8px', color: '#fff', padding: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'opacity 0.15s', marginBottom: '2px' },
 
     // Filter panel
     filterPanel: { display: 'flex', gap: '0.5rem', padding: '0.5rem 0 0', flexWrap: 'wrap', animation: 'fadeIn 0.15s ease' },

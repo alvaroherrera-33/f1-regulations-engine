@@ -22,7 +22,7 @@ export default function Home() {
                     </Link>
                 </div>
                 <p style={styles.meta}>
-                    4,300+ articles indexed &middot; 2023-2026 seasons &middot; Free and open source
+                    16,000+ articles indexed &middot; 2023–2026 seasons &middot; Free and open source
                 </p>
             </div>
         </main>
@@ -89,6 +89,6 @@ const styles: Record<string, React.CSSProperties> = {
     },
     meta: {
         fontSize: '0.78rem',
-        color: '#555',
+        color: '#666',
     },
 };

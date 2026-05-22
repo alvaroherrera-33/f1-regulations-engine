@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+// Compare uses a Next.js API route that queries Supabase directly — no backend needed
+const COMPARE_API = '/api/compare';
 
 interface ArticleVersion {
     article_code: string;
@@ -28,21 +29,21 @@ export default function ComparePage() {
         setError('');
         setResult(null);
         try {
-            const res = await fetch(API + '/api/compare?code=' + encodeURIComponent(target) + '&year_a=' + yearA + '&year_b=' + yearB);
+            const res = await fetch(COMPARE_API + '?code=' + encodeURIComponent(target) + '&year_a=' + yearA + '&year_b=' + yearB);
             if (!res.ok) {
                 const err = await res.json().catch(() => ({}));
-                throw new Error(err.detail || 'Not found');
+                throw new Error((err as { detail?: string }).detail || 'Not found');
             }
             const data = await res.json();
             setResult({ a: data.version_a, b: data.version_b });
-        } catch (e: any) {
-            setError(e.message || 'Could not find that article. Check the code and try again.');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Could not find that article. Check the code and try again.');
         } finally {
             setLoading(false);
         }
     };
 
-    const CHIPS = ['1.1', '2.1', '3.1', '5.1', '11.1.1', '22.1'];
+    const CHIPS = ['1.1', '2.1', '3.1', '5.1', '10.1', '22.1'];
 
     return (
         <div style={styles.page}>
@@ -54,17 +55,17 @@ export default function ComparePage() {
 
                 <div style={styles.controls}>
                     <select value={yearA} onChange={e => setYearA(+e.target.value)} style={styles.select}>
-                        <option value={2023}>2023</option>
-                        <option value={2024}>2024</option>
-                        <option value={2025}>2025</option>
                         <option value={2026}>2026</option>
+                        <option value={2025}>2025</option>
+                        <option value={2024}>2024</option>
+                        <option value={2023}>2023</option>
                     </select>
                     <span style={styles.vs}>vs</span>
                     <select value={yearB} onChange={e => setYearB(+e.target.value)} style={styles.select}>
-                        <option value={2023}>2023</option>
-                        <option value={2024}>2024</option>
-                        <option value={2025}>2025</option>
                         <option value={2026}>2026</option>
+                        <option value={2025}>2025</option>
+                        <option value={2024}>2024</option>
+                        <option value={2023}>2023</option>
                     </select>
                     <input
                         value={code}
@@ -73,7 +74,7 @@ export default function ComparePage() {
                         placeholder="Article code (e.g. 3.1)"
                         style={styles.input}
                     />
-                    <button onClick={compare} disabled={loading || !code.trim()} style={{ ...styles.btn, opacity: loading || !code.trim() ? 0.3 : 1 }}>
+                    <button onClick={() => compare()} disabled={loading || !code.trim()} style={{ ...styles.btn, opacity: loading || !code.trim() ? 0.3 : 1 }}>
                         {loading ? 'Loading...' : 'Compare'}
                     </button>
                 </div>
@@ -121,28 +122,24 @@ function VersionPanel({ version, year }: { version: ArticleVersion | null; year:
 const styles: Record<string, React.CSSProperties> = {
     page: { minHeight: 'calc(100vh - 52px)', padding: '2rem 1rem' },
     container: { maxWidth: '960px', margin: '0 auto' },
-
     header: { marginBottom: '2rem' },
     title: { fontSize: '1.4rem', fontWeight: 600, color: '#fff', letterSpacing: '-0.02em', marginBottom: '0.3rem' },
-    subtitle: { fontSize: '0.85rem', color: '#555' },
-
+    subtitle: { fontSize: '0.85rem', color: '#666' },
     controls: { display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.75rem' },
     select: { background: '#111', border: '1px solid #222', borderRadius: '8px', color: '#ccc', padding: '0.5rem 0.75rem', fontSize: '0.85rem', outline: 'none', transition: 'border-color 0.15s' },
-    vs: { color: '#444', fontSize: '0.78rem', fontWeight: 500 },
+    vs: { color: '#666', fontSize: '0.78rem', fontWeight: 500 },
     input: { flex: 1, minWidth: '160px', background: '#111', border: '1px solid #222', borderRadius: '8px', color: '#e0e0e0', padding: '0.5rem 0.75rem', fontSize: '0.85rem', outline: 'none', transition: 'border-color 0.15s' },
     btn: { background: '#eb0000', border: 'none', borderRadius: '8px', color: '#fff', padding: '0.5rem 1.25rem', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', transition: 'opacity 0.15s' },
-
     chips: { display: 'flex', gap: '0.35rem', flexWrap: 'wrap', marginBottom: '1.5rem' },
     chip: { background: 'transparent', border: '1px solid #222', borderRadius: '8px', color: '#666', padding: '0.3rem 0.6rem', fontSize: '0.72rem', cursor: 'pointer', transition: 'border-color 0.15s, color 0.15s' },
-
     error: { color: '#eb0000', fontSize: '0.85rem', marginBottom: '1rem' },
-
     diffGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' },
-
     panel: { border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', padding: '1.25rem' },
-    panelEmpty: { color: '#444', fontSize: '0.85rem', textAlign: 'center', padding: '2rem 0' },
+    panelEmpty: { color: '#666', fontSize: '0.85rem', textAlign: 'center', padding: '2rem 0' },
     panelHeader: { display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' },
     panelYear: { fontSize: '0.72rem', color: '#eb0000', fontWeight: 600 },
     panelCode: { fontFamily: 'monospace', fontSize: '0.82rem', color: '#ccc', fontWeight: 600 },
     panelBadge: { background: 'rgba(255,255,255,0.04)', borderRadius: '4px', padding: '0.12rem 0.4rem', fontSize: '0.68rem', color: '#666', fontWeight: 500 },
-    pan
+    panelTitle: { fontSize: '0.9rem', color: '#ccc', fontWeight: 500, marginBottom: '0.75rem', lineHeight: 1.4 },
+    panelContent: { fontSize: '0.82rem', color: '#888', lineHeight: 1.7, whiteSpace: 'pre-line' },
+};
