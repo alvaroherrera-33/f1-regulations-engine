@@ -4,8 +4,6 @@ import { useState } from 'react';
 
 // Compare uses a Next.js API route that queries Supabase directly — no backend needed
 const COMPARE_API = '/api/compare';
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-
 interface ArticleVersion {
     article_code: string;
     title: string;
@@ -58,7 +56,7 @@ export default function ComparePage() {
         setExplainError('');
         setExplanation(null);
         try {
-            let url = `${BACKEND_URL}/api/compare/explain?code=${encodeURIComponent(code.trim())}&year_a=${yearA}&year_b=${yearB}`;
+            let url = `/api/compare/explain?code=${encodeURIComponent(code.trim())}&year_a=${yearA}&year_b=${yearB}`;
             if (section) url += `&section=${encodeURIComponent(section)}`;
             const res = await fetch(url, { method: 'POST' });
             if (!res.ok) {
