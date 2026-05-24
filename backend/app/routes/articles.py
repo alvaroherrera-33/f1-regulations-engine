@@ -114,7 +114,117 @@ async def explain_article_diff(
 
     Example: POST /api/compare/explain?code=C4.1&year_a=2025&year_b=2026&section=Technical
     """
-    # Fetch both versions (reuse compare logic)
     async def _fetch(year: int) -> Optional[dict]:
         stmt = (
-            select(Artic
+            select(ArticleDB)
+            .where(ArticleDB.article_code == code, ArticleDB.year == year)
+        )
+        if section:
+            stmt = stmt.where(ArticleDB.section == section)
+        stmt = stmt.order_by(desc(ArticleDB.issue)).limit(1)
+        result = await db.execute(stmt)
+        art = result.scalar_one_or_none()
+        if not art:
+            return None
+        return {
+            "article_code": art.article_code,
+            "title": art.title,
+            "content": art.content,
+            "year": art.year,
+            "section": art.section,
+            "issue": art.issue,
+        }
+
+    version_a = await _fetch(year_a)
+    version_b = await _fetch(year_b)
+
+    if version_a is None and version_b is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Article '{code}' not found for {year_a} or {year_b}.",
+        )
+
+    try:
+        explanation = await _explain_diff_with_llm(code, version_a, version_b)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=f"LLM service error: {exc}",
+        )
+
+    return {
+        "article_code": code,
+        "year_a": year_a,
+        "year_b": year_b,
+        "section": section,
+        "version_a": version_a,
+        "version_b": version_b,
+        "explanation": explanation,
+    }
+
+
+@router.get("/articles/{article_code}", response_model=Article)
+async def get_article(
+    article_code: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """Retrieve a specific article by its code."""
+    stmt = select(ArticleDB).where(ArticleDB.article_code == article_code)
+    result = await db.execute(stmt)
+    article_db = result.scalar_one_or_none()
+
+    if not article_db:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Article {article_code} not found"
+        )
+
+    return Article(
+        id=article_db.id,
+        article_code=article_db.article_code,
+        title=article_db.title,
+        content=article_db.content,
+        year=article_db.year,
+        section=article_db.section,
+        issue=article_db.issue,
+        level=article_db.level,
+        parent_code=article_db.parent_code
+    )
+
+
+@router.get("/articles", response_model=List[Article])
+async def list_articles(
+    year: int = None,
+    section: str = None,
+    issue: int = None,
+    limit: int = 50,
+    db: AsyncSession = Depends(get_db)
+):
+    """List articles with optional filters."""
+    stmt = select(ArticleDB)
+
+    if year:
+        stmt = stmt.where(ArticleDB.year == year)
+    if section:
+        stmt = stmt.where(ArticleDB.section == section)
+    if issue:
+        stmt = stmt.where(ArticleDB.issue == issue)
+
+    stmt = stmt.order_by(ArticleDB.article_code).limit(limit)
+    result = await db.execute(stmt)
+    articles_db = result.scalars().all()
+
+    return [
+        Article(
+            id=art.id,
+            article_code=art.article_code,
+            title=art.title,
+            content=art.content,
+            year=art.year,
+            section=art.section,
+            issue=art.issue,
+            level=art.level,
+            parent_code=art.parent_code
+        )
+        for art in articles_db
+    ]
