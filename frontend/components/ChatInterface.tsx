@@ -28,6 +28,7 @@ interface Message {
     retrievedCount?: number;
     stepCount?: number;
     timeMs?: number;
+    confidence?: number;
 }
 
 interface Props {
@@ -96,6 +97,7 @@ export default function ChatInterface({ year, section, issue, onYearChange, onSe
                 retrievedCount: res.retrieved_count,
                 stepCount: res.research_steps?.length || 1,
                 timeMs: Date.now() - t0,
+                confidence: res.confidence,
             }]);
         } catch (e: any) {
             setMessages(prev => [...prev, {
@@ -169,6 +171,14 @@ export default function ChatInterface({ year, section, issue, onYearChange, onSe
                                 </div>
                             )}
                         </div>
+
+                        {/* Low-confidence warning */}
+                        {msg.role === 'assistant' && msg.confidence != null && msg.confidence < 0.55 && msg.citations && msg.citations.length > 0 && (
+                            <div style={styles.confidenceWarn}>
+                                <span style={styles.confidenceIcon}>⚠</span>
+                                Low confidence — this topic may not be well covered in the indexed regulations. Verify with official FIA documents.
+                            </div>
+                        )}
 
                         {/* Citations */}
                         {msg.citations && msg.citations.length > 0 && (
@@ -300,6 +310,10 @@ const styles: Record<string, React.CSSProperties> = {
     filterToggleActive: { borderColor: '#eb0000', color: '#eb0000' },
     textarea: { flex: 1, background: 'transparent', border: 'none', color: '#e0e0e0', fontSize: '0.9rem', resize: 'none', outline: 'none', fontFamily: 'inherit', lineHeight: 1.5, padding: '0.5rem 0', overflowY: 'hidden', maxHeight: '150px' },
     sendBtn: { background: '#eb0000', border: 'none', borderRadius: '8px', color: '#fff', padding: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'opacity 0.15s', marginBottom: '2px' },
+
+    // Confidence warning
+    confidenceWarn: { display: 'flex', alignItems: 'flex-start', gap: '0.4rem', background: 'rgba(250,204,21,0.06)', border: '1px solid rgba(250,204,21,0.2)', borderRadius: '6px', padding: '0.5rem 0.7rem', fontSize: '0.75rem', color: '#9ca3af', lineHeight: 1.5, marginTop: '0.5rem' },
+    confidenceIcon: { color: '#facc15', flexShrink: 0, marginTop: '0.05rem' },
 
     // Filter panel
     filterPanel: { display: 'flex', gap: '0.5rem', padding: '0.5rem 0 0', flexWrap: 'wrap', animation: 'fadeIn 0.15s ease' },

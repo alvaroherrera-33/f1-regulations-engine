@@ -76,10 +76,10 @@ const styles: Record<string, React.CSSProperties> = {
 
     header: { marginBottom: '2.5rem' },
     title: { fontSize: '1.4rem', fontWeight: 600, color: '#fff', letterSpacing: '-0.02em', marginBottom: '0.3rem' },
-    subtitle: { fontSize: '0.85rem', color: '#555' },
+    subtitle: { fontSize: '0.85rem', color: '#666' },
 
     section: { marginBottom: '2.5rem' },
-    sectionTitle: { fontSize: '0.72rem', color: '#555', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 500, marginBottom: '0.75rem' },
+    sectionTitle: { fontSize: '0.72rem', color: '#666', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 500, marginBottom: '0.75rem' },
 
     steps: { display: 'flex', flexDirection: 'column', gap: '0.75rem' },
     step: { display: 'flex', gap: '0.75rem', alignItems: 'flex-start', padding: '0.75rem', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px' },
@@ -90,7 +90,7 @@ const styles: Record<string, React.CSSProperties> = {
     stackGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.5rem' },
     stackCard: { display: 'flex', flexDirection: 'column', gap: '0.15rem', padding: '0.75rem', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px' },
     stackName: { fontSize: '0.85rem', color: '#ccc', fontWeight: 500 },
-    stackRole: { fontSize: '0.72rem', color: '#555' },
+    stackRole: { fontSize: '0.72rem', color: '#666' },
 
     sourceText: { fontSize: '0.9rem', color: '#888', lineHeight: 1.6 },
     link: { color: '#eb0000', textDecoration: 'underline', textUnderlineOffset: '2px' },

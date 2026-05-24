@@ -31,6 +31,9 @@ class Citation(BaseModel):
     year: int
     section: str
     issue: int
+    # Validity fields (populated when article has cross-year diff data)
+    validity: Optional[str] = None       # 'unchanged' | 'minor' | 'major' | 'removed' | None
+    latest_year: Optional[int] = None    # most recent year this article exists in DB
 
 
 class ChatResponse(BaseModel):
@@ -40,6 +43,7 @@ class ChatResponse(BaseModel):
     retrieved_count: int = 0
     research_steps: List[dict] = []  # List of {'thought': str, 'action': str, 'query': str}
     query_id: Optional[int] = None  # DB row ID for feedback submission
+    confidence: float = 1.0         # 0-1 normalized retrieval confidence
 
 
 class FeedbackRequest(BaseModel):
@@ -71,6 +75,9 @@ class Article(BaseModel):
     issue: int
     level: int
     parent_code: Optional[str] = None
+    # Validity (set by retriever after diff lookup)
+    validity: Optional[str] = None
+    latest_year: Optional[int] = None
 
 
 class UploadResponse(BaseModel):
@@ -96,7 +103,7 @@ class StatusResponse(BaseModel):
 
 # ===== Database ORM Models (SQLAlchemy) =====
 
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, Float, String, Text, DateTime, Boolean, ForeignKey
 from sqlalchemy.sql import func
 from app.database import Base
 from pgvector.sqlalchemy import Vector
@@ -135,8 +142,33 @@ class ArticleDB(Base):
 class ArticleEmbedding(Base):
     """Article embedding ORM model."""
     __tablename__ = "article_embeddings"
-    
+
     id = Column(Integer, primary_key=True)
     article_id = Column(Integer, ForeignKey("articles.id"))
     embedding = Column(Vector(384))  # sentence-transformers/all-MiniLM-L6-v2
     created_at = Column(DateTime, server_default=func.now())
+
+
+class ArticleDiff(Base):
+    """Pre-computed cross-year similarity between articles with the same code."""
+    __tablename__ = "article_diffs"
+
+    id = Column(Integer, primary_key=True)
+    article_code = Column(String(50), nullable=False)
+    section = Column(String(50), nullable=False)
+    year_from = Column(Integer, nullable=False)
+    year_to = Column(Integer, nullable=False)
+    similarity = Column(Float, nullable=False)
+    change_type = Column(String(20), nullable=False)  # unchanged/minor/major/removed
+    computed_at = Column(DateTime, server_default=func.now())
+
+
+class FiaSyncLog(Base):
+    """Log of FIA website sync checks."""
+    __tablename__ = "fia_sync_log"
+
+    id             = Column(Integer, primary_key=True)
+    checked_at     = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    new_docs_found = Column(Integer, nullable=False, default=0)
+    total_fia_docs = Column(Integer, nullable=False, default=0)
+    error          = Column(Text)

@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models import ChatRequest, ChatResponse, FeedbackRequest, StatsResponse
-from app.retrieval.retriever import retrieve_articles
+from app.retrieval.retriever import retrieve_articles, HybridRetriever
 from app.llm.client import generate_answer_with_citations, OpenRouterError
 
 logger = logging.getLogger(__name__)
@@ -134,14 +134,15 @@ async def chat(
         query_section = request.section or prepared.get("section")
         expanded_query = prepared.get("search_query", request.query)
 
-        # Step 3: Initial retrieval
-        articles = await retrieve_articles(
-            db=db,
+        # Step 3: Initial retrieval — use HybridRetriever directly to capture confidence
+        _retriever = HybridRetriever(db)
+        articles = await _retriever.retrieve(
             query=expanded_query,
             year=query_year,
             section=query_section,
             issue=request.issue,
         )
+        retrieval_confidence = _retriever.confidence
 
         if not articles:
             ms = int((time.monotonic() - t_start) * 1000)
@@ -240,6 +241,7 @@ async def chat(
                     retrieved_count=len(all_retrieved_articles),
                     research_steps=display_steps,
                     query_id=qid,
+                    confidence=retrieval_confidence,
                 )
 
             elif result.get("action") == "SEARCH":
@@ -285,6 +287,7 @@ async def chat(
             retrieved_count=len(all_retrieved_articles),
             research_steps=research_history,
             query_id=qid,
+            confidence=retrieval_confidence,
         )
 
     except Exception as e:

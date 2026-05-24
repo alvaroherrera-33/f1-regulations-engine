@@ -5,7 +5,7 @@ from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, func, text
 
-from app.models import ArticleDB, ArticleEmbedding, Article
+from app.models import ArticleDB, ArticleEmbedding, ArticleDiff, Article
 from ingestion.local_embeddings import get_embeddings_generator
 
 logger = logging.getLogger(__name__)
@@ -23,6 +23,7 @@ class HybridRetriever:
         """Initialize with database session."""
         self.db = db
         self.embeddings = get_embeddings_generator()
+        self.confidence: float = 0.0  # set after _merge_and_deduplicate
 
     async def retrieve(
         self,
@@ -53,13 +54,20 @@ class HybridRetriever:
         )
 
         # Step 3: Merge & deduplicate (prefer latest issue and vector results)
-        articles = self._merge_and_deduplicate(
+        articles, top_score = self._merge_and_deduplicate(
             vector_articles, fts_articles, top_k=top_k, detected_section=section
         )
-        logger.debug("Retrieval: deduped to %d unique articles (top_k=%d)", len(articles), top_k)
+        # Normalize confidence: RRF max score ~1/61 ≈ 0.0164 at rank 1
+        # We scale so that top score at rank 1 from both lists = 1.0
+        max_possible = 2.0 / (60 + 1)  # two results at rank 1
+        self.confidence = min(1.0, top_score / max_possible)
+        logger.debug("Retrieval: deduped to %d unique articles (top_k=%d, confidence=%.2f)", len(articles), top_k, self.confidence)
 
         # Step 4: Enrich with parent articles (increases context depth)
         articles = await self._enrich_with_parents(articles, filters)
+
+        # Step 5: Annotate with cross-year validity info
+        articles = await self._annotate_validity(articles)
 
         return articles
 
@@ -145,6 +153,10 @@ class HybridRetriever:
         """
         k_rrf = 60
         SECTION_BOOST = 1.2
+        # Level weights: Level 2 (sub-article) slightly preferred as the "sweet spot"
+        # Level 1 is often a high-level overview; Level 3 can be too granular without context
+        LEVEL_WEIGHTS = {1: 0.85, 2: 1.0, 3: 0.92}
+
         scores: dict[tuple[str, str, int], float] = {}
         # Map canonical key to the best actual Article object (highest issue)
         best_articles: dict[tuple[str, str, int], Article] = {}
@@ -154,8 +166,9 @@ class HybridRetriever:
                 # Canonical key: (article_code, section, year)
                 key = (article.article_code, article.section, article.year)
 
-                # Update RRF score
-                scores[key] = scores.get(key, 0.0) + (1.0 / (k_rrf + rank))
+                # RRF score with level weighting
+                level_w = LEVEL_WEIGHTS.get(article.level, 1.0)
+                scores[key] = scores.get(key, 0.0) + (level_w / (k_rrf + rank))
 
                 # Keep the instance with the highest issue number
                 if key not in best_articles or article.issue > best_articles[key].issue:
@@ -174,8 +187,8 @@ class HybridRetriever:
         # Sort by RRF score descending
         sorted_keys = sorted(scores.keys(), key=lambda x: scores[x], reverse=True)
 
-        # Take top_k
-        return [best_articles[key] for key in sorted_keys[:top_k]]
+        top_score = scores[sorted_keys[0]] if sorted_keys else 0.0
+        return [best_articles[key] for key in sorted_keys[:top_k]], top_score
 
     async def _enrich_with_parents(
         self, articles: List[Article], filters: list
@@ -216,6 +229,65 @@ class HybridRetriever:
 
         logger.debug("[Parent enrichment] Added %d latest-issue parent articles", len(extra_articles))
         return articles + extra_articles
+
+    async def _annotate_validity(self, articles: List[Article]) -> List[Article]:
+        """
+        Batch-fetch cross-year validity from article_diffs and annotate each article.
+
+        For each article at year Y < LATEST_YEAR, fetches the diff record with the
+        highest year_to. Articles at LATEST_YEAR get validity='unchanged' automatically.
+        Articles with no diff data keep validity=None.
+        """
+        if not articles:
+            return articles
+
+        LATEST_YEAR = 2026  # Update when a new season is indexed
+
+        # Annotate latest-year articles directly — no DB lookup needed
+        for article in articles:
+            if article.year == LATEST_YEAR:
+                article.validity = "unchanged"
+                article.latest_year = LATEST_YEAR
+
+        # For older articles, do a batch lookup
+        older = [a for a in articles if a.year < LATEST_YEAR]
+        if not older:
+            return articles
+
+        try:
+            # Build tuples for SQL: collect unique (code, section, year) combos
+            # We query by article_code IN (...) and then filter in Python — simpler
+            codes = list({a.article_code for a in older})
+            stmt = (
+                select(
+                    ArticleDiff.article_code,
+                    ArticleDiff.section,
+                    ArticleDiff.year_from,
+                    ArticleDiff.year_to,
+                    ArticleDiff.change_type,
+                )
+                .where(ArticleDiff.article_code.in_(codes))
+                .order_by(ArticleDiff.year_to.desc())
+            )
+            result = await self.db.execute(stmt)
+            rows = result.all()
+
+            # Build lookup: (code, section, year_from) -> (change_type, latest year_to seen)
+            diff_map: dict = {}
+            for code, section, y_from, y_to, change_type in rows:
+                key = (code, section, y_from)
+                if key not in diff_map:  # already sorted by year_to desc — first is best
+                    diff_map[key] = (change_type, y_to)
+
+            for article in older:
+                key = (article.article_code, article.section, article.year)
+                if key in diff_map:
+                    article.validity, article.latest_year = diff_map[key]
+
+        except Exception as e:
+            logger.warning("Validity annotation failed (non-critical): %s", e)
+
+        return articles
 
     @staticmethod
     def _to_article(db_row: ArticleDB) -> Article:

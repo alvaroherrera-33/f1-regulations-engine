@@ -118,8 +118,9 @@ async def root():
     }
 
 
-from app.routes import upload, chat, articles, admin
+from app.routes import upload, chat, articles, admin, sync
 app.include_router(upload.router, prefix="/api", tags=["upload"])
 app.include_router(chat.router, prefix="/api", tags=["chat"])
 app.include_router(articles.router, prefix="/api", tags=["articles"])
 app.include_router(admin.router, prefix="/api", tags=["admin"])
+app.include_router(sync.router, prefix="/api", tags=["sync"])

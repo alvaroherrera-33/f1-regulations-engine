@@ -19,5 +19,5 @@ const styles: Record<string, React.CSSProperties> = {
     container: { maxWidth: '560px', margin: '0 auto' },
     header: { marginBottom: '2rem' },
     title: { fontSize: '1.4rem', fontWeight: 600, color: '#fff', letterSpacing: '-0.02em', marginBottom: '0.3rem' },
-    subtitle: { fontSize: '0.85rem', color: '#555' },
+    subtitle: { fontSize: '0.85rem', color: '#666' },
 };

@@ -302,6 +302,18 @@ class LLMClient:
             if article.parent_code:
                 lines.append(f"Parent Article: {article.parent_code}")
 
+            # Validity note — helps LLM qualify its answer temporally
+            if article.validity and article.year < 2026:
+                validity_labels = {
+                    "unchanged": f"✓ Identical in {article.latest_year or 2026}",
+                    "minor":     f"⚠ Minor updates through {article.latest_year or 2026}",
+                    "major":     f"⚠ Significantly changed by {article.latest_year or 2026}",
+                    "removed":   f"✗ Not present in {article.latest_year or 2026} — may be obsolete",
+                }
+                validity_note = validity_labels.get(article.validity)
+                if validity_note:
+                    lines.append(f"[VALIDITY: {validity_note}]")
+
             content = article.content
             if len(content) > self.MAX_ARTICLE_CHARS:
                 # Truncate at a sentence boundary if possible
@@ -413,6 +425,8 @@ class LLMClient:
             year=article.year,
             section=article.section,
             issue=article.issue,
+            validity=article.validity,
+            latest_year=article.latest_year,
         )
 
 
