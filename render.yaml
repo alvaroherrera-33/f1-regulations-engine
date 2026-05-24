@@ -32,6 +32,7 @@ services:
 
       - key: PYTHONUNBUFFERED
         value: "1"
+      - key: APP_VERSION
+        value: "2.4.0"  # Mejoras 1-6 complete
 
-      - key: HF_HOME
-        value: /opt/render/project/.cache/huggingface
+   
