@@ -9,9 +9,9 @@ services:
     plan: free
 
     buildCommand: >
-      pip install --no-cache-dir torch==2.3.0+cpu
+      pip install torch==2.3.0+cpu
       --index-url https://download.pytorch.org/whl/cpu &&
-      pip install --no-cache-dir -r requirements.txt
+      pip install -r requirements.txt
 
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
 
@@ -32,6 +32,54 @@ services:
 
       - key: PYTHONUNBUFFERED
         value: "1"
+      - key: APP_VERSION
+        value: "2.4.0"  # Mejoras 1-6 complete
 
       - key: HF_HOME
         value: /opt/render/project/.cache/huggingface
+
+  # Daily cron: check FIA website for new regulation PDFs and auto-ingest them
+  - type: cron
+    name: fia-sync-daily
+    runtime: python
+    rootDir: backend
+    plan: free
+    schedule: "0 7 * * *"       # 07:00 UTC every day
+
+    buildCommand: >
+      pip install torch==2.3.0+cpu
+      --index-url https://download.pytorch.org/whl/cpu &&
+      pip install -r requirements.txt
+
+    startCommand: python -m scripts.fia_scraper
+
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: HF_HOME
+        value: /opt/render/project/.cache/huggingface
+      - key: PYTHONUNBUFFERED
+        value: "1"
+
+  # Weekly cron: recompute article_diffs after new data is indexed
+  - type: cron
+    name: compute-diffs-weekly
+    runtime: python
+    rootDir: backend
+    plan: free
+    schedule: "30 7 * * 0"      # 07:30 UTC every Sunday (after fia-sync)
+
+    buildCommand: >
+      pip install torch==2.3.0+cpu
+      --index-url https://download.pytorch.org/whl/cpu &&
+      pip install -r requirements.txt
+
+    startCommand: python -m scripts.compute_diffs
+
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: PYTHONUNBUFFERED
+        value: "1"

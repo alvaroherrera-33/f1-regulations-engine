@@ -1,14 +1,15 @@
 """LLM client for OpenRouter with citation enforcement and retry logic."""
 import asyncio
-import httpx
 import json
 import logging
 import re
 from typing import List
 
+import httpx
+
 from app.config import settings
-from app.models import Article, Citation
 from app.llm.intent import detect_intent_local
+from app.models import Article, Citation
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +45,9 @@ RESPONSE FORMAT (JSON ONLY):
   "action": "SEARCH" or "ANSWER",
   "search_query": "Precise keywords for next search (if action is SEARCH)",
   "answer": "Your final detailed answer with [Article X.Y] citations (if action is ANSWER)"
-}"""
+}
+
+LANGUAGE RULE: Always respond in the same language as the user's question. If the question is in French, answer in French. If in German, answer in German. If in Italian, answer in Italian. If in Spanish, answer in Spanish. Default to English for any other language. Use ONLY data from the provided articles — never mix data from different years unless the question explicitly asks for a comparison."""
 
 CONVERSATIONAL_PROMPT = """You are a helpful and professional F1 regulations expert.
 For non-technical queries or greetings, respond in a friendly manner.
@@ -302,6 +305,18 @@ class LLMClient:
             if article.parent_code:
                 lines.append(f"Parent Article: {article.parent_code}")
 
+            # Validity note — helps LLM qualify its answer temporally
+            if article.validity and article.year < 2026:
+                validity_labels = {
+                    "unchanged": f"✓ Identical in {article.latest_year or 2026}",
+                    "minor":     f"⚠ Minor updates through {article.latest_year or 2026}",
+                    "major":     f"⚠ Significantly changed by {article.latest_year or 2026}",
+                    "removed":   f"✗ Not present in {article.latest_year or 2026} — may be obsolete",
+                }
+                validity_note = validity_labels.get(article.validity)
+                if validity_note:
+                    lines.append(f"[VALIDITY: {validity_note}]")
+
             content = article.content
             if len(content) > self.MAX_ARTICLE_CHARS:
                 # Truncate at a sentence boundary if possible
@@ -413,6 +428,8 @@ class LLMClient:
             year=article.year,
             section=article.section,
             issue=article.issue,
+            validity=article.validity,
+            latest_year=article.latest_year,
         )
 
 

@@ -1,20 +1,35 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import ChatInterface from '@/components/ChatInterface';
 
-export default function ChatPage() {
-    const [year, setYear] = useState<number | null>(null);
-    const [section, setSection] = useState<string | null>(null);
+function ChatPageInner() {
+    const params = useSearchParams();
+    const [year, setYear] = useState<number | null>(() => {
+        const y = params.get('year');
+        return y ? parseInt(y, 10) : null;
+    });
+    const [section, setSection] = useState<string | null>(() => params.get('section'));
     const [issue, setIssue] = useState<number | null>(null);
+    const initialQuery = params.get('q') || undefined;
 
     return (
         <div style={styles.container}>
             <ChatInterface
                 year={year} section={section} issue={issue}
                 onYearChange={setYear} onSectionChange={setSection} onIssueChange={setIssue}
+                initialQuery={initialQuery}
             />
         </div>
+    );
+}
+
+export default function ChatPage() {
+    return (
+        <Suspense fallback={<div style={styles.container} />}>
+            <ChatPageInner />
+        </Suspense>
     );
 }
 

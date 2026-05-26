@@ -184,6 +184,35 @@ Technical 2026: Issues 11, 12, 14, 15
 - **PostgreSQL tables:** documents, articles, article_embeddings, query_logs
 - **Índices en Supabase:** HNSW para vector search (creado por schema.sql)
 
+### Estado de la DB de producción (mayo 2026)
+
+**✅ COMPLETADO — Ingestion de todos los años (2023–2026)**
+
+| Año | Artículos | Embeddings |
+|-----|-----------|------------|
+| 2023 | 6,045 | 7,869 |
+| 2024 | 5,833 | 7,181 |
+| 2025 | 2,027 | 2,236 |
+| 2026 | 2,277 | 2,515 |
+| **Total** | **16,182** | **19,801** |
+
+**Cómo se hizo la ingestion de 2023/2024 sin contraseña postgres:**
+1. Parseo y embedding generados en sandbox de Cowork (Python, sin necesidad de DB)
+2. Documentos insertados vía Supabase MCP (execute_sql) — 39 docs, IDs 21–59
+3. Artículos y embeddings insertados via psycopg2 directo desde sandbox:
+   - Se creó usuario temporal `temp_ingester` (no-superuser) con políticas RLS permisivas
+   - Conexión via Session Pooler (IPv4): `aws-1-eu-central-1.pooler.supabase.com:5432`
+   - Batches de 300 rows con `execute_values` → ~370 rows/s
+   - `execute_values` + `ON CONFLICT DO NOTHING` con `RETURNING` no devuelve los IDs (bug psycopg2) — usar SELECT posterior para recuperar el mapping
+   - Usuario y políticas borrados al terminar
+
+**Para futura ingestion (con password):**
+```bash
+cd backend
+DATABASE_URL="postgresql+asyncpg://postgres.nmftfbboxssonnvbjzef:<PASSWORD>@aws-1-eu-central-1.pooler.supabase.com:5432/postgres?ssl=require" \
+python -m scripts.ingest_archives
+```
+
 ## Modelo LLM actual
 
 - **Configurado:** `openai/gpt-oss-120b` via OpenRouter
@@ -216,3 +245,40 @@ CREATE TABLE query_logs (
 - **Ver artículos cortos/basura:** `SELECT article_code, section, year, LENGTH(content) as len, LEFT(content,100) FROM articles WHERE LENGTH(content) < 50 ORDER BY section, year`
 - **Verificar orphans:** `SELECT a.article_code, a.parent_code FROM articles a LEFT JOIN articles p ON a.parent_code=p.article_code AND a.section=p.section AND a.year=p.year AND a.issue=p.issue WHERE a.parent_code IS NOT NULL AND p.article_code IS NULL`
 - **El index.lock de git** a veces queda bloqueado desde sesiones de Cowork. Borrarlo manualmente: `del .git\index.lock` (Windows) o `rm .git/index.lock` (Linux/Mac).
+
+## ⚠️ CRÍTICO: cp desde NTFS trunca archivos en el sandbox Linux
+
+**Problema:** Al copiar archivos del workspace Windows montado (`/sessions/*/mnt/`) al sandbox Linux (`/tmp/`) con `cp`, los archivos se truncan silenciosamente en un punto arbitrario (e.g., a 3800 bytes de un archivo de 3868 bytes). Esto lleva a syntax errors en producción que son difíciles de diagnosticar porque el bash local no los detecta.
+
+**Síntoma:** Render/CI falla el build silenciosamente (sirve el deployment antiguo sin error visible). `python3 -m py_compile` sobre los archivos copiados detecta el error.
+
+**Solución:** Siempre usar Python `pathlib` para copiar archivos entre el NTFS mount y el filesystem Linux:
+```python
+import pathlib
+src = pathlib.Path("/sessions/.../mnt/f1-regulations-engine/backend/app/main.py")
+dst = pathlib.Path("/tmp/mi-repo/backend/app/main.py")
+dst.write_bytes(src.read_bytes())  # NO: cp, shutil.copy, shutil.copy2
+```
+
+**Verificación obligatoria antes de git push:** Comparar `wc -l` de origen y destino, o ejecutar `python3 -m py_compile` sobre todos los .py copiados.
+
+## Mejoras implementadas (2026-05-23)
+
+### Mejora 3: Validación temporal de artículos
+- Tabla `article_diffs` (3944 filas): similitud coseno entre artículos del mismo código en distintos años.
+- Clasificación: ≥0.985=unchanged, ≥0.90=minor, <0.90=major, ausente=removed.
+- `_annotate_validity()` en `HybridRetriever` anota cada artículo recuperado.
+- Frontend: `CitationCard` muestra badge de color por validez; `ChatInterface` muestra advertencia si confidence < 0.55.
+
+### Mejora 2: Búsqueda jerárquica por niveles (RRF level weights)
+- Level 1 (artículo principal) = 0.85x, Level 2 (sub-artículo) = 1.0x, Level 3 (cláusula) = 0.92x.
+- Se prefieren sub-artículos porque son más específicos sin ser demasiado granulares.
+
+### Mejora 5: Confidence scoring
+- `HybridRetriever.confidence`: normalizado del top RRF score = `min(1.0, top_score / (2/61))`.
+- Propagado por `chat.py` → `ChatResponse.confidence` → frontend.
+
+### Mejora 1: FIA scraper
+- `backend/scripts/fia_scraper.py`: scrape de `fia.com/regulation/category/110`, extrae PDFs F1 por año/sección/issue del filename.
+- `backend/app/routes/sync.py`: `GET /api/sync/status` (caché) y `POST /api/sync/check` (live check ± ingest en background).
+- Tabla `fia_sync_log` en Supabase para historial de checks.

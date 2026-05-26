@@ -5,6 +5,7 @@ because the Render free tier has only 512MB RAM, which is insufficient
 to embed all articles in a single process alongside the web server.
 """
 import logging
+
 from fastapi import APIRouter
 from sqlalchemy import func, select, text
 

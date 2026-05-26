@@ -1,6 +1,7 @@
 import asyncio
-import json
+
 from httpx import AsyncClient
+
 
 async def test_api():
     async with AsyncClient(base_url='http://localhost:8000/api', timeout=30.0) as client:
@@ -12,8 +13,8 @@ async def test_api():
         print('\n[1/3] Testing: Basic Retrieval & Citations (Financial Regulations)')
         try:
             r1 = await client.post('/chat', json={
-                'query': 'What is the definition of a Team?', 
-                'year': 2026, 
+                'query': 'What is the definition of a Team?',
+                'year': 2026,
                 'section': 'Financial'
             })
             d1 = r1.json()
@@ -22,7 +23,7 @@ async def test_api():
             print(f'✅ Citations found: {len(citations)}')
             if citations:
                 print(f'✅ First Citation: {citations[0].get("article_code")} - {citations[0].get("title")}')
-            
+
             # Verify citation content relevance
             if "Team" in d1.get('answer', ''):
                 print('✅ Answer seems relevant (contains "Team")')
@@ -36,14 +37,14 @@ async def test_api():
         try:
             # Most Financial regs we ingested are 2026 Issue 1 or similar
             r2 = await client.post('/chat', json={
-                'query': 'What are the rules for marketing activities?', 
-                'year': 2026, 
+                'query': 'What are the rules for marketing activities?',
+                'year': 2026,
                 'issue': 1
             })
             d2 = r2.json()
             retrieved = d2.get('retrieved_count', 0)
             print(f'✅ Articles retrieved: {retrieved}')
-            
+
             # Check if citations match the filters
             mismatch = False
             for c in d2.get('citations', []):

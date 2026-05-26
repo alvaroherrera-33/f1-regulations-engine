@@ -1,5 +1,7 @@
 import asyncio
+
 from httpx import AsyncClient
+
 
 async def test_routing():
     async with AsyncClient(base_url='http://localhost:8000/api', timeout=30.0) as client:
@@ -23,12 +25,12 @@ async def test_routing():
                     'section': 'Technical'
                 })
                 data = r.json()
-                
+
                 print(f"✅ Status: {r.status_code}")
                 print(f"✅ Citations: {len(data.get('citations', []))}")
                 print(f"✅ Retrieved Count: {data.get('retrieved_count', 0)}")
                 print(f"💬 Answer: {data.get('answer', '')[:100]}...")
-                
+
                 if q_type == "Conversational":
                     if data.get('retrieved_count', 0) == 0:
                         print("✨ Successfully routed to CONVERSATIONAL (no RAG used)")

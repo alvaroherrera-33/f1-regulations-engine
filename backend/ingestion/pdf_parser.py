@@ -1,8 +1,9 @@
 """PDF parsing using PyMuPDF (fitz)."""
-import fitz  # PyMuPDF
 import re
-from typing import List, Dict, Optional
 from dataclasses import dataclass
+from typing import Dict, List, Optional
+
+import fitz  # PyMuPDF
 
 
 @dataclass

@@ -365,4 +365,41 @@ Your F1 Regulations RAG Engine is now live!
 - Add analytics
 - Share with users!
 
-🏎️ Happy racing! 🏎️
+---
+
+## Automated cron jobs (Render)
+
+The `render.yaml` blueprint defines two cron services that run automatically:
+
+### fia-sync-daily (07:00 UTC every day)
+
+Checks the FIA website for new regulation PDFs and ingests any that are not yet in the database.
+
+```
+python -m scripts.fia_scraper
+```
+
+Required env vars on the cron service: `DATABASE_URL`, `OPENROUTER_API_KEY`, `HF_HOME`.
+
+### compute-diffs-weekly (07:30 UTC every Sunday)
+
+Recomputes cross-year article diffs after new data may have been indexed by the daily sync.
+Uses the embeddings already in the DB — zero LLM calls.
+
+```
+python -m scripts.compute_diffs
+```
+
+Required env vars: `DATABASE_URL`.
+
+### First-time setup
+
+After deploying, apply the migration to add the required tables:
+
+1. Open the Supabase SQL Editor (or psql).
+2. Run `backend/database/migrations/002_add_article_diffs_and_sync_log.sql`.
+3. Then run compute_diffs once manually to populate initial diffs:
+
+```bash
+DATABASE_URL=postgresql+asyncpg://... python -m scripts.compute_diffs
+```

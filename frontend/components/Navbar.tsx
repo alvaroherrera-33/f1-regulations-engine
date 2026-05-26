@@ -89,5 +89,6 @@ const styles: Record<string, React.CSSProperties> = {
     linkActive: {
         color: '#fff',
         fontWeight: 600,
+        background: 'rgba(255,255,255,0.07)',
     },
 };

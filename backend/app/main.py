@@ -4,11 +4,14 @@ from datetime import datetime
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 from sqlalchemy import select
 
 from app.config import settings
-from app.models import HealthResponse
 from app.database import engine
+from app.models import HealthResponse
 
 logging.basicConfig(
     level=logging.INFO,
@@ -16,11 +19,16 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Rate limiter — 10 requests/minute per IP on /api/chat
+limiter = Limiter(key_func=get_remote_address)
+
 app = FastAPI(
     title="F1 Regulations RAG Engine",
     description="Legal-grade RAG system for FIA Formula 1 regulations",
     version="0.1.0",
 )
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
@@ -68,9 +76,10 @@ async def health_check():
     )
 
 
-from app.database import async_session
-from app.models import StatusResponse, Document, ArticleDB, ArticleEmbedding
 from sqlalchemy import func
+
+from app.database import async_session
+from app.models import ArticleDB, ArticleEmbedding, Document, StatusResponse
 
 
 @app.get("/status", response_model=StatusResponse)
@@ -118,8 +127,10 @@ async def root():
     }
 
 
-from app.routes import upload, chat, articles, admin
+from app.routes import admin, articles, chat, sync, upload
+
 app.include_router(upload.router, prefix="/api", tags=["upload"])
 app.include_router(chat.router, prefix="/api", tags=["chat"])
 app.include_router(articles.router, prefix="/api", tags=["articles"])
 app.include_router(admin.router, prefix="/api", tags=["admin"])
+app.include_router(sync.router, prefix="/api", tags=["sync"])

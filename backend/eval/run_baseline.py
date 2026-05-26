@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Run eval queries one at a time, saving results incrementally."""
-import json, time, sys
+import json
+import sys
+import time
 from pathlib import Path
 
 try:
@@ -22,17 +24,17 @@ results = []
 for i, q in enumerate(queries):
     qid = q["id"]
     print(f"[{i+1}/{len(queries)}] {qid}: {q['query'][:60]}...", flush=True)
-    
+
     expected = set(q["expected_articles"])
     key_facts = q.get("key_facts", [])
-    
+
     t0 = time.monotonic()
     try:
         r = client.post(f"{URL}/api/chat", json={"query": q["query"]}, timeout=120)
         r.raise_for_status()
         data = r.json()
         elapsed_ms = int((time.monotonic() - t0) * 1000)
-        
+
         citations = data.get("citations", [])
         retrieved = set()
         for c in citations:
@@ -41,16 +43,16 @@ for i, q in enumerate(queries):
             parts = code.split(".")
             if len(parts) > 1:
                 retrieved.add(parts[0])
-        
+
         precision = len(expected & retrieved) / len(retrieved) if retrieved else 0
         recall = len(expected & retrieved) / len(expected) if expected else 1
-        
+
         answer = data.get("answer", "").lower()
         facts_found = sum(1 for f in key_facts if f.lower() in answer)
         fact_acc = facts_found / len(key_facts) if key_facts else 1
-        
+
         steps = len(data.get("research_steps", []))
-        
+
         result = {
             "id": qid, "difficulty": q["difficulty"],
             "expected": list(expected), "retrieved": list(retrieved),
@@ -60,7 +62,7 @@ for i, q in enumerate(queries):
             "answer_len": len(answer), "error": None
         }
         status = f"P={precision:.0%} R={recall:.0%} F={fact_acc:.0%} {elapsed_ms/1000:.1f}s"
-        
+
     except Exception as e:
         elapsed_ms = int((time.monotonic() - t0) * 1000)
         result = {
@@ -71,14 +73,14 @@ for i, q in enumerate(queries):
             "answer_len": 0, "error": str(e)
         }
         status = f"ERROR: {e}"
-    
+
     results.append(result)
     print(f"  → {status}", flush=True)
-    
+
     # Save incrementally
     with open(OUTPUT, "w") as f:
         json.dump({"timestamp": time.strftime("%Y-%m-%d %H:%M:%S"), "results": results}, f, indent=2)
-    
+
     if i < len(queries) - 1:
         time.sleep(1)
 

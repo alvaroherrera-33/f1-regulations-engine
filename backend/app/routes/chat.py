@@ -1,16 +1,21 @@
 """Chat endpoint for RAG queries."""
+import asyncio
 import logging
 import time
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
+from app.llm.client import OpenRouterError, generate_answer_with_citations
 from app.models import ChatRequest, ChatResponse, FeedbackRequest, StatsResponse
-from app.retrieval.retriever import retrieve_articles
-from app.llm.client import generate_answer_with_citations, OpenRouterError
+from app.retrieval.retriever import HybridRetriever, retrieve_articles
+
+limiter = Limiter(key_func=get_remote_address)
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["chat"])
@@ -19,6 +24,19 @@ _AI_UNAVAILABLE = (
     "The AI service is temporarily unavailable. "
     "Please try again in a few moments."
 )
+
+# Hard timeout per agentic step (seconds). Prevents runaway requests on Render free tier.
+_STEP_TIMEOUT_S = 22.0
+
+
+def _citations_or_fallback(citations, all_retrieved_articles):
+    """
+    If the LLM returned 0 parsed citations, fall back to the top-3 retrieved articles.
+    This ensures the user always gets relevant article references.
+    """
+    if citations:
+        return citations
+    return list(all_retrieved_articles[:3])
 
 
 async def _log_query(
@@ -70,7 +88,9 @@ async def _log_query(
 
 
 @router.post("/chat", response_model=ChatResponse)
+@limiter.limit("10/minute")
 async def chat(
+    http_request: Request,
     request: ChatRequest,
     db: AsyncSession = Depends(get_db)
 ):
@@ -134,14 +154,15 @@ async def chat(
         query_section = request.section or prepared.get("section")
         expanded_query = prepared.get("search_query", request.query)
 
-        # Step 3: Initial retrieval
-        articles = await retrieve_articles(
-            db=db,
+        # Step 3: Initial retrieval — use HybridRetriever directly to capture confidence
+        _retriever = HybridRetriever(db)
+        articles = await _retriever.retrieve(
             query=expanded_query,
             year=query_year,
             section=query_section,
             issue=request.issue,
         )
+        retrieval_confidence = _retriever.confidence
 
         if not articles:
             ms = int((time.monotonic() - t_start) * 1000)
@@ -184,11 +205,17 @@ async def chat(
                     seen_codes.add(na.article_code)
 
             try:
-                result = await llm_client.generate_reasoning_step(
-                    query=request.query,
-                    articles=all_retrieved_articles,
-                    history=research_history
+                result = await asyncio.wait_for(
+                    llm_client.generate_reasoning_step(
+                        query=request.query,
+                        articles=all_retrieved_articles,
+                        history=research_history,
+                    ),
+                    timeout=_STEP_TIMEOUT_S,
                 )
+            except asyncio.TimeoutError:
+                logger.warning("Agentic step %d timed out after %.0fs", step + 1, _STEP_TIMEOUT_S)
+                break
             except OpenRouterError:
                 ms = int((time.monotonic() - t_start) * 1000)
                 codes = [a.article_code for a in all_retrieved_articles]
@@ -215,7 +242,10 @@ async def chat(
 
             if result.get("action") == "ANSWER":
                 answer = result.get("answer")
-                citations = llm_client._extract_citations(all_retrieved_articles, answer)
+                citations = _citations_or_fallback(
+                    llm_client._extract_citations(all_retrieved_articles, answer),
+                    all_retrieved_articles,
+                )
                 codes = [c.article_code for c in citations]
 
                 display_steps = research_history
@@ -240,6 +270,7 @@ async def chat(
                     retrieved_count=len(all_retrieved_articles),
                     research_steps=display_steps,
                     query_id=qid,
+                    confidence=retrieval_confidence,
                 )
 
             elif result.get("action") == "SEARCH":
@@ -285,6 +316,7 @@ async def chat(
             retrieved_count=len(all_retrieved_articles),
             research_steps=research_history,
             query_id=qid,
+            confidence=retrieval_confidence,
         )
 
     except Exception as e:

@@ -14,7 +14,6 @@ Design constraints (from NEXT_SPRINT.md):
 from dataclasses import dataclass
 from typing import List
 
-
 # Only chunk articles whose content exceeds this length
 CHUNK_THRESHOLD = 1500
 

@@ -1,6 +1,6 @@
 """Ingestion module for PDF processing and database insertion."""
-from ingestion.pdf_parser import PDFParser, parse_pdf, ParsedArticle
 from ingestion.local_embeddings import LocalEmbeddingsGenerator, generate_embeddings
+from ingestion.pdf_parser import ParsedArticle, PDFParser, parse_pdf
 from ingestion.pipeline import IngestionPipeline, ingest_document
 
 __all__ = [

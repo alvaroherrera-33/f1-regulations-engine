@@ -16,6 +16,8 @@ export interface Citation {
     year: number;
     section: string;
     issue: number;
+    validity?: 'unchanged' | 'minor' | 'major' | 'removed' | null;
+    latest_year?: number | null;
 }
 
 export interface ChatResponse {
@@ -29,6 +31,7 @@ export interface ChatResponse {
         query: string;
     }[];
     query_id?: number;
+    confidence?: number;  // 0-1, retrieval confidence
 }
 
 export interface UploadResponse {
@@ -147,5 +150,60 @@ export async function submitFeedback(queryId: number, wasHelpful: boolean): Prom
 export async function getStats(): Promise<StatsResponse> {
     const response = await fetch(`${API_URL}/api/stats`);
     if (!response.ok) throw new Error('Stats fetch failed');
+    return response.json();
+}
+
+export interface ExplainDiffResponse {
+    article_code: string;
+    year_a: number;
+    year_b: number;
+    section: string | null;
+    version_a: ArticleVersion | null;
+    version_b: ArticleVersion | null;
+    explanation: string;
+}
+
+export interface ArticleVersion {
+    article_code: string;
+    title: string;
+    content: string;
+    year: number;
+    section: string;
+    issue: number;
+}
+
+/**
+ * AI-powered explanation of the differences between two versions of a regulation article
+ */
+export async function explainDiff(
+    code: string,
+    yearA: number,
+    yearB: number,
+    section?: string
+): Promise<ExplainDiffResponse> {
+    let url = `${API_URL}/api/compare/explain?code=${encodeURIComponent(code)}&year_a=${yearA}&year_b=${yearB}`;
+    if (section) url += `&section=${encodeURIComponent(section)}`;
+    const response = await fetch(url, { method: 'POST' });
+    if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error((error as { detail?: string }).detail || 'Explain diff failed');
+    }
+    return response.json();
+}
+
+export interface SyncStatusResponse {
+    last_checked: string | null;
+    total_fia_docs: number;
+    new_docs_found: number;
+    last_error: string | null;
+    db_total_docs: number;
+}
+
+/**
+ * Get FIA sync status (last time we checked fia.com for new PDFs)
+ */
+export async function getSyncStatus(): Promise<SyncStatusResponse> {
+    const response = await fetch(`${API_URL}/api/sync/status`);
+    if (!response.ok) throw new Error('Sync status fetch failed');
     return response.json();
 }

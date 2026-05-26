@@ -12,3 +12,4 @@ pgvector==0.2.4
 numpy==1.26.4
 huggingface-hub==0.20.3
 sentence-transformers==2.6.1
+slowapi==0.1.9

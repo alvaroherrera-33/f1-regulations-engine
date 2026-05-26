@@ -6,10 +6,10 @@ import { sendChatQuery, submitFeedback } from '@/lib/api';
 import CitationCard from './CitationCard';
 
 const EXAMPLES = [
-    'What is the minimum weight of an F1 car in 2026?',
-    'How does DRS work under current regulations?',
-    'Explain the cost cap rules',
-    'What are the power unit fuel flow limits?',
+    'What is the minimum car weight in 2026?',
+    'How many power units are allowed per season?',
+    'What changed in the 2026 aerodynamic regulations?',
+    'What are the cost cap limits?',
 ];
 
 const LOADING_MESSAGES = [
@@ -28,6 +28,7 @@ interface Message {
     retrievedCount?: number;
     stepCount?: number;
     timeMs?: number;
+    confidence?: number;
 }
 
 interface Props {
@@ -37,16 +38,19 @@ interface Props {
     onYearChange: (y: number | null) => void;
     onSectionChange: (s: string | null) => void;
     onIssueChange: (i: number | null) => void;
+    initialQuery?: string;
 }
 
-export default function ChatInterface({ year, section, issue, onYearChange, onSectionChange, onIssueChange }: Props) {
+export default function ChatInterface({ year, section, issue, onYearChange, onSectionChange, onIssueChange, initialQuery }: Props) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [loadingIdx, setLoadingIdx] = useState(0);
     const [showFilters, setShowFilters] = useState(false);
+    const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
     const endRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const firedInitial = useRef(false);
 
     useEffect(() => {
         endRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -64,6 +68,15 @@ export default function ChatInterface({ year, section, issue, onYearChange, onSe
             textareaRef.current.style.height = 'auto';
         }
     }, [input]);
+
+    // Auto-execute query from URL ?q= param (runs once)
+    useEffect(() => {
+        if (initialQuery && !firedInitial.current) {
+            firedInitial.current = true;
+            send(initialQuery);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const autoResize = () => {
         const el = textareaRef.current;
@@ -96,6 +109,7 @@ export default function ChatInterface({ year, section, issue, onYearChange, onSe
                 retrievedCount: res.retrieved_count,
                 stepCount: res.research_steps?.length || 1,
                 timeMs: Date.now() - t0,
+                confidence: res.confidence,
             }]);
         } catch (e: any) {
             setMessages(prev => [...prev, {
@@ -106,6 +120,21 @@ export default function ChatInterface({ year, section, issue, onYearChange, onSe
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleShare = (idx: number) => {
+        // Find the preceding user message to get the query text
+        const userMsg = messages.slice(0, idx).reverse().find(m => m.role === 'user');
+        if (!userMsg) return;
+        const params = new URLSearchParams();
+        params.set('q', userMsg.content);
+        if (year) params.set('year', String(year));
+        if (section) params.set('section', section);
+        const url = `${window.location.origin}/chat?${params.toString()}`;
+        navigator.clipboard.writeText(url).then(() => {
+            setCopiedIdx(idx);
+            setTimeout(() => setCopiedIdx(null), 2000);
+        });
     };
 
     const handleFeedback = async (idx: number, helpful: boolean) => {
@@ -155,6 +184,11 @@ export default function ChatInterface({ year, section, issue, onYearChange, onSe
                                         </>
                                     )}
                                     <span style={{ flex: 1 }} />
+                                    <button onClick={() => handleShare(i)} style={styles.shareBtn} title="Copy link">
+                                        {copiedIdx === i ? '✓ Copied' : (
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+                                        )}
+                                    </button>
                                     {msg.queryId && !msg.feedback && (
                                         <>
                                             <button onClick={() => handleFeedback(i, true)} style={styles.fbBtn} title="Helpful">&#128077;</button>
@@ -169,6 +203,14 @@ export default function ChatInterface({ year, section, issue, onYearChange, onSe
                                 </div>
                             )}
                         </div>
+
+                        {/* Low-confidence warning */}
+                        {msg.role === 'assistant' && msg.confidence != null && msg.confidence < 0.55 && msg.citations && msg.citations.length > 0 && (
+                            <div style={styles.confidenceWarn}>
+                                <span style={styles.confidenceIcon}>⚠</span>
+                                Low confidence — this topic may not be well covered in the indexed regulations. Verify with official FIA documents.
+                            </div>
+                        )}
 
                         {/* Citations */}
                         {msg.citations && msg.citations.length > 0 && (
@@ -282,6 +324,7 @@ const styles: Record<string, React.CSSProperties> = {
     dot: { width: '2px', height: '2px', borderRadius: '50%', background: '#444', flexShrink: 0 },
     fbBtn: { background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.75rem', padding: '0.15rem 0.3rem', borderRadius: '4px', opacity: 0.5, transition: 'opacity 0.15s' },
     fbThanks: { fontSize: '0.72rem', color: '#666', fontStyle: 'italic' },
+    shareBtn: { background: 'transparent', border: 'none', cursor: 'pointer', color: '#555', fontSize: '0.7rem', padding: '0.15rem 0.3rem', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '0.2rem', transition: 'color 0.15s' },
 
     // Citations
     citations: { paddingLeft: '0.75rem', borderLeft: '2px solid rgba(255,255,255,0.07)' },
@@ -300,6 +343,10 @@ const styles: Record<string, React.CSSProperties> = {
     filterToggleActive: { borderColor: '#eb0000', color: '#eb0000' },
     textarea: { flex: 1, background: 'transparent', border: 'none', color: '#e0e0e0', fontSize: '0.9rem', resize: 'none', outline: 'none', fontFamily: 'inherit', lineHeight: 1.5, padding: '0.5rem 0', overflowY: 'hidden', maxHeight: '150px' },
     sendBtn: { background: '#eb0000', border: 'none', borderRadius: '8px', color: '#fff', padding: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'opacity 0.15s', marginBottom: '2px' },
+
+    // Confidence warning
+    confidenceWarn: { display: 'flex', alignItems: 'flex-start', gap: '0.4rem', background: 'rgba(250,204,21,0.06)', border: '1px solid rgba(250,204,21,0.2)', borderRadius: '6px', padding: '0.5rem 0.7rem', fontSize: '0.75rem', color: '#9ca3af', lineHeight: 1.5, marginTop: '0.5rem' },
+    confidenceIcon: { color: '#facc15', flexShrink: 0, marginTop: '0.05rem' },
 
     // Filter panel
     filterPanel: { display: 'flex', gap: '0.5rem', padding: '0.5rem 0 0', flexWrap: 'wrap', animation: 'fadeIn 0.15s ease' },

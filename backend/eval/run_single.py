@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Run a single eval query by index. Appends result to eval_baseline.json."""
-import json, sys, time
+import json
+import sys
+import time
 from pathlib import Path
 
 import httpx

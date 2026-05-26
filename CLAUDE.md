@@ -194,3 +194,73 @@ DATABASE_URL=postgresql+asyncpg://... python -m scripts.ingest_archives
 ## Estado actual del proyecto
 
 Consultar `PLAN.md` para el plan de features, `QUALITY_PLAN.md` para el plan de mejora de calidad, y `.claude/learnings.md` para decisiones técnicas y problemas conocidos.
+
+## Plan estratégico de profesionalización (Mayo 2026)
+
+Documento completo en `F1_REGS_ENGINE_STRATEGIC_PLAN.docx`. A continuación el resumen ejecutable:
+
+### Multiidioma — Cambios requeridos
+
+**1. Ampliar intent.py con keywords FR/DE/IT** (`backend/app/llm/intent.py`):
+- Añadir a `_REGULATION_PATTERNS` términos en francés (règlement, poids, moteur, pneumatique, châssis, aileron, freins, course, qualification), alemán (Reglement, Gewicht, Motor, Reifen, Chassis, Bremse, Rennen, Qualifikation), e italiano (regolamento, peso, motore, pneumatico, telaio, freni, gara, qualifica).
+- Añadir a `_CONVERSATIONAL_PATTERNS` saludos: "bonjour", "bonsoir", "guten tag", "guten morgen", "buongiorno", "buonasera", "auf wiedersehen", "arrivederci", "merci", "danke", "grazie".
+
+**2. Añadir instrucción de idioma al AGENTIC_PROMPT** (`backend/app/llm/client.py`):
+- Añadir al final del AGENTIC_PROMPT: `"LANGUAGE RULE: Always respond in the same language as the user's question. If the question is in French, answer in French. If in German, answer in German. Etc. Use ONLY data from the provided articles — never mix data from different years unless the question explicitly asks for a comparison."`
+
+### Web — Cambios requeridos
+
+**3. Ocultar /stats y /upload del navbar** (`frontend/components/Navbar.tsx`):
+- Eliminar upload y stats de `NAV_LINKS`. Las páginas siguen existiendo, accesibles por URL directa.
+- El navbar queda: Chat, Compare, About.
+
+**4. Rediseñar landing page** (`frontend/app/page.tsx`):
+- Claim: "Search F1 regulations with AI-powered precision" (sin emojis).
+- Tres features: Instant answers with citations / Compare across years / 16,000+ articles indexed.
+- Sección Coverage: tabla de qué regulaciones están indexadas (Technical, Sporting, Financial × 2023–2026).
+- Ejemplo real de pregunta/respuesta.
+- Footer profesional: enlace GitHub, "Built by Álvaro Herrera".
+
+**5. Añadir suggested questions al chat** (`frontend/components/ChatInterface.tsx`):
+- En estado vacío mostrar 3–4 preguntas clickeables, ej: "What is the minimum car weight in 2026?", "How many power units are allowed per season?", "What changed in the 2026 aerodynamic regulations?", "What are the cost cap limits?".
+
+**6. Reestructurar About** (`frontend/app/about/page.tsx`):
+- About queda como página orientada al usuario: qué es la herramienta, qué regulaciones cubre (años, secciones), limitaciones.
+- Crear `/about/technical` con el contenido actual de pipeline y tech stack, enlazado desde About como "See how it works under the hood".
+
+### GitHub — Cambios requeridos
+
+**7. Limpiar raíz del repo**:
+- Crear carpeta `docs/`.
+- Mover a `docs/`: DEPLOYMENT.md, QUICKSTART.md, ARCHIVE_SETUP.md.
+- Mover a `docs/internal/`: PLAN.md, PLAN_V2.md, QUALITY_PLAN.md, NEXT_SPRINT.md.
+- CLAUDE.md se queda en raíz (lo usa Claude Code directamente).
+- README.md se queda en raíz.
+
+**8. Reescribir README.md**:
+- Sin emojis. Título: "F1 Regulations Engine — AI-powered search across FIA Formula 1 regulations".
+- Badges: Python 3.11, License MIT, deploy status.
+- Secciones: Features (lista concisa), Architecture (diagrama ASCII simplificado), Quick Start (docker-compose), Tech Stack (tabla), API Endpoints, License.
+- Añadir screenshot del chat (pendiente de captura).
+
+**9. Añadir CI** (`.github/workflows/ci.yml`):
+- Trigger: push y PR a main.
+- Backend: ruff lint + pytest (si hay tests).
+- Frontend: tsc --noEmit + next build.
+
+### Prioridad de ejecución
+
+| Prioridad | Tareas | Tiempo estimado |
+|-----------|--------|-----------------|
+| ALTA | #1, #2, #3 (intent.py, prompt, navbar) | ~1 hora |
+| ALTA | #7, #8 (limpiar repo, README) | ~2 horas |
+| MEDIA | #4, #5, #6 (landing, suggested questions, about) | ~4 horas |
+| BAJA | #9 (CI) | ~1 hora |
+
+### Principios de diseño (respetar siempre)
+
+1. **Herramienta, no demo** — El usuario debe sentir que usa una herramienta profesional, no un proyecto de portfolio.
+2. **Inglés como idioma base** — UI en inglés (reglamentos FIA son en inglés). Chat acepta preguntas en cualquier idioma.
+3. **Menos es más en navbar** — Solo Chat, Compare, About.
+4. **GitHub como escaparate técnico** — README impecable, sin emojis, con CI verde.
+5. **No romper free tier** — Todo cabe en Render free (~512MB), Supabase free, Vercel hobby.

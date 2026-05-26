@@ -58,3 +58,47 @@ USING hnsw (embedding vector_cosine_ops);
 
 -- Document lookup
 CREATE INDEX idx_documents_year_section ON documents(year, section);
+
+-- Query logs: every chat request + feedback
+CREATE TABLE IF NOT EXISTS query_logs (
+    id SERIAL PRIMARY KEY,
+    query TEXT NOT NULL,
+    intent VARCHAR(20),                -- 'REGULATIONS' | 'CONVERSATIONAL'
+    year INTEGER,
+    section VARCHAR(50),
+    answer TEXT,
+    retrieved_count INTEGER DEFAULT 0,
+    response_time_ms INTEGER,
+    was_helpful BOOLEAN,               -- NULL until user submits feedback
+    error_occurred BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Cross-year article diffs (computed by scripts/compute_diffs.py, 0 LLM calls)
+CREATE TABLE IF NOT EXISTS article_diffs (
+    id SERIAL PRIMARY KEY,
+    article_code VARCHAR(50) NOT NULL,
+    section VARCHAR(50) NOT NULL,
+    year_from INTEGER NOT NULL,
+    year_to INTEGER NOT NULL,
+    issue_from INTEGER NOT NULL,
+    issue_to INTEGER NOT NULL,
+    similarity FLOAT,                  -- cosine similarity of embeddings (0-1)
+    change_type VARCHAR(20),           -- 'unchanged' | 'minor' | 'major' | 'added' | 'removed'
+    computed_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(article_code, section, year_from, year_to)
+);
+
+CREATE INDEX IF NOT EXISTS idx_diffs_lookup
+    ON article_diffs(article_code, section, year_from);
+
+-- FIA auto-sync audit log (populated by scripts/fia_scraper.py cron)
+CREATE TABLE IF NOT EXISTS fia_sync_log (
+    id SERIAL PRIMARY KEY,
+    checked_at TIMESTAMP DEFAULT NOW(),
+    new_docs_found INTEGER DEFAULT 0,
+    new_articles_indexed INTEGER DEFAULT 0,
+    total_fia_docs INTEGER DEFAULT 0,
+    error TEXT,
+    status VARCHAR(20) DEFAULT 'ok'   -- 'ok' | 'error' | 'no_changes'
+);
