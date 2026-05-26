@@ -90,8 +90,8 @@ async def _log_query(
 @router.post("/chat", response_model=ChatResponse)
 @limiter.limit("10/minute")
 async def chat(
-    http_request: Request,
-    request: ChatRequest,
+    request: Request,
+    body: ChatRequest,
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -110,14 +110,14 @@ async def chat(
         llm_client = LLMClient()
 
         # Step 1: Detect Intent (local, no LLM)
-        intent = await llm_client.detect_intent(request.query)
+        intent = await llm_client.detect_intent(body.query)
 
         if intent == "CONVERSATIONAL":
-            logger.info("Routing CONVERSATIONAL: %s", request.query[:80])
-            answer = await llm_client.generate_conversational_response(request.query)
+            logger.info("Routing CONVERSATIONAL: %s", body.query[:80])
+            answer = await llm_client.generate_conversational_response(body.query)
             ms = int((time.monotonic() - t_start) * 1000)
             qid = await _log_query(
-                db, query=request.query, intent="CONVERSATIONAL",
+                db, query=body.query, intent="CONVERSATIONAL",
                 year=None, section=None, answer=answer,
                 retrieved_count=0, research_steps=0,
                 response_time_ms=ms, cited_articles=[],
@@ -130,15 +130,15 @@ async def chat(
                 query_id=qid,
             )
 
-        logger.info("Routing REGULATIONS: %s", request.query[:80])
+        logger.info("Routing REGULATIONS: %s", body.query[:80])
 
         # Step 2: One LLM call -- extract filters + rewrite query
         try:
-            prepared = await llm_client.prepare_search(request.query)
+            prepared = await llm_client.prepare_search(body.query)
         except OpenRouterError:
             ms = int((time.monotonic() - t_start) * 1000)
             await _log_query(
-                db, query=request.query, intent="REGULATIONS",
+                db, query=body.query, intent="REGULATIONS",
                 year=None, section=None, answer=_AI_UNAVAILABLE,
                 retrieved_count=0, research_steps=0,
                 response_time_ms=ms, cited_articles=[], error_occurred=True,
@@ -150,9 +150,9 @@ async def chat(
                 research_steps=[]
             )
 
-        query_year = request.year or prepared.get("year")
-        query_section = request.section or prepared.get("section")
-        expanded_query = prepared.get("search_query", request.query)
+        query_year = body.year or prepared.get("year")
+        query_section = body.section or prepared.get("section")
+        expanded_query = prepared.get("search_query", body.query)
 
         # Step 3: Initial retrieval — use HybridRetriever directly to capture confidence
         _retriever = HybridRetriever(db)
@@ -160,7 +160,7 @@ async def chat(
             query=expanded_query,
             year=query_year,
             section=query_section,
-            issue=request.issue,
+            issue=body.issue,
         )
         retrieval_confidence = _retriever.confidence
 
@@ -168,7 +168,7 @@ async def chat(
             ms = int((time.monotonic() - t_start) * 1000)
             no_results_msg = "I couldn't find specific regulations matching your query. Could you please clarify your question or adjust the filters (year, section, etc.)?"
             qid = await _log_query(
-                db, query=request.query, intent="REGULATIONS",
+                db, query=body.query, intent="REGULATIONS",
                 year=query_year, section=query_section, answer=no_results_msg,
                 retrieved_count=0, research_steps=0,
                 response_time_ms=ms, cited_articles=[],
@@ -194,7 +194,7 @@ async def chat(
                 query=current_step_query,
                 year=query_year,
                 section=query_section,
-                issue=request.issue,
+                issue=body.issue,
                 top_k=8
             )
 
@@ -207,7 +207,7 @@ async def chat(
             try:
                 result = await asyncio.wait_for(
                     llm_client.generate_reasoning_step(
-                        query=request.query,
+                        query=body.query,
                         articles=all_retrieved_articles,
                         history=research_history,
                     ),
@@ -220,7 +220,7 @@ async def chat(
                 ms = int((time.monotonic() - t_start) * 1000)
                 codes = [a.article_code for a in all_retrieved_articles]
                 await _log_query(
-                    db, query=request.query, intent="REGULATIONS",
+                    db, query=body.query, intent="REGULATIONS",
                     year=query_year, section=query_section, answer=_AI_UNAVAILABLE,
                     retrieved_count=len(all_retrieved_articles),
                     research_steps=len(research_history),
@@ -258,7 +258,7 @@ async def chat(
 
                 ms = int((time.monotonic() - t_start) * 1000)
                 qid = await _log_query(
-                    db, query=request.query, intent="REGULATIONS",
+                    db, query=body.query, intent="REGULATIONS",
                     year=query_year, section=query_section, answer=answer,
                     retrieved_count=len(all_retrieved_articles),
                     research_steps=len(research_history),
@@ -281,14 +281,14 @@ async def chat(
         # Final fallback if loop finishes without ANSWER
         try:
             final_answer, final_citations = await generate_answer_with_citations(
-                query=request.query,
+                query=body.query,
                 articles=all_retrieved_articles
             )
         except OpenRouterError:
             ms = int((time.monotonic() - t_start) * 1000)
             codes = [a.article_code for a in all_retrieved_articles]
             await _log_query(
-                db, query=request.query, intent="REGULATIONS",
+                db, query=body.query, intent="REGULATIONS",
                 year=query_year, section=query_section, answer=_AI_UNAVAILABLE,
                 retrieved_count=len(all_retrieved_articles),
                 research_steps=len(research_history),
@@ -304,7 +304,7 @@ async def chat(
         ms = int((time.monotonic() - t_start) * 1000)
         codes = [a.article_code for a in all_retrieved_articles]
         qid = await _log_query(
-            db, query=request.query, intent="REGULATIONS",
+            db, query=body.query, intent="REGULATIONS",
             year=query_year, section=query_section, answer=final_answer,
             retrieved_count=len(all_retrieved_articles),
             research_steps=len(research_history),
@@ -324,7 +324,7 @@ async def chat(
         ms = int((time.monotonic() - t_start) * 1000)
         try:
             await _log_query(
-                db, query=request.query, intent="UNKNOWN",
+                db, query=body.query, intent="UNKNOWN",
                 year=None, section=None, answer=str(e),
                 retrieved_count=0, research_steps=0,
                 response_time_ms=ms, cited_articles=[], error_occurred=True,
