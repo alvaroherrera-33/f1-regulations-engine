@@ -87,8 +87,14 @@ export async function sendChatQuery(request: ChatRequest): Promise<ChatResponse>
     });
 
     if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || 'Chat query failed');
+        let detail = `Server error (${response.status})`;
+        try {
+            const error = await response.json();
+            detail = error.detail || detail;
+        } catch {
+            // body was plain text (e.g. slowapi error) — use status code message
+        }
+        throw new Error(detail);
     }
 
     return response.json();

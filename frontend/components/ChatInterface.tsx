@@ -16,6 +16,7 @@ const LOADING_MESSAGES = [
     'Searching regulations...',
     'Reading articles...',
     'Generating answer...',
+    'Still working... (server may be warming up)',
 ];
 
 interface Message {
@@ -58,7 +59,8 @@ export default function ChatInterface({ year, section, issue, onYearChange, onSe
 
     useEffect(() => {
         if (!loading) { setLoadingIdx(0); return; }
-        const t = setInterval(() => setLoadingIdx(i => (i + 1) % LOADING_MESSAGES.length), 2000);
+        // Cycle through first 3 messages every 2s, then hold on warming up after 8s
+        const t = setInterval(() => setLoadingIdx(i => Math.min(i + 1, LOADING_MESSAGES.length - 1)), 2000);
         return () => clearInterval(t);
     }, [loading]);
 
@@ -112,9 +114,13 @@ export default function ChatInterface({ year, section, issue, onYearChange, onSe
                 confidence: res.confidence,
             }]);
         } catch (e: any) {
+            const isNetworkError = e.message === 'Failed to fetch' || e.message?.includes('NetworkError');
+            const errorMsg = isNetworkError
+                ? 'Could not reach the server. It may be warming up — please try again in a few seconds.'
+                : 'Something went wrong: ' + (e.message || 'Unknown error');
             setMessages(prev => [...prev, {
                 role: 'assistant',
-                content: 'Something went wrong: ' + (e.message || 'Unknown error'),
+                content: errorMsg,
                 timestamp: new Date(),
             }]);
         } finally {
