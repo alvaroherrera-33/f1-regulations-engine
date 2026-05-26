@@ -1,12 +1,11 @@
 """Article lookup endpoint."""
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, desc
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import desc, select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.database import get_db
-from app.models import Article, ArticleDB
+from app.models import ArticleDB, Article
 
 router = APIRouter(tags=["articles"])
 

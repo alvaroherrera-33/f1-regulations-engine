@@ -147,7 +147,6 @@ def fetch_fia_pdf_list() -> list[dict]:
 async def _get_existing_docs(db) -> set[tuple]:
     """Return set of (year, section, issue) tuples already in DB."""
     from sqlalchemy import select
-
     from app.models import Document
 
     result = await db.execute(select(Document.year, Document.section, Document.issue))
@@ -254,7 +253,6 @@ async def check_for_new_regulations(dry_run: bool = True) -> dict:
 async def _ingest_document(local_path: Path, meta: dict):
     """Parse + embed + store a single downloaded PDF."""
     from sqlalchemy import insert, select
-
     from app.database import async_session
     from app.models import Document
     from ingestion.pipeline import IngestionPipeline
