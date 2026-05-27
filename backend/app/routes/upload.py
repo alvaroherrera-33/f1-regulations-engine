@@ -87,7 +87,7 @@ async def get_upload_status(job_id: str):
     """
     Get the status of a PDF ingestion job.
 
-    TODO: Implement job tracking system
+    Job tracking is not yet implemented; status always returns pending.
     """
     return {
         "job_id": job_id,

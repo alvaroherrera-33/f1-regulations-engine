@@ -20,7 +20,6 @@ from sqlalchemy import insert, select
 
 from app.database import async_session
 from app.models import Document as DocumentModel
-from ingestion.embeddings import generate_embeddings
 from ingestion.pdf_parser import parse_pdf
 from ingestion.pipeline import IngestionPipeline
 
