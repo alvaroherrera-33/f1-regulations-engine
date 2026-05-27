@@ -43,7 +43,9 @@ logs/
 *.db
 *.sqlite
 
+# Archives directory (large PDFs, not committed)
 archives/
+
 # Debug / one-off scripts (do not commit)
 check_*.py
 verify_*.py
@@ -55,4 +57,3 @@ simple_llm_test.py
 diag_output.txt
 debug_routing.log
 routing_debug.log
-archives/
