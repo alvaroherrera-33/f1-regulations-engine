@@ -57,3 +57,6 @@ simple_llm_test.py
 diag_output.txt
 debug_routing.log
 routing_debug.log
+
+# TypeScript build cache
+*.tsbuildinfo
