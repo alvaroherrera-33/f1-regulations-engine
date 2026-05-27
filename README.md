@@ -14,6 +14,10 @@ Live demo: [f1-regulations-engine-project.vercel.app](https://f1-regulations-eng
 
 ---
 
+![F1 Regulations Engine — chat interface showing a question about minimum car weight with cited article](docs/screenshot.png)
+
+---
+
 ## Features
 
 - **Hybrid search** — Combines vector similarity (pgvector) and full-text search (PostgreSQL), merged with Reciprocal Rank Fusion (RRF) for best-of-both recall and precision.
