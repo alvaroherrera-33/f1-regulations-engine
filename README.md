@@ -6,6 +6,7 @@
 ![License MIT](https://img.shields.io/badge/license-MIT-green)
 ![FastAPI](https://img.shields.io/badge/FastAPI-async-009688?logo=fastapi&logoColor=white)
 ![Next.js](https://img.shields.io/badge/Next.js-14-black?logo=next.js)
+![CI](https://github.com/alvaroherrera-33/f1-regulations-engine/actions/workflows/ci.yml/badge.svg)
 
 Ask questions about Formula 1 regulations in plain language and receive precise, citation-backed answers sourced directly from official FIA documents. Every response references the exact article it draws from — no hallucinations, no guessing.
 
@@ -165,4 +166,4 @@ curl -X POST https://f1-regulations-engine.onrender.com/api/chat \
 
 ## License
 
-MIT. Built by [Alvaro Herrera](https://github.com/alvaroherrera-33).
+MIT. Built by [Álvaro Herrera](https://github.com/alvaroherrera-33).
