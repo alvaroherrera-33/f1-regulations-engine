@@ -43,5 +43,5 @@
 - [x] Backend on Render (free tier)
 - [x] Frontend on Vercel
 - [x] Database on Supabase (Session Pooler)
-- [x] 98 PDFs ingested (4,300+ articles)
+- [x] 98 PDFs ingested (16,000+ articles indexed across 3 seasons)
 - [x] README with badges and demo link

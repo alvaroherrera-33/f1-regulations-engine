@@ -27,17 +27,17 @@
 | Eval framework (4 rounds) | ✅ | Mejor F1=82.1%, Precision=44.1% |
 | Professionalization (Mayo 2026) | ✅ hoy | Multiidioma, landing, about, README, CI, docs/ |
 
-### Incompleto / roto
+### Previously flagged — all resolved
 
-| Problema | Impacto | Archivos afectados |
-|---------|---------|-------------------|
-| `article_diffs` NO está en schema.sql | CRÍTICO — validity siempre NULL en prod | `database/schema.sql` |
-| `fia_sync_log` NO está en schema.sql | ALTO — sync/status falla en prod | `database/schema.sql` |
-| No existe `compute_diffs.py` | ALTO — sin el script los diffs no se calculan nunca | Script nuevo |
-| FIA scraper sin cron | ALTO — nunca corre automáticamente | Render cron / Supabase pg_cron |
-| CI sin `ruff.toml` / `pyproject.toml` | MEDIO — `ruff check .` fallará en CI | `pyproject.toml` nuevo |
-| Financial recall 17-30% | ALTO calidad — D/E prefix articles no se recuperan bien | `retriever.py`, embeddings |
+All items below were identified during the May 2026 audit and fixed in the same sprint.
 
+| Item | Status |
+|------|--------|
+| `article_diffs` / `fia_sync_log` missing from schema | Fixed — both tables added, validity badges live |
+| `compute_diffs.py` did not exist | Fixed — weekly Render cron computes diffs every Sunday |
+| FIA scraper not connected to cron | Fixed — `fia-sync-daily` cron in `render.yaml` |
+| No CI / `pyproject.toml` | Fixed — GitHub Actions: ruff + pytest + tsc all green |
+| Financial recall 17–30% | Fixed — embedding enrichment + section-aware RRF boost |
 ---
 
 ## BLOQUE 0 — Reparar lo que está roto (antes de cualquier feature nueva)

@@ -139,18 +139,18 @@ curl -X POST https://f1-regulations-engine.onrender.com/api/chat \
 
 ```json
 {
-  "answer": "According to [Article 4.1], the minimum weight of the car including the driver...",
+  "answer": "In 2026 the minimum car weight (mass) is defined as follows: During Sprint Qualifying and Qualifying sessions the Minimum Mass is **726 kg plus the Nominal Tyre Mass**. In all other sessions the Minimum Mass is **724 kg plus the Nominal Tyre Mass**. [Article C4.1]",
   "citations": [
     {
-      "article_code": "4.1",
-      "title": "Weight",
-      "excerpt": "The weight of the car, inclusive of the driver and all fluids...",
+      "article_code": "C4.1",
+      "title": "Minimum mass",
+      "excerpt": "C4.1 Minimum mass During the Sprint Qualifying and Qualifying sessions, the Minimum Mass is 726kg plus the Nominal Tyre Mass...",
       "year": 2026,
       "section": "Technical",
-      "issue": 3
+      "issue": 18
     }
   ],
-  "retrieved_count": 8,
+  "retrieved_count": 4,
   "query_id": 1042
 }
 ```
