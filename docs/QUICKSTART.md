@@ -1,168 +1,93 @@
-# 🚀 Quick Start Guide
+# Quick Start — Local Development
 
-## Local Development Setup
+## Prerequisites
 
-### 1. Prerequisites
+- Docker Desktop (includes Docker Compose)
+- An [OpenRouter](https://openrouter.ai) API key
 
-Make sure you have installed:
-- **Docker Desktop** (includes Docker Compose)
-- A text editor (VS Code recommended)
+## Setup
 
-### 2. Get OpenRouter API Key
-
-1. Go to https://openrouter.ai/
-2. Sign up or log in
-3. Navigate to "Keys" section
-4. Create a new API key
-5. Copy the key (starts with `sk-or-...`)
-
-### 3. Configure Environment
+**1. Clone the repository**
 
 ```bash
-# Copy the environment template
-copy .env.example .env
-
-# Edit .env and add your API key
-# Replace 'your_openrouter_api_key_here' with your actual key
+git clone https://github.com/alvaroherrera-33/f1-regulations-engine.git
+cd f1-regulations-engine
 ```
 
-### 4. Prepare Regulation Archives
-
-Place your F1 regulation PDFs in the `archives/` directory:
+**2. Configure environment variables**
 
 ```bash
-archives/
-├── 2024/
-│   ├── Technical_Regulations_2024_Issue_1.pdf
-│   └── Sporting_Regulations_2024_Issue_1.pdf
-├── 2023/
-│   └── ...
+cp .env.example .env
+# Edit .env and set OPENROUTER_API_KEY=sk-or-...
 ```
 
-### 5. Start Services
+**3. Start all services**
 
 ```bash
-# Start all services (database, backend, frontend)
-docker-compose up
-
-# Wait for services to start (first time takes ~2-3 minutes)
-# You'll see logs from all three services
+docker-compose up --build
 ```
 
-### 6. Ingest Regulations
+This starts three containers: PostgreSQL + pgvector, the FastAPI backend, and the Next.js frontend.
 
-Open a new terminal and run:
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:3000 |
+| Backend API | http://localhost:8000 |
+| Swagger docs | http://localhost:8000/docs |
+
+Wait about 30 seconds on first run for the embedding model (`all-MiniLM-L6-v2`) to download.
+
+## Ingest Regulation PDFs
+
+The application ships without pre-loaded data. You need to ingest regulation PDFs before queries will return results.
+
+**Option A — Ingest from the `archives/` directory (recommended)**
+
+Place FIA regulation PDFs in `archives/` following the naming convention described in [docs/ARCHIVE_SETUP.md](ARCHIVE_SETUP.md), then run:
 
 ```bash
-# This will process all PDFs and load them into the database
-docker-compose exec backend python -m scripts.ingest_archives
+cd backend
+python -m venv venv && source venv/bin/activate   # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/f1_regs \
+  python -m scripts.ingest_archives
 ```
 
-This will:
-- Scan the `archives/` directory
-- Extract articles from each PDF
-- Generate embeddings
-- Store everything in PostgreSQL
+**Option B — Upload a single PDF via the API**
 
-**Note**: This may take 5-15 minutes depending on the number of PDFs.
-
-### 7. Access the Application
-
-Once you see "Application startup complete" in the logs:
-
-- **Frontend**: http://localhost:3000
-- **Backend API Docs**: http://localhost:8000/docs
-- **Health Check**: http://localhost:8000/health
-
-### 6. Stop the Application
+With the backend running:
 
 ```bash
-# Press Ctrl+C in the terminal where docker-compose is running
-# Then run:
-docker-compose down
+curl -X POST http://localhost:8000/api/upload \
+  -F "file=@/path/to/regulation.pdf" \
+  -F "year=2026" \
+  -F "section=Technical" \
+  -F "issue=1"
 ```
 
-## Next Steps
+## Verify the Setup
 
-The foundation is ready! Now we'll build:
+```bash
+# Check indexed article count
+curl http://localhost:8000/status
 
-1. **Phase 2**: PDF upload and parsing
-2. **Phase 3**: RAG retrieval system
-3. **Phase 4**: Chat interface
-4. **Phase 5**: Deployment to Railway
+# Run a test query
+curl -X POST http://localhost:8000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"query": "What is the minimum car weight in 2026?", "year": 2026}'
+```
+
+## Run Tests
+
+```bash
+cd backend
+pytest tests/ -q
+```
 
 ## Troubleshooting
 
-### Port Already in Use
+**Backend exits immediately** — Check that `OPENROUTER_API_KEY` is set in `.env`.
 
-If you see "port already in use" errors:
+**Queries return no results** — The database is empty. Run the ingestion step above.
 
-```bash
-# Stop conflicting services or change ports in docker-compose.yml
-# Example: Change "3000:3000" to "3001:3000"
-```
-
-### Database Connection Issues
-
-```bash
-# Reset database
-docker-compose down -v  # Warning: deletes all data
-docker-compose up
-```
-
-### API Key Not Working
-
-- Make sure `.env` file is in the root directory (same level as `docker-compose.yml`)
-- Check that there are no quotes around the API key
-- Restart docker-compose after editing `.env`
-
-## Development Workflow
-
-### Backend Development
-
-```bash
-# Enter backend container
-docker-compose exec backend bash
-
-# Or run locally without Docker
-cd backend
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-```
-
-### Frontend Development
-
-```bash
-# Enter frontend container
-docker-compose exec frontend sh
-
-# Or run locally without Docker
-cd frontend
-npm install
-npm run dev
-```
-
-### View Database
-
-```bash
-# Connect to PostgreSQL
-docker-compose exec db psql -U postgres -d f1_regs
-
-# Useful commands:
-\dt              # List tables
-\d articles      # Describe articles table
-SELECT * FROM documents LIMIT 10;
-```
-
-## Project Structure Overview
-
-```
-f1-regulations-engine/
-├── backend/           ← FastAPI Python backend
-├── frontend/          ← Next.js React frontend
-├── data/             ← PDF storage (gitignored)
-├── docker-compose.yml ← Local dev orchestration
-└── .env              ← Your secrets (gitignored)
-```
-
-Ready to develop! 🏎️
+**Port conflict** — Change the exposed ports in `docker-compose.yml` if 3000 or 8000 are already in use.
