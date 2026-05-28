@@ -7,7 +7,7 @@ from app.config import settings
 # Create async engine
 engine = create_async_engine(
     settings.database_url.replace("postgresql://", "postgresql+asyncpg://"),
-    echo=True,  # Log SQL queries (disable in production)
+    echo=settings.sql_echo,  # Controlled by SQL_ECHO env var (default: False)
     future=True,
 )
 

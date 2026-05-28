@@ -25,6 +25,7 @@ interface Message {
     citations?: any[];
     timestamp: Date;
     queryId?: number;
+    feedbackToken?: string;   // A-03: HMAC token for feedback validation
     feedback?: 'up' | 'down';
     retrievedCount?: number;
     stepCount?: number;
@@ -108,6 +109,7 @@ export default function ChatInterface({ year, section, issue, onYearChange, onSe
                 citations: res.citations,
                 timestamp: new Date(),
                 queryId: res.query_id,
+                feedbackToken: res.feedback_token,
                 retrievedCount: res.retrieved_count,
                 stepCount: res.research_steps?.length || 1,
                 timeMs: Date.now() - t0,
@@ -147,7 +149,7 @@ export default function ChatInterface({ year, section, issue, onYearChange, onSe
         const msg = messages[idx];
         if (!msg.queryId || msg.feedback) return;
         setMessages(prev => prev.map((m, i) => i === idx ? { ...m, feedback: helpful ? 'up' : 'down' } : m));
-        try { await submitFeedback(msg.queryId, helpful); } catch { /* silent */ }
+        try { await submitFeedback(msg.queryId, helpful, msg.feedbackToken); } catch { /* silent */ }
     };
 
     return (

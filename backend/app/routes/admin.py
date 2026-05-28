@@ -3,12 +3,15 @@
 Note: The re-embedding task is run externally (not via this endpoint)
 because the Render free tier has only 512MB RAM, which is insufficient
 to embed all articles in a single process alongside the web server.
+
+All admin endpoints require X-Admin-Key authentication.
 """
 import logging
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from sqlalchemy import func, select, text
 
+from app.auth import require_admin_key
 from app.database import async_session
 from app.models import ArticleDB, ArticleEmbedding
 
@@ -17,8 +20,8 @@ router = APIRouter(tags=["admin"])
 
 
 @router.get("/admin/embedding-stats")
-async def embedding_stats():
-    """Check embedding coverage and chunking stats."""
+async def embedding_stats(_: None = Depends(require_admin_key)):
+    """Check embedding coverage and chunking stats. Requires X-Admin-Key."""
     async with async_session() as db:
         total_articles = await db.scalar(select(func.count(ArticleDB.id)))
         total_embeddings = await db.scalar(select(func.count(ArticleEmbedding.id)))

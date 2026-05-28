@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const SUPABASE_URL = 'https://nmftfbboxssonnvbjzef.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tZnRmYmJveHNzb25udmJqemVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNzQ5MDgsImV4cCI6MjA5MzY1MDkwOH0.EI7L8QhFUXvsSLr5EjAvauyvyw0a55txcxboM_HsyxQ';
+// C-02: Call the backend instead of Supabase REST directly.
+// This eliminates the hardcoded SUPABASE_ANON_KEY from the frontend bundle.
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 interface ArticleVersion {
     article_code: string;
@@ -13,18 +14,16 @@ interface ArticleVersion {
 }
 
 async function fetchVersion(code: string, year: number, section?: string): Promise<ArticleVersion | null> {
-    let url = `${SUPABASE_URL}/rest/v1/articles?article_code=eq.${encodeURIComponent(code)}&year=eq.${year}&select=article_code,title,content,year,section,issue&order=issue.desc&limit=1`;
-    if (section) url += `&section=eq.${encodeURIComponent(section)}`;
-    const res = await fetch(url, {
-        headers: {
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        },
-        cache: 'no-store',
-    });
-    if (!res.ok) return null;
-    const rows: ArticleVersion[] = await res.json();
-    return rows[0] ?? null;
+    let url = `${API_URL}/api/articles?article_code=${encodeURIComponent(code)}&year=${year}&limit=1`;
+    if (section) url += `&section=${encodeURIComponent(section)}`;
+    try {
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) return null;
+        const rows: ArticleVersion[] = await res.json();
+        return rows[0] ?? null;
+    } catch {
+        return null;
+    }
 }
 
 export async function GET(request: NextRequest) {

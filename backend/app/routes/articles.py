@@ -1,7 +1,9 @@
-"""Article lookup endpoint."""
+"""Article lookup and comparison endpoints."""
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,6 +11,11 @@ from app.database import get_db
 from app.models import Article, ArticleDB
 
 router = APIRouter(tags=["articles"])
+limiter = Limiter(key_func=get_remote_address)
+
+# Regex pattern for valid article codes: letters, digits, dots, underscores, hyphens
+_CODE_PATTERN = r"^[A-Za-z0-9._\-]+$"
+_ALLOWED_SECTIONS = {"Technical", "Sporting", "Financial"}
 
 
 async def _explain_diff_with_llm(
@@ -52,7 +59,7 @@ Be specific and factual. If the content is identical or very similar, say so."""
 
 @router.get("/compare")
 async def compare_articles(
-    code: str = Query(..., description="Article code, e.g. 3.1 or C4.1"),
+    code: str = Query(..., max_length=50, pattern=_CODE_PATTERN, description="Article code, e.g. 3.1 or C4.1"),
     year_a: int = Query(..., ge=2000, le=2100),
     year_b: int = Query(..., ge=2000, le=2100),
     section: Optional[str] = Query(None, description="Filter by section: Technical, Sporting, Financial"),
@@ -66,6 +73,9 @@ async def compare_articles(
 
     Example: GET /api/compare?code=C4.1&year_a=2025&year_b=2026&section=Technical
     """
+    if section and section not in _ALLOWED_SECTIONS:
+        raise HTTPException(status_code=400, detail=f"Invalid section. Must be one of: {', '.join(sorted(_ALLOWED_SECTIONS))}")
+
     async def _fetch(year: int) -> Optional[dict]:
         stmt = (
             select(ArticleDB)
@@ -100,8 +110,10 @@ async def compare_articles(
 
 
 @router.post("/compare/explain")
+@limiter.limit("5/minute")
 async def explain_article_diff(
-    code: str = Query(..., description="Article code"),
+    request: Request,
+    code: str = Query(..., max_length=50, pattern=_CODE_PATTERN, description="Article code"),
     year_a: int = Query(..., ge=2000, le=2100),
     year_b: int = Query(..., ge=2000, le=2100),
     section: Optional[str] = Query(None, description="Filter by section"),
@@ -110,11 +122,14 @@ async def explain_article_diff(
     """
     AI-powered explanation of changes between two versions of a regulation article.
 
-    Calls LLM to summarize: what changed, whether it's technical/editorial,
-    and the practical impact for F1 teams.
+    Rate limited to 5 requests/minute per IP. Calls LLM to summarize: what
+    changed, whether it's technical/editorial, and the practical impact.
 
     Example: POST /api/compare/explain?code=C4.1&year_a=2025&year_b=2026&section=Technical
     """
+    if section and section not in _ALLOWED_SECTIONS:
+        raise HTTPException(status_code=400, detail=f"Invalid section. Must be one of: {', '.join(sorted(_ALLOWED_SECTIONS))}")
+
     async def _fetch(year: int) -> Optional[dict]:
         stmt = (
             select(ArticleDB)
@@ -147,10 +162,10 @@ async def explain_article_diff(
 
     try:
         explanation = await _explain_diff_with_llm(code, version_a, version_b)
-    except Exception as exc:
+    except Exception:
         raise HTTPException(
             status_code=502,
-            detail=f"LLM service error: {exc}",
+            detail="The AI service is temporarily unavailable. Please try again shortly.",
         )
 
     return {
@@ -170,6 +185,9 @@ async def get_article(
     db: AsyncSession = Depends(get_db)
 ):
     """Retrieve a specific article by its code."""
+    if len(article_code) > 50:
+        raise HTTPException(status_code=400, detail="Article code too long.")
+
     stmt = select(ArticleDB).where(ArticleDB.article_code == article_code)
     result = await db.execute(stmt)
     article_db = result.scalar_one_or_none()
@@ -195,13 +213,16 @@ async def get_article(
 
 @router.get("/articles", response_model=List[Article])
 async def list_articles(
-    year: int = None,
-    section: str = None,
-    issue: int = None,
-    limit: int = 50,
+    year: Optional[int] = Query(None, ge=2000, le=2100),
+    section: Optional[str] = Query(None),
+    issue: Optional[int] = Query(None, ge=1),
+    limit: int = Query(default=50, ge=1, le=200),
     db: AsyncSession = Depends(get_db)
 ):
-    """List articles with optional filters."""
+    """List articles with optional filters. Maximum 200 results per request."""
+    if section and section not in _ALLOWED_SECTIONS:
+        raise HTTPException(status_code=400, detail=f"Invalid section. Must be one of: {', '.join(sorted(_ALLOWED_SECTIONS))}")
+
     stmt = select(ArticleDB)
 
     if year:

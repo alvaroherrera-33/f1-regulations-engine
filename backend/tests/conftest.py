@@ -42,6 +42,7 @@ class _FakeSettings:
     openrouter_api_key = "sk-or-test"
     llm_model = "test-model"
     allowed_origins = "http://localhost:3000"
+    admin_api_key = "test-admin-key"
     max_upload_size = 50 * 1024 * 1024
     upload_dir = "data/regulations"
     port = 8000

@@ -229,7 +229,17 @@ async def check_for_new_regulations(dry_run: bool = True) -> dict:
                     headers={"User-Agent": "Mozilla/5.0 (compatible; F1RegBot/1.0)"},
                 )
                 with urllib.request.urlopen(req, timeout=60) as resp:
-                    local_path.write_bytes(resp.read())
+                    raw = resp.read()
+
+                # B-01: validate magic bytes before ingestion — a malformed or
+                # HTML error page served as a PDF would crash the parser.
+                if not raw[:5] == b"%PDF-":
+                    raise ValueError(
+                        f"Downloaded file is not a valid PDF (bad magic bytes). "
+                        f"First bytes: {raw[:8]!r}"
+                    )
+
+                local_path.write_bytes(raw)
 
                 logger.info(
                     "Ingesting %s (year=%d, section=%s, issue=%d)",

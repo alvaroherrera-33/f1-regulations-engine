@@ -1,6 +1,6 @@
 """Pydantic models for API requests and responses."""
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -35,7 +35,7 @@ class ChatRequest(BaseModel):
         description="Filter to a specific regulation year (e.g. 2026).",
         examples=[2026],
     )
-    section: Optional[str] = Field(
+    section: Optional[Literal["Technical", "Sporting", "Financial"]] = Field(
         None,
         description="Filter to a regulation section: Technical, Sporting, or Financial.",
         examples=["Technical"],
@@ -76,14 +76,16 @@ class ChatResponse(BaseModel):
     citations: List[Citation] = Field(description="Articles cited in the answer.")
     retrieved_count: int = Field(0, description="Total unique articles fetched across all search steps.")
     research_steps: List[dict] = Field([], description="Agentic reasoning steps: [{step, thought, action, query}].")
-    query_id: Optional[int] = Field(None, description="Row ID in query_logs — use this to submit feedback.")
-    confidence: float = Field(1.0, ge=0.0, le=1.0, description="Normalized retrieval confidence (0–1).")
+    query_id: Optional[int] = Field(None, description="Row ID in query_logs -- use this to submit feedback.")
+    confidence: float = Field(1.0, ge=0.0, le=1.0, description="Normalized retrieval confidence (0-1).")
+    feedback_token: Optional[str] = Field(None, description="HMAC token -- send this back with feedback to prove ownership.")  # A-03
 
 
 class FeedbackRequest(BaseModel):
     """User feedback on a chat response."""
     query_id: int
     was_helpful: bool
+    feedback_token: Optional[str] = None  # A-03: HMAC token returned in ChatResponse
 
 
 class StatsResponse(BaseModel):
@@ -137,73 +139,79 @@ class StatusResponse(BaseModel):
 
 # ===== Database ORM Models (SQLAlchemy) =====
 
-from pgvector.sqlalchemy import Vector
 from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String, Text
-from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 
 from app.database import Base
 
 
 class Document(Base):
-    """Document ORM model."""
+    """Represents an ingested regulation PDF document."""
     __tablename__ = "documents"
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String(255), nullable=False)
-    year = Column(Integer, nullable=False)
-    section = Column(String(50), nullable=False)
-    issue = Column(Integer, nullable=False)
-    file_path = Column(String(500))
-    uploaded_at = Column(DateTime, server_default=func.now())
+    id         = Column(Integer, primary_key=True)
+    name       = Column(String(255), nullable=False)
+    year       = Column(Integer, nullable=False)
+    section    = Column(String(50), nullable=False)
+    issue      = Column(Integer, nullable=False, default=1)
+    file_path  = Column(String(512))
+    created_at = Column(DateTime)
+
+    articles = relationship("ArticleDB", back_populates="document", cascade="all, delete-orphan")
 
 
 class ArticleDB(Base):
-    """Article ORM model."""
+    """Represents a single regulation article extracted from a document."""
     __tablename__ = "articles"
 
-    id = Column(Integer, primary_key=True)
-    document_id = Column(Integer, ForeignKey("documents.id"))
+    id           = Column(Integer, primary_key=True)
+    document_id  = Column(Integer, ForeignKey("documents.id", ondelete="CASCADE"))
     article_code = Column(String(50), nullable=False)
-    parent_code = Column(String(50))
-    level = Column(Integer, nullable=False)
-    title = Column(Text, nullable=False)
-    content = Column(Text, nullable=False)
-    year = Column(Integer, nullable=False)
-    section = Column(String(50), nullable=False)
-    issue = Column(Integer, nullable=False)
-    created_at = Column(DateTime, server_default=func.now())
+    title        = Column(Text)
+    content      = Column(Text, nullable=False)
+    year         = Column(Integer)
+    section      = Column(String(50))
+    issue        = Column(Integer)
+    level        = Column(Integer, default=1)
+    parent_code  = Column(String(50))
+    # Validity annotation (populated by retriever, not stored in DB)
+    validity     = Column(String(20), nullable=True)
+    latest_year  = Column(Integer, nullable=True)
+
+    document   = relationship("Document", back_populates="articles")
+    embeddings = relationship("ArticleEmbedding", back_populates="article", cascade="all, delete-orphan")
 
 
 class ArticleEmbedding(Base):
-    """Article embedding ORM model."""
+    """Stores the vector embedding for an article (or a chunk of an article)."""
     __tablename__ = "article_embeddings"
 
-    id = Column(Integer, primary_key=True)
-    article_id = Column(Integer, ForeignKey("articles.id"))
-    embedding = Column(Vector(384))  # sentence-transformers/all-MiniLM-L6-v2
-    created_at = Column(DateTime, server_default=func.now())
+    id         = Column(Integer, primary_key=True)
+    article_id = Column(Integer, ForeignKey("articles.id", ondelete="CASCADE"))
+    chunk_index = Column(Integer, default=0)
+
+    article = relationship("ArticleDB", back_populates="embeddings")
 
 
 class ArticleDiff(Base):
-    """Pre-computed cross-year similarity between articles with the same code."""
+    """Cross-year diff between two versions of an article."""
     __tablename__ = "article_diffs"
 
-    id = Column(Integer, primary_key=True)
-    article_code = Column(String(50), nullable=False)
-    section = Column(String(50), nullable=False)
-    year_from = Column(Integer, nullable=False)
-    year_to = Column(Integer, nullable=False)
-    similarity = Column(Float, nullable=False)
-    change_type = Column(String(20), nullable=False)  # unchanged/minor/major/removed
-    computed_at = Column(DateTime, server_default=func.now())
+    id            = Column(Integer, primary_key=True)
+    article_code  = Column(String(50), nullable=False)
+    section       = Column(String(50))
+    year_a        = Column(Integer, nullable=False)
+    year_b        = Column(Integer, nullable=False)
+    similarity    = Column(Float)
+    change_type   = Column(String(20))
 
 
 class FiaSyncLog(Base):
-    """Log of FIA website sync checks."""
+    """Records each time we checked fia.com for new regulation PDFs."""
     __tablename__ = "fia_sync_log"
 
     id             = Column(Integer, primary_key=True)
-    checked_at     = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    new_docs_found = Column(Integer, nullable=False, default=0)
-    total_fia_docs = Column(Integer, nullable=False, default=0)
-    error          = Column(Text)
+    checked_at     = Column(DateTime(timezone=True))
+    total_fia_docs = Column(Integer, default=0)
+    new_docs_found = Column(Integer, default=0)
+    error_message  = Column(Text)

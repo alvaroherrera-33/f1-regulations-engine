@@ -31,7 +31,8 @@ export interface ChatResponse {
         query: string;
     }[];
     query_id?: number;
-    confidence?: number;  // 0-1, retrieval confidence
+    confidence?: number;       // 0-1, retrieval confidence
+    feedback_token?: string;   // A-03: HMAC token — send back with feedback
 }
 
 export interface UploadResponse {
@@ -140,13 +141,23 @@ export async function getStatus(): Promise<StatusResponse> {
 }
 
 /**
- * Submit thumbs-up / thumbs-down feedback for a chat response
+ * Submit thumbs-up / thumbs-down feedback for a chat response.
+ * feedbackToken is the HMAC token returned in ChatResponse; including it
+ * lets the backend validate the request came from the original browser session.
  */
-export async function submitFeedback(queryId: number, wasHelpful: boolean): Promise<void> {
+export async function submitFeedback(
+    queryId: number,
+    wasHelpful: boolean,
+    feedbackToken?: string,
+): Promise<void> {
     await fetch(`${API_URL}/api/chat/feedback`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query_id: queryId, was_helpful: wasHelpful }),
+        body: JSON.stringify({
+            query_id: queryId,
+            was_helpful: wasHelpful,
+            ...(feedbackToken ? { feedback_token: feedbackToken } : {}),
+        }),
     });
 }
 

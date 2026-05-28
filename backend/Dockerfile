@@ -12,6 +12,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
+# Create non-root user and transfer ownership
+RUN useradd -r -u 1001 app && chown -R app:app /app
+USER app
+
 # Expose port (Railway will set $PORT)
 ENV PORT=8000
 EXPOSE $PORT

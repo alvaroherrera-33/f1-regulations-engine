@@ -4,9 +4,9 @@ services:
     environment:
       POSTGRES_DB: f1_regs
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./backend/database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
@@ -21,10 +21,11 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/f1_regs
+      - DATABASE_URL=postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@db:5432/f1_regs
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
       - LLM_MODEL=openai/gpt-oss-120b
       - ALLOWED_ORIGINS=http://localhost:3000
+      - ADMIN_API_KEY=${ADMIN_API_KEY:-}
       - PYTHONUNBUFFERED=1
     depends_on:
       db:

@@ -1,6 +1,10 @@
-# Environment variables
+# Environment variables (all variants)
 .env
 .env.local
+.env.*.local
+.env.development
+.env.production
+.env.test
 
 # Python
 __pycache__/
@@ -60,3 +64,22 @@ routing_debug.log
 
 # TypeScript build cache
 *.tsbuildinfo
+
+# Internal planning and strategy documents
+docs/internal/
+.claude/
+F1_REGS_ENGINE_STRATEGIC_PLAN.docx
+F1_Regulations_Engine_Status_Report.docx
+security_review.docx
+*.docx
+
+# Eval result JSONs (keep scripts and test_set.json)
+backend/eval/eval_*.json
+backend/eval_baseline.json
+
+# Stale deployment configs
+backend/railway.json
+frontend/railway.json
+
+# Stray root-level package-lock (real one is in frontend/)
+/package-lock.json

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// Proxies to Supabase Edge Function — no backend env vars needed
-const EDGE_FN_URL = 'https://nmftfbboxssonnvbjzef.supabase.co/functions/v1/compare-explain';
+// C-02: Proxy to the backend instead of calling Supabase Edge Function directly.
+// This eliminates the hardcoded Supabase project URL from the frontend bundle.
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export async function POST(request: NextRequest) {
     const { searchParams } = new URL(request.url);
@@ -17,19 +18,20 @@ export async function POST(request: NextRequest) {
         );
     }
 
-    let upstreamUrl = `${EDGE_FN_URL}?code=${encodeURIComponent(code)}&year_a=${year_a}&year_b=${year_b}`;
+    let upstreamUrl = `${API_URL}/api/compare/explain?code=${encodeURIComponent(code)}&year_a=${year_a}&year_b=${year_b}`;
     if (section) upstreamUrl += `&section=${encodeURIComponent(section)}`;
 
     try {
         const res = await fetch(upstreamUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            cache: 'no-store',
         });
         const data = await res.json();
         return NextResponse.json(data, { status: res.status });
-    } catch (err) {
+    } catch {
         return NextResponse.json(
-            { detail: err instanceof Error ? err.message : 'Upstream error' },
+            { detail: 'Upstream error' },
             { status: 502 }
         );
     }

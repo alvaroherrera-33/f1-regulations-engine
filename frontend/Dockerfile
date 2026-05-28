@@ -1,4 +1,4 @@
-# ── Stage 1: Build ────────────────────────────────────────────────────────────
+# -- Stage 1: Build ------------------------------------------------------------
 FROM node:20-alpine AS builder
 
 WORKDIR /app
@@ -11,20 +11,23 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-# ── Stage 2: Production runner ────────────────────────────────────────────────
+# -- Stage 2: Production runner ------------------------------------------------
 FROM node:20-alpine AS runner
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Copy only what's needed to run the app
+# Copy only what is needed to run the app
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 
 # Install only production dependencies (no devDependencies)
 RUN npm ci --only=production --ignore-scripts
+
+# node:20-alpine includes a built-in non-root user "node" (uid 1000)
+USER node
 
 EXPOSE 3000
 

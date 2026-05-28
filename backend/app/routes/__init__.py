@@ -1,4 +1,4 @@
 """Routes module."""
-from app.routes import articles, chat, upload
+from app.routes import admin, articles, chat, sync, upload
 
-__all__ = ["upload", "chat", "articles"]
+__all__ = ["admin", "articles", "chat", "sync", "upload"]

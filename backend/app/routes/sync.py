@@ -7,10 +7,16 @@ from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth import require_admin_key
 from app.database import get_db
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["sync"])
+
+# M-07: generic error constants — never store raw exception text in the DB.
+# Raw exceptions can leak internal paths, DB URLs, or scraper internals.
+_ERR_FIA_UNREACHABLE = "FIA website unreachable"
+_ERR_SCRAPER_GENERIC = "Scraper error"
 
 
 # ------------------------------------------------------------------ #
@@ -54,6 +60,7 @@ async def sync_status(db: AsyncSession = Depends(get_db)):
     Return the cached status of the last FIA sync check.
 
     This is cheap (single DB query) and safe to call on every page load.
+    No authentication required — returns non-sensitive aggregate data only.
     """
     try:
         # Latest sync log entry
@@ -89,9 +96,10 @@ async def sync_check(
     background_tasks: BackgroundTasks,
     ingest: bool = False,
     db: AsyncSession = Depends(get_db),
+    _: None = Depends(require_admin_key),
 ):
     """
-    Live-check fia.com for new regulation PDFs.
+    Live-check fia.com for new regulation PDFs. Requires X-Admin-Key.
 
     - `ingest=false` (default): dry-run — list what's new, no download.
     - `ingest=true`: download and ingest any new PDFs in the background.
@@ -109,17 +117,18 @@ async def sync_check(
         # Always run a dry-run first to get the list
         summary = await check_for_new_regulations(dry_run=True)
     except Exception as exc:
-        logger.error("FIA check failed: %s", exc)
-        # Log the failure
+        # M-07: log full detail internally but store only a generic constant in DB
+        # to avoid leaking internal paths, DB URLs, or scraper internals.
+        logger.error("FIA check failed: %s", exc, exc_info=True)
         try:
             await db.execute(text("""
                 INSERT INTO fia_sync_log (new_docs_found, total_fia_docs, error)
                 VALUES (0, 0, :error)
-            """), {"error": str(exc)[:500]})
+            """), {"error": _ERR_FIA_UNREACHABLE})
             await db.commit()
         except Exception:
             pass
-        raise HTTPException(status_code=502, detail=f"Could not reach FIA website: {exc}")
+        raise HTTPException(status_code=502, detail="Could not reach FIA website.")
 
     # Log successful check to fia_sync_log so /api/sync/status reflects it
     try:

@@ -1,21 +1,23 @@
 """Chat endpoint for RAG queries."""
 import asyncio
 import logging
+import secrets
 import time
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi.security import APIKeyHeader
 from slowapi import Limiter
-from slowapi.util import get_remote_address
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.llm.client import OpenRouterError, generate_answer_with_citations
 from app.models import ChatRequest, ChatResponse, FeedbackRequest, StatsResponse
+from app.rate_limit import get_client_ip, make_feedback_token, verify_feedback_token  # A-01 / A-03
 from app.retrieval.retriever import HybridRetriever, retrieve_articles
 
-limiter = Limiter(key_func=get_remote_address)
+limiter = Limiter(key_func=get_client_ip)  # A-01: real IP from proxy
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["chat"])
@@ -27,6 +29,29 @@ _AI_UNAVAILABLE = (
 
 # Hard timeout per agentic step (seconds). Prevents runaway requests on Render free tier.
 _STEP_TIMEOUT_S = 22.0
+
+
+def _token(qid: Optional[int]) -> Optional[str]:
+    """Generate feedback HMAC token for a query_id; returns None if qid is None."""
+    return make_feedback_token(qid) if qid is not None else None
+
+
+# B-02: X-Admin-Key header scheme (optional — used for debug mode only)
+_admin_key_header = APIKeyHeader(name="X-Admin-Key", auto_error=False)
+
+
+def _is_debug_request(debug: bool, admin_key: str | None) -> bool:
+    """Return True only when debug=1 AND a valid admin key is supplied.
+
+    B-02: research_steps contain internal LLM reasoning; exposing them in
+    production leaks implementation details and can aid prompt-injection tuning.
+    """
+    configured_key = getattr(__import__("app.config", fromlist=["settings"]).settings, "admin_api_key", "")
+    if not debug or not configured_key:
+        return False
+    if not admin_key:
+        return False
+    return secrets.compare_digest(admin_key, configured_key)
 
 
 def _citations_or_fallback(citations, all_retrieved_articles):
@@ -88,11 +113,13 @@ async def _log_query(
 
 
 @router.post("/chat", response_model=ChatResponse)
-@limiter.limit("10/minute")
+@limiter.limit("5/minute;50/day")  # A-01: tighter limit with daily cap
 async def chat(
     request: Request,
     body: ChatRequest,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    debug: bool = Query(default=False, description="Include research_steps (requires valid X-Admin-Key)"),
+    admin_key: str | None = Depends(_admin_key_header),
 ):
     """
     Ask a question about F1 regulations.
@@ -128,6 +155,7 @@ async def chat(
                 retrieved_count=0,
                 research_steps=[],
                 query_id=qid,
+                feedback_token=_token(qid),
             )
 
         logger.info("Routing REGULATIONS: %s", body.query[:80])
@@ -154,7 +182,7 @@ async def chat(
         query_section = body.section or prepared.get("section")
         expanded_query = prepared.get("search_query", body.query)
 
-        # Step 3: Initial retrieval — use HybridRetriever directly to capture confidence
+        # Step 3: Initial retrieval -- use HybridRetriever directly to capture confidence
         _retriever = HybridRetriever(db)
         articles = await _retriever.retrieve(
             query=expanded_query,
@@ -178,6 +206,7 @@ async def chat(
                 citations=[],
                 retrieved_count=0,
                 query_id=qid,
+                feedback_token=_token(qid),
             )
 
         # Agentic Research Loop (max 3 steps)
@@ -268,9 +297,10 @@ async def chat(
                     answer=answer,
                     citations=citations,
                     retrieved_count=len(all_retrieved_articles),
-                    research_steps=display_steps,
+                    research_steps=display_steps if _is_debug_request(debug, admin_key) else [],
                     query_id=qid,
                     confidence=retrieval_confidence,
+                    feedback_token=_token(qid),
                 )
 
             elif result.get("action") == "SEARCH":
@@ -314,9 +344,10 @@ async def chat(
             answer=final_answer,
             citations=final_citations,
             retrieved_count=len(all_retrieved_articles),
-            research_steps=research_history,
+            research_steps=research_history if _is_debug_request(debug, admin_key) else [],
             query_id=qid,
             confidence=retrieval_confidence,
+            feedback_token=_token(qid),
         )
 
     except Exception as e:
@@ -325,7 +356,7 @@ async def chat(
         try:
             await _log_query(
                 db, query=body.query, intent="UNKNOWN",
-                year=None, section=None, answer=str(e),
+                year=None, section=None, answer="UNEXPECTED_ERROR",
                 retrieved_count=0, research_steps=0,
                 response_time_ms=ms, cited_articles=[], error_occurred=True,
             )
@@ -333,21 +364,30 @@ async def chat(
             pass
         raise HTTPException(
             status_code=500,
-            detail=f"An error occurred while processing your query: {str(e)}"
+            detail="An unexpected error occurred while processing your query. Please try again.",
         )
 
 
 @router.post("/chat/feedback")
+@limiter.limit("30/hour")  # A-03: prevent feedback spam
 async def submit_feedback(
+    request: Request,
     feedback: FeedbackRequest,
     db: AsyncSession = Depends(get_db),
 ):
     """
     Submit thumbs-up / thumbs-down feedback for a previous chat response.
 
-    The query_id is returned in every ChatResponse and links back to the
-    query_logs row created when the answer was generated.
+    The query_id and feedback_token are returned in every ChatResponse.
+    When a token is provided it is validated via HMAC to prevent arbitrary
+    feedback manipulation.  Requests without a token are still accepted for
+    backward compatibility but will not pass HMAC validation.
     """
+    # A-03: validate HMAC token when present
+    if feedback.feedback_token is not None:
+        if not verify_feedback_token(feedback.query_id, feedback.feedback_token):
+            raise HTTPException(status_code=403, detail="Invalid or expired feedback token.")
+
     try:
         await db.execute(
             text("UPDATE query_logs SET was_helpful = :helpful WHERE id = :id"),
