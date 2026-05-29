@@ -24,7 +24,7 @@ Live demo: [f1-regulations-engine-project.vercel.app](https://f1-regulations-eng
 - **Agentic research loop** — Up to three search-reason cycles, following cross-references between articles before committing to an answer.
 - **Mandatory citations** — Every answer includes exact article codes, section, year, and issue. No answer is returned without a verifiable source.
 - **Local embeddings** — `all-MiniLM-L6-v2` runs on the backend; no third-party embedding API is called.
-- **Multi-year coverage** — Technical, Sporting, and Financial regulations for 2023 through 2026 (16,000+ articles indexed).
+- **Multi-year coverage** — Technical, Sporting, and Financial regulations for 2023 through 2026 (19,000+ articles indexed).
 - **Multilingual queries** — Accepts questions in English, Spanish, French, German, and Italian.
 - **Feedback loop** — Thumbs up/down on each answer feeds a `query_logs` table for ongoing quality monitoring.
 

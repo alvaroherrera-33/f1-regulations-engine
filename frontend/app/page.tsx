@@ -12,7 +12,7 @@ const FEATURES = [
         desc: 'Query 2023 through 2026 side by side. The engine flags articles that have changed, been added, or removed.',
     },
     {
-        title: '16,000+ articles indexed',
+        title: '19,000+ articles indexed',
         desc: 'Full coverage of Technical, Sporting, and Financial regulations across four seasons.',
     },
 ];
