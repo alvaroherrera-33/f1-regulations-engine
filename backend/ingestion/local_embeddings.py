@@ -6,9 +6,25 @@ Key design decisions:
   Article embeddings are generated only during ingestion, never cached here.
 """
 import logging
+import os
 from typing import List, Optional
 
+# --- Memory frugality for the 512MB free tier (must run BEFORE torch import) ---
+# torch allocates per-thread memory arenas; pinning to a single thread cuts the
+# resident set substantially and prevents the worker from being OOM-killed when
+# the embedding model loads. Set only if the deployer hasn't overridden them.
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+os.environ.setdefault("MKL_NUM_THREADS", "1")
+os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
+
 from sentence_transformers import SentenceTransformer
+
+try:
+    import torch
+    torch.set_num_threads(1)
+    torch.set_grad_enabled(False)  # inference only — no autograd buffers
+except Exception:  # pragma: no cover - torch always present in prod
+    torch = None
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +53,7 @@ class LocalEmbeddingsGenerator:
 
     def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
         logger.info("Loading local embedding model: %s", model_name)
-        self.model = SentenceTransformer(model_name)
+        self.model = SentenceTransformer(model_name, device="cpu")
         logger.info(
             "Embedding model loaded. Dimension: %d",
             self.model.get_sentence_embedding_dimension(),
@@ -47,7 +63,9 @@ class LocalEmbeddingsGenerator:
         """Generate embeddings for a list of texts (used during ingestion)."""
         if not texts:
             return []
-        embeddings = self.model.encode(texts, convert_to_numpy=True)
+        embeddings = self.model.encode(
+            texts, convert_to_numpy=True, batch_size=16, show_progress_bar=False
+        )
         return [emb.tolist() for emb in embeddings]
 
     async def generate_one(self, text: str) -> List[float]:
@@ -57,25 +75,3 @@ class LocalEmbeddingsGenerator:
         question asked twice). Article embeddings bypass this path entirely.
         """
         cache = self.__class__._query_cache
-
-        if text in cache:
-            logger.debug("Embedding cache hit: '%s'", text[:60])
-            return cache[text]
-
-        result = await self.generate([text])
-        embedding = result[0] if result else []
-
-        # Simple FIFO eviction when cache is full
-        if len(cache) >= self.__class__._MAX_CACHE_SIZE:
-            oldest_key = next(iter(cache))
-            del cache[oldest_key]
-
-        cache[text] = embedding
-        logger.debug("Embedding cache miss (size now %d): '%s'", len(cache), text[:60])
-        return embedding
-
-
-async def generate_embeddings(texts: List[str]) -> List[List[float]]:
-    """Convenience function used by the ingestion pipeline."""
-    generator = get_embeddings_generator()
-    return await generator.generate(texts)

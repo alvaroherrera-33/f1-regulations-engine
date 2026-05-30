@@ -38,6 +38,15 @@ services:
       - key: APP_VERSION
         value: "0.1.0"
 
+      # Memory frugality for the 512MB free tier: pin BLAS/torch to 1 thread
+      # so the embedding model loads without OOM-killing the single worker.
+      - key: OMP_NUM_THREADS
+        value: "1"
+      - key: MKL_NUM_THREADS
+        value: "1"
+      - key: TOKENIZERS_PARALLELISM
+        value: "false"
+
       - key: HF_HOME
         value: /opt/render/project/.cache/huggingface
 
@@ -74,15 +83,4 @@ services:
     plan: free
     schedule: "30 7 * * 0"      # 07:30 UTC every Sunday (after fia-sync)
 
-    buildCommand: >
-      pip install torch==2.3.0+cpu
-      --index-url https://download.pytorch.org/whl/cpu &&
-      pip install -r requirements.txt
-
-    startCommand: python -m scripts.compute_diffs
-
-    envVars:
-      - key: DATABASE_URL
-        sync: false
-      - key: PYTHONUNBUFFERED
-        value: "1"
+  
