@@ -16,6 +16,10 @@ from typing import List, Optional
 os.environ.setdefault("OMP_NUM_THREADS", "1")
 os.environ.setdefault("MKL_NUM_THREADS", "1")
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
+# Cap glibc malloc arenas: multithreaded allocators otherwise reserve one
+# 64MB arena per CPU, which alone can blow past a 512MB container during the
+# torch/model load. MALLOC_ARENA_MAX=2 is the standard fix.
+os.environ.setdefault("MALLOC_ARENA_MAX", "2")
 
 from sentence_transformers import SentenceTransformer
 
@@ -75,3 +79,25 @@ class LocalEmbeddingsGenerator:
         question asked twice). Article embeddings bypass this path entirely.
         """
         cache = self.__class__._query_cache
+
+        if text in cache:
+            logger.debug("Embedding cache hit: '%s'", text[:60])
+            return cache[text]
+
+        result = await self.generate([text])
+        embedding = result[0] if result else []
+
+        # Simple FIFO eviction when cache is full
+        if len(cache) >= self.__class__._MAX_CACHE_SIZE:
+            oldest_key = next(iter(cache))
+            del cache[oldest_key]
+
+        cache[text] = embedding
+        logger.debug("Embedding cache miss (size now %d): '%s'", len(cache), text[:60])
+        return embedding
+
+
+async def generate_embeddings(texts: List[str]) -> List[List[float]]:
+    """Convenience function used by the ingestion pipeline."""
+    generator = get_embeddings_generator()
+    return await generator.generate(texts)

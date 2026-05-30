@@ -46,6 +46,10 @@ services:
         value: "1"
       - key: TOKENIZERS_PARALLELISM
         value: "false"
+      # Cap glibc malloc arenas (one 64MB arena per CPU otherwise) — key to
+      # keeping the model load under the 512MB limit.
+      - key: MALLOC_ARENA_MAX
+        value: "2"
 
       - key: HF_HOME
         value: /opt/render/project/.cache/huggingface
@@ -75,12 +79,4 @@ services:
       - key: PYTHONUNBUFFERED
         value: "1"
 
-  # Weekly cron: recompute article_diffs after new data is indexed
-  - type: cron
-    name: compute-diffs-weekly
-    runtime: python
-    rootDir: backend
-    plan: free
-    schedule: "30 7 * * 0"      # 07:30 UTC every Sunday (after fia-sync)
-
-  
+  # Weekly cron: recompute article_diffs after new data is indexe
