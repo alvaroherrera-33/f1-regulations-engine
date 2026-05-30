@@ -179,9 +179,10 @@ class ArticleDB(Base):
     parent_id         = Column(Integer, ForeignKey("articles.id", ondelete="SET NULL"), nullable=True)
     is_stub           = Column(Boolean, nullable=False, default=False)
     structural_status = Column(String(20), nullable=False, default="unvalidated")
-    # Validity annotation (populated by retriever, not stored in DB)
-    validity     = Column(String(20), nullable=True)
-    latest_year  = Column(Integer, nullable=True)
+    # NOTE: validity / latest_year are NOT DB columns. They are computed at
+    # query time and set on the Article pydantic model by the retriever's
+    # _annotate_validity(). Mapping them here as Columns made select(ArticleDB)
+    # SELECT non-existent columns and 500 every query — hence removed.
 
     document   = relationship("Document", back_populates="articles")
     embeddings = relationship("ArticleEmbedding", back_populates="article", cascade="all, delete-orphan")
@@ -257,3 +258,5 @@ class FiaSyncLog(Base):
     id             = Column(Integer, primary_key=True)
     checked_at     = Column(DateTime(timezone=True))
     total_fia_docs = Column(Integer, default=0)
+    new_docs_found = Column(Integer, default=0)
+    error_message  = Column(Text)
