@@ -1,14 +1,23 @@
 """Ingestion pipeline orchestration."""
-from typing import List
+from typing import Dict, List
 
-from sqlalchemy import insert, select
+from sqlalchemy import insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.database import async_session
-from app.models import ArticleDB, ArticleEmbedding, Document
+from app.models import (
+    ArticleDB,
+    ArticleEmbedding,
+    ArticleReference,
+    Document,
+    DocumentStructureAudit,
+)
 from ingestion.chunker import chunk_articles
 from ingestion.local_embeddings import LocalEmbeddingsGenerator
 from ingestion.pdf_parser import ParsedArticle, parse_pdf
+from ingestion.structural_parser import StructuralArticle, parse_pdf_structural
+from ingestion.structural_validation import compute_audit
 
 
 class IngestionPipeline:
@@ -22,7 +31,8 @@ class IngestionPipeline:
     async def ingest_document(
         self,
         pdf_path: str,
-        document_id: int
+        document_id: int,
+        allow_degraded: bool = True,
     ) -> dict:
         """
         Ingest a document: parse PDF, generate embeddings, store in database.
@@ -30,10 +40,16 @@ class IngestionPipeline:
         Args:
             pdf_path: Path to PDF file
             document_id: ID of document record in database
+            allow_degraded: when False and the structural validation gate fails
+                (orphans or TOC coverage below threshold), abort without storing.
+                Only consulted when settings.structural_parser is True.
 
         Returns:
             Statistics about the ingestion
         """
+        if settings.structural_parser:
+            return await self._ingest_structural(pdf_path, document_id, allow_degraded)
+
         print(f"Starting ingestion for document {document_id}")
 
         # Step 1: Parse PDF
@@ -109,6 +125,174 @@ class IngestionPipeline:
             "articles_count": len(articles),
             "embeddings_count": len(embeddings)
         }
+
+    async def _ingest_structural(
+        self,
+        pdf_path: str,
+        document_id: int,
+        allow_degraded: bool,
+    ) -> dict:
+        """Structural ingestion path (Fase 2/3): TOC-aware parse + validation gate.
+
+        Stores parent_id / is_stub / structural_status, the cross-reference
+        graph, and a per-document structural audit row. 0 LLM calls.
+        """
+        print(f"[structural] Starting ingestion for document {document_id}")
+
+        result = parse_pdf_structural(pdf_path)
+        articles: List[StructuralArticle] = result.articles
+        print(f"[structural] Parsed {len(articles)} articles "
+              f"(TOC available={result.toc_available}, "
+              f"{len(result.expected_from_toc)} TOC codes)")
+
+        if not articles:
+            return {"status": "error", "message": "No articles found in PDF",
+                    "articles_count": 0}
+
+        # --- Validation gate (before any writes, so a failed doc stores nothing) ---
+        audit = compute_audit(articles, result.expected_from_toc)
+        cov_str = f"{audit.toc_coverage:.2%}" if audit.toc_coverage is not None else "n/a"
+        print(f"[structural] Gate: orphans={audit.orphan_count} "
+              f"gaps={audit.numbering_gap_count} toc_coverage={cov_str} "
+              f"passed={audit.passed}")
+        if not audit.passed and not allow_degraded:
+            detail = {"orphans": audit.orphans[:20],
+                      "missing_from_toc": audit.missing_from_toc[:20]}
+            return {"status": "rejected",
+                    "message": "Structural validation gate failed "
+                               "(use allow_degraded to force).",
+                    "articles_count": 0, "audit": detail}
+
+        # --- Document metadata ---
+        result_doc = await self.db.execute(
+            select(Document).where(Document.id == document_id)
+        )
+        document = result_doc.scalar_one_or_none()
+        if not document:
+            return {"status": "error", "message": "Document not found",
+                    "articles_count": 0}
+
+        # --- Store articles, capture code -> id ---
+        code_to_id = await self._store_articles_structural(articles, document)
+
+        # --- Resolve parent_id from parent_code within this document ---
+        await self._resolve_parent_ids(articles, code_to_id)
+
+        # --- Store and resolve the cross-reference graph ---
+        xref_total, xref_resolved = await self._store_references(articles, code_to_id)
+        audit.xref_total = xref_total
+        audit.xref_resolved = xref_resolved
+
+        # --- Embeddings (same chunk → embed path as the legacy flow) ---
+        parsed = [a.to_parsed_article() for a in articles]
+        chunks = chunk_articles(parsed)
+        texts = [c.text for c in chunks]
+        embeddings = await self.embeddings_generator.generate(texts)
+        article_ids = [code_to_id[a.article_code] for a in articles]
+        await self._store_chunk_embeddings(article_ids, chunks, embeddings)
+
+        # --- Persist the per-document audit ---
+        await self._store_structure_audit(document, audit)
+
+        await self.db.commit()
+        print(f"[structural] Ingestion complete for document {document_id}")
+
+        return {
+            "status": "success" if audit.passed else "degraded",
+            "message": f"Ingested {len(articles)} articles "
+                       f"({len(chunks)} chunks); xref {xref_resolved}/{xref_total} resolved",
+            "articles_count": len(articles),
+            "embeddings_count": len(embeddings),
+            "audit": {
+                "orphan_count": audit.orphan_count,
+                "numbering_gap_count": audit.numbering_gap_count,
+                "toc_coverage": audit.toc_coverage,
+                "xref_resolution_rate": audit.xref_resolution_rate,
+                "passed": audit.passed,
+            },
+        }
+
+    async def _store_articles_structural(
+        self, articles: List[StructuralArticle], document: Document
+    ) -> Dict[str, int]:
+        """Insert structural articles, returning {article_code: id}."""
+        code_to_id: Dict[str, int] = {}
+        for a in articles:
+            stmt = insert(ArticleDB).values(
+                document_id=document.id,
+                article_code=a.article_code,
+                parent_code=a.parent_code,
+                level=a.level,
+                title=a.title,
+                content=a.content,
+                year=document.year,
+                section=document.section,
+                issue=document.issue,
+                is_stub=a.is_stub,
+                structural_status=a.structural_status,
+            ).returning(ArticleDB.id)
+            res = await self.db.execute(stmt)
+            code_to_id[a.article_code] = res.scalar_one()
+        return code_to_id
+
+    async def _resolve_parent_ids(
+        self, articles: List[StructuralArticle], code_to_id: Dict[str, int]
+    ) -> None:
+        """Set articles.parent_id from parent_code, within this document scope."""
+        for a in articles:
+            if a.parent_code and a.parent_code in code_to_id:
+                await self.db.execute(
+                    update(ArticleDB)
+                    .where(ArticleDB.id == code_to_id[a.article_code])
+                    .values(parent_id=code_to_id[a.parent_code])
+                )
+
+    async def _store_references(
+        self, articles: List[StructuralArticle], code_to_id: Dict[str, int]
+    ) -> tuple[int, int]:
+        """Persist the cross-reference graph; resolve targets within this doc.
+
+        Returns (total, resolved).
+        """
+        total = 0
+        resolved = 0
+        for a in articles:
+            src_id = code_to_id[a.article_code]
+            for ref in a.references:
+                total += 1
+                target_id = code_to_id.get(ref.target_code)
+                if target_id is not None:
+                    resolved += 1
+                await self.db.execute(
+                    insert(ArticleReference).values(
+                        source_article_id=src_id,
+                        target_code=ref.target_code,
+                        target_article_id=target_id,
+                        resolved=target_id is not None,
+                        raw_text=ref.raw_text[:255],
+                    )
+                )
+        return total, resolved
+
+    async def _store_structure_audit(
+        self, document: Document, audit
+    ) -> None:
+        """Write the per-document structural audit snapshot."""
+        await self.db.execute(
+            insert(DocumentStructureAudit).values(
+                document_id=document.id,
+                year=document.year,
+                section=document.section,
+                issue=document.issue,
+                total_articles=audit.total_articles,
+                orphan_count=audit.orphan_count,
+                numbering_gap_count=audit.numbering_gap_count,
+                toc_suspect_count=audit.toc_suspect_count,
+                xref_total=audit.xref_total,
+                xref_resolved=audit.xref_resolved,
+                passed=audit.passed,
+            )
+        )
 
     async def _store_articles(
         self,

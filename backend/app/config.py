@@ -36,6 +36,11 @@ class Settings(BaseSettings):
     # Server settings
     port: int = Field(default=8000)
 
+    # Structural parser (Priority 1). When True, ingestion uses the TOC-aware
+    # structural_parser with a validation gate; when False (default), it uses
+    # the legacy regex parser. See docs/internal/STRUCTURE_PLAN.md.
+    structural_parser: bool = Field(default=False)
+
     model_config = SettingsConfigDict(
         env_file=".env",
         extra="ignore",  # Ignore any extra env vars so Docker doesn't crash

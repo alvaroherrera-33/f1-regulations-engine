@@ -10,13 +10,14 @@ Usage:
 Environment:
     Requires DATABASE_URL and OPENROUTER_API_KEY to be set.
 """
+import argparse
 import asyncio
 import os
 import sys
 from pathlib import Path
 from typing import List, Tuple
 
-from sqlalchemy import insert, select
+from sqlalchemy import delete, insert, select
 
 from app.database import async_session
 from app.models import Document as DocumentModel
@@ -135,8 +136,16 @@ async def find_regulation_pdfs(archives_dir: str) -> List[Tuple[str, dict]]:
     return pdf_files
 
 
-async def ingest_all_documents():
-    """Process all PDFs from archives directory."""
+async def ingest_all_documents(allow_degraded: bool = True, reingest: bool = False):
+    """Process all PDFs from archives directory.
+
+    Args:
+        allow_degraded: when False, documents failing the structural validation
+            gate (orphans / low TOC coverage) are rejected instead of stored.
+            Only meaningful with STRUCTURAL_PARSER=true.
+        reingest: when True, delete an already-ingested document (cascade) and
+            re-ingest it, instead of skipping. Makes re-runs idempotent.
+    """
 
     # Get archives directory (relative to project root)
     project_root = Path(__file__).parent.parent.parent
@@ -184,8 +193,14 @@ async def ingest_all_documents():
                 existing_doc = result.scalar_one_or_none()
 
                 if existing_doc:
-                    print("⏭️  Already ingested - skipping")
-                    continue
+                    if not reingest:
+                        print("⏭️  Already ingested - skipping")
+                        continue
+                    print("♻️  Re-ingesting (deleting existing document + cascade)")
+                    await db.execute(
+                        delete(DocumentModel).where(DocumentModel.id == existing_doc.id)
+                    )
+                    await db.commit()
 
                 # Create document record
                 stmt = insert(DocumentModel).values(
@@ -201,10 +216,21 @@ async def ingest_all_documents():
                 await db.commit()
 
                 # Ingest document
-                result = await pipeline.ingest_document(pdf_path, document_id)
+                result = await pipeline.ingest_document(
+                    pdf_path, document_id, allow_degraded=allow_degraded
+                )
 
                 if result['status'] == 'success':
                     print(f"✅ Success: {result['articles_count']} articles ingested")
+                elif result['status'] == 'degraded':
+                    print(f"⚠️  Degraded (stored): {result['message']}")
+                elif result['status'] == 'rejected':
+                    # Gate failed and allow_degraded=False → remove the empty doc row
+                    print(f"⛔ Rejected by validation gate: {result['message']}")
+                    await db.execute(
+                        delete(DocumentModel).where(DocumentModel.id == document_id)
+                    )
+                    await db.commit()
                 else:
                     print(f"❌ Error: {result['message']}")
 
@@ -219,4 +245,17 @@ async def ingest_all_documents():
 
 
 if __name__ == "__main__":
-    asyncio.run(ingest_all_documents())
+    parser = argparse.ArgumentParser(description="Batch-ingest FIA regulation PDFs.")
+    parser.add_argument(
+        "--allow-degraded", action="store_true",
+        help="Store documents even if the structural validation gate fails "
+             "(default: hard gate rejects them).",
+    )
+    parser.add_argument(
+        "--reingest", action="store_true",
+        help="Delete and re-ingest documents that already exist (idempotent re-run).",
+    )
+    args = parser.parse_args()
+    asyncio.run(ingest_all_documents(
+        allow_degraded=args.allow_degraded, reingest=args.reingest
+    ))

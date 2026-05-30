@@ -111,6 +111,7 @@ class Article(BaseModel):
     issue: int
     level: int
     parent_code: Optional[str] = None
+    parent_id: Optional[int] = None       # resolved tree edge (structural layer)
     # Validity (set by retriever after diff lookup)
     validity: Optional[str] = None
     latest_year: Optional[int] = None
@@ -139,7 +140,7 @@ class StatusResponse(BaseModel):
 
 # ===== Database ORM Models (SQLAlchemy) =====
 
-from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -174,12 +175,18 @@ class ArticleDB(Base):
     issue        = Column(Integer)
     level        = Column(Integer, default=1)
     parent_code  = Column(String(50))
+    # Structural layer (Priority 1) — additive, see STRUCTURE_PLAN.md
+    parent_id         = Column(Integer, ForeignKey("articles.id", ondelete="SET NULL"), nullable=True)
+    is_stub           = Column(Boolean, nullable=False, default=False)
+    structural_status = Column(String(20), nullable=False, default="unvalidated")
     # Validity annotation (populated by retriever, not stored in DB)
     validity     = Column(String(20), nullable=True)
     latest_year  = Column(Integer, nullable=True)
 
     document   = relationship("Document", back_populates="articles")
     embeddings = relationship("ArticleEmbedding", back_populates="article", cascade="all, delete-orphan")
+    # Self-referential parent/children via resolved parent_id
+    parent     = relationship("ArticleDB", remote_side=[id], backref="children")
 
 
 class ArticleEmbedding(Base):
@@ -206,6 +213,43 @@ class ArticleDiff(Base):
     change_type   = Column(String(20))
 
 
+class ArticleReference(Base):
+    """A cross-reference from one article to another, extracted deterministically.
+
+    Populated during ingestion (0 LLM calls). `target_article_id`/`resolved`
+    are filled when the referenced code can be matched within the same
+    document scope; otherwise the reference is kept as dangling.
+    """
+    __tablename__ = "article_references"
+
+    id                = Column(Integer, primary_key=True)
+    source_article_id = Column(Integer, ForeignKey("articles.id", ondelete="CASCADE"), nullable=False)
+    target_code       = Column(String(50), nullable=False)
+    target_article_id = Column(Integer, ForeignKey("articles.id", ondelete="SET NULL"), nullable=True)
+    resolved          = Column(Boolean, nullable=False, default=False)
+    raw_text          = Column(String(255))
+    created_at        = Column(DateTime)
+
+
+class DocumentStructureAudit(Base):
+    """Per-document structural audit snapshot written by the validation gate."""
+    __tablename__ = "document_structure_audit"
+
+    id                  = Column(Integer, primary_key=True)
+    document_id         = Column(Integer, ForeignKey("documents.id", ondelete="CASCADE"))
+    year                = Column(Integer, nullable=False)
+    section             = Column(String(50), nullable=False)
+    issue               = Column(Integer, nullable=False)
+    total_articles      = Column(Integer, default=0)
+    orphan_count        = Column(Integer, default=0)
+    numbering_gap_count = Column(Integer, default=0)
+    toc_suspect_count   = Column(Integer, default=0)
+    xref_total          = Column(Integer, default=0)
+    xref_resolved       = Column(Integer, default=0)
+    passed              = Column(Boolean, default=False)
+    computed_at         = Column(DateTime)
+
+
 class FiaSyncLog(Base):
     """Records each time we checked fia.com for new regulation PDFs."""
     __tablename__ = "fia_sync_log"
@@ -213,5 +257,3 @@ class FiaSyncLog(Base):
     id             = Column(Integer, primary_key=True)
     checked_at     = Column(DateTime(timezone=True))
     total_fia_docs = Column(Integer, default=0)
-    new_docs_found = Column(Integer, default=0)
-    error_message  = Column(Text)

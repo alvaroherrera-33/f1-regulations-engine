@@ -1,0 +1,2106 @@
+{
+  "schema_version": 1,
+  "thresholds": {
+    "short_content_chars": 40,
+    "xref_pattern": "\\bArticle\\s+([A-Z]?\\d+(?:\\.\\w+)*)"
+  },
+  "_note": "Generated server-side via read-only Supabase MCP because DATABASE_URL credentials were not available in the agent workspace. Numbers are real (prod DB). The codes/details/unresolved_examples arrays are left empty here; running scripts/structural_audit.py with DATABASE_URL set will populate them identically.",
+  "global": {
+    "total_articles": 19777,
+    "total_groups": 69,
+    "total_orphans": 4,
+    "orphan_rate": 0.0002,
+    "total_numbering_gaps": 3067,
+    "total_toc_suspect": 85,
+    "total_short_content": 1488,
+    "xref_mentions": 8268,
+    "xref_resolved": 4774,
+    "xref_resolution_rate": 0.5774
+  },
+  "worst_groups": [
+    {
+      "group": "Technical 2026 issue 10",
+      "health_score": 3.4876,
+      "total_articles": 445,
+      "orphans": 0,
+      "numbering_gaps": 1438,
+      "toc_suspect": 0,
+      "short_content": 30,
+      "xref_resolution_rate": 0.4783
+    },
+    {
+      "group": "Sporting 2026 issue 6",
+      "health_score": 0.81,
+      "total_articles": 100,
+      "orphans": 4,
+      "numbering_gaps": 4,
+      "toc_suspect": 0,
+      "short_content": 3,
+      "xref_resolution_rate": 0.1954
+    },
+    {
+      "group": "Sporting 2024 issue 3",
+      "health_score": 0.7005,
+      "total_articles": 404,
+      "orphans": 0,
+      "numbering_gaps": 173,
+      "toc_suspect": 1,
+      "short_content": 33,
+      "xref_resolution_rate": 0.6219
+    },
+    {
+      "group": "Sporting 2026 issue 2",
+      "health_score": 0.62,
+      "total_articles": 100,
+      "orphans": 0,
+      "numbering_gaps": 0,
+      "toc_suspect": 0,
+      "short_content": 4,
+      "xref_resolution_rate": 0.1944
+    },
+    {
+      "group": "Financial 2026 issue 6",
+      "health_score": 0.5571,
+      "total_articles": 70,
+      "orphans": 0,
+      "numbering_gaps": 0,
+      "toc_suspect": 0,
+      "short_content": 11,
+      "xref_resolution_rate": 0.4909
+    },
+    {
+      "group": "Sporting 2026 issue 5",
+      "health_score": 0.5436,
+      "total_articles": 149,
+      "orphans": 0,
+      "numbering_gaps": 0,
+      "toc_suspect": 0,
+      "short_content": 9,
+      "xref_resolution_rate": 0.191
+    },
+    {
+      "group": "Sporting 2026 issue 3",
+      "health_score": 0.5369,
+      "total_articles": 149,
+      "orphans": 0,
+      "numbering_gaps": 0,
+      "toc_suspect": 0,
+      "short_content": 8,
+      "xref_resolution_rate": 0.191
+    },
+    {
+      "group": "Sporting 2026 issue 1",
+      "health_score": 0.5248,
+      "total_articles": 101,
+      "orphans": 0,
+      "numbering_gaps": 0,
+      "toc_suspect": 0,
+      "short_content": 4,
+      "xref_resolution_rate": 0.2222
+    },
+    {
+      "group": "Technical 2026 issue 12",
+      "health_score": 0.5212,
+      "total_articles": 449,
+      "orphans": 0,
+      "numbering_gaps": 113,
+      "toc_suspect": 0,
+      "short_content": 34,
+      "xref_resolution_rate": 0.4695
+    },
+    {
+      "group": "Sporting 2026 issue 4",
+      "health_score": 0.5067,
+      "total_articles": 150,
+      "orphans": 0,
+      "numbering_gaps": 0,
+      "toc_suspect": 0,
+      "short_content": 8,
+      "xref_resolution_rate": 0.1905
+    },
+    {
+      "group": "Financial 2026 issue 4",
+      "health_score": 0.4667,
+      "total_articles": 75,
+      "orphans": 0,
+      "numbering_gaps": 0,
+      "toc_suspect": 0,
+      "short_content": 8,
+      "xref_resolution_rate": 0.4706
+    },
+    {
+      "group": "Technical 2023 issue 1",
+      "health_score": 0.4593,
+      "total_articles": 307,
+      "orphans": 0,
+      "numbering_gaps": 48,
+      "toc_suspect": 0,
+      "short_content": 28,
+      "xref_resolution_rate": 0.4672
+    },
+    {
+      "group": "Technical 2023 issue 3",
+      "health_score": 0.4569,
+      "total_articles": 313,
+      "orphans": 0,
+      "numbering_gaps": 48,
+      "toc_suspect": 0,
+      "short_content": 30,
+      "xref_resolution_rate": 0.4882
+    },
+    {
+      "group": "Technical 2023 issue 2",
+      "health_score": 0.4537,
+      "total_articles": 313,
+      "orphans": 0,
+      "numbering_gaps": 48,
+      "toc_suspect": 0,
+      "short_content": 29,
+      "xref_resolution_rate": 0.4715
+    },
+    {
+      "group": "Financial 2026 issue 2",
+      "health_score": 0.4528,
+      "total_articles": 53,
+      "orphans": 0,
+      "numbering_gaps": 0,
+      "toc_suspect": 0,
+      "short_content": 10,
+      "xref_resolution_rate": 0.5
+    }
+  ],
+  "by_group": [
+    {
+      "section": "Financial",
+      "year": 2023,
+      "issue": 14,
+      "total_articles": 133,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 29,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 6,
+        "short_content_count": 1,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 56,
+        "resolved": 55,
+        "resolution_rate": 0.9821,
+        "unresolved_examples": []
+      },
+      "health_score": 0.2782
+    },
+    {
+      "section": "Financial",
+      "year": 2023,
+      "issue": 15,
+      "total_articles": 132,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 29,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 6,
+        "short_content_count": 1,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 48,
+        "resolved": 48,
+        "resolution_rate": 1.0,
+        "unresolved_examples": []
+      },
+      "health_score": 0.2727
+    },
+    {
+      "section": "Financial",
+      "year": 2023,
+      "issue": 16,
+      "total_articles": 131,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 29,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 5,
+        "short_content_count": 1,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 48,
+        "resolved": 48,
+        "resolution_rate": 1.0,
+        "unresolved_examples": []
+      },
+      "health_score": 0.2672
+    },
+    {
+      "section": "Financial",
+      "year": 2023,
+      "issue": 17,
+      "total_articles": 132,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 29,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 5,
+        "short_content_count": 1,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 48,
+        "resolved": 48,
+        "resolution_rate": 1.0,
+        "unresolved_examples": []
+      },
+      "health_score": 0.2652
+    },
+    {
+      "section": "Financial",
+      "year": 2023,
+      "issue": 18,
+      "total_articles": 131,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 0,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 5,
+        "short_content_count": 1,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 47,
+        "resolved": 46,
+        "resolution_rate": 0.9787,
+        "unresolved_examples": []
+      },
+      "health_score": 0.0534
+    },
+    {
+      "section": "Financial",
+      "year": 2024,
+      "issue": 19,
+      "total_articles": 130,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 0,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 5,
+        "short_content_count": 1,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 46,
+        "resolved": 45,
+        "resolution_rate": 0.9783,
+        "unresolved_examples": []
+      },
+      "health_score": 0.0538
+    },
+    {
+      "section": "Financial",
+      "year": 2024,
+      "issue": 20,
+      "total_articles": 130,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 29,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 5,
+        "short_content_count": 1,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 38,
+        "resolved": 38,
+        "resolution_rate": 1.0,
+        "unresolved_examples": []
+      },
+      "health_score": 0.2692
+    },
+    {
+      "section": "Financial",
+      "year": 2024,
+      "issue": 21,
+      "total_articles": 129,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 29,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 5,
+        "short_content_count": 1,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 38,
+        "resolved": 38,
+        "resolution_rate": 1.0,
+        "unresolved_examples": []
+      },
+      "health_score": 0.2713
+    },
+    {
+      "section": "Financial",
+      "year": 2024,
+      "issue": 22,
+      "total_articles": 131,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 29,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 5,
+        "short_content_count": 1,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 38,
+        "resolved": 38,
+        "resolution_rate": 1.0,
+        "unresolved_examples": []
+      },
+      "health_score": 0.2672
+    },
+    {
+      "section": "Financial",
+      "year": 2025,
+      "issue": 23,
+      "total_articles": 132,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 29,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 6,
+        "short_content_count": 1,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 38,
+        "resolved": 38,
+        "resolution_rate": 1.0,
+        "unresolved_examples": []
+      },
+      "health_score": 0.2727
+    },
+    {
+      "section": "Financial",
+      "year": 2025,
+      "issue": 24,
+      "total_articles": 132,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 29,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 6,
+        "short_content_count": 1,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 38,
+        "resolved": 38,
+        "resolution_rate": 1.0,
+        "unresolved_examples": []
+      },
+      "health_score": 0.2727
+    },
+    {
+      "section": "Financial",
+      "year": 2026,
+      "issue": 1,
+      "total_articles": 196,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 1,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 9,
+        "short_content_count": 1,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 63,
+        "resolved": 63,
+        "resolution_rate": 1.0,
+        "unresolved_examples": []
+      },
+      "health_score": 0.0561
+    },
+    {
+      "section": "Financial",
+      "year": 2026,
+      "issue": 2,
+      "total_articles": 53,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 0,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 10,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 28,
+        "resolved": 14,
+        "resolution_rate": 0.5,
+        "unresolved_examples": []
+      },
+      "health_score": 0.4528
+    },
+    {
+      "section": "Financial",
+      "year": 2026,
+      "issue": 3,
+      "total_articles": 71,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 0,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 6,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 42,
+        "resolved": 22,
+        "resolution_rate": 0.5238,
+        "unresolved_examples": []
+      },
+      "health_score": 0.3662
+    },
+    {
+      "section": "Financial",
+      "year": 2026,
+      "issue": 4,
+      "total_articles": 75,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 0,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 8,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 51,
+        "resolved": 24,
+        "resolution_rate": 0.4706,
+        "unresolved_examples": []
+      },
+      "health_score": 0.4667
+    },
+    {
+      "section": "Financial",
+      "year": 2026,
+      "issue": 5,
+      "total_articles": 50,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 0,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 8,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 28,
+        "resolved": 15,
+        "resolution_rate": 0.5357,
+        "unresolved_examples": []
+      },
+      "health_score": 0.42
+    },
+    {
+      "section": "Financial",
+      "year": 2026,
+      "issue": 6,
+      "total_articles": 70,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 0,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 11,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 55,
+        "resolved": 27,
+        "resolution_rate": 0.4909,
+        "unresolved_examples": []
+      },
+      "health_score": 0.5571
+    },
+    {
+      "section": "Financial",
+      "year": 2026,
+      "issue": 7,
+      "total_articles": 138,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 0,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 4,
+        "short_content_count": 1,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 42,
+        "resolved": 42,
+        "resolution_rate": 1.0,
+        "unresolved_examples": []
+      },
+      "health_score": 0.0362
+    },
+    {
+      "section": "Sporting",
+      "year": 2023,
+      "issue": 1,
+      "total_articles": 401,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 2,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 1,
+        "short_content_count": 33,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 169,
+        "resolved": 117,
+        "resolution_rate": 0.6923,
+        "unresolved_examples": []
+      },
+      "health_score": 0.2195
+    },
+    {
+      "section": "Sporting",
+      "year": 2023,
+      "issue": 2,
+      "total_articles": 401,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 2,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 1,
+        "short_content_count": 33,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 168,
+        "resolved": 118,
+        "resolution_rate": 0.7024,
+        "unresolved_examples": []
+      },
+      "health_score": 0.2145
+    },
+    {
+      "section": "Sporting",
+      "year": 2023,
+      "issue": 3,
+      "total_articles": 401,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 4,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 1,
+        "short_content_count": 34,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 185,
+        "resolved": 112,
+        "resolution_rate": 0.6054,
+        "unresolved_examples": []
+      },
+      "health_score": 0.2793
+    },
+    {
+      "section": "Sporting",
+      "year": 2023,
+      "issue": 4,
+      "total_articles": 400,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 3,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 1,
+        "short_content_count": 31,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 192,
+        "resolved": 121,
+        "resolution_rate": 0.6302,
+        "unresolved_examples": []
+      },
+      "health_score": 0.265
+    },
+    {
+      "section": "Sporting",
+      "year": 2023,
+      "issue": 5,
+      "total_articles": 402,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 3,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 1,
+        "short_content_count": 32,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 206,
+        "resolved": 128,
+        "resolution_rate": 0.6214,
+        "unresolved_examples": []
+      },
+      "health_score": 0.2836
+    },
+    {
+      "section": "Sporting",
+      "year": 2023,
+      "issue": 6,
+      "total_articles": 397,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 2,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 1,
+        "short_content_count": 30,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 202,
+        "resolved": 128,
+        "resolution_rate": 0.6337,
+        "unresolved_examples": []
+      },
+      "health_score": 0.2695
+    },
+    {
+      "section": "Sporting",
+      "year": 2023,
+      "issue": 7,
+      "total_articles": 397,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 3,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 1,
+        "short_content_count": 31,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 199,
+        "resolved": 129,
+        "resolution_rate": 0.6482,
+        "unresolved_examples": []
+      },
+      "health_score": 0.2645
+    },
+    {
+      "section": "Sporting",
+      "year": 2023,
+      "issue": 8,
+      "total_articles": 398,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 3,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 1,
+        "short_content_count": 31,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 198,
+        "resolved": 127,
+        "resolution_rate": 0.6414,
+        "unresolved_examples": []
+      },
+      "health_score": 0.2663
+    },
+    {
+      "section": "Sporting",
+      "year": 2024,
+      "issue": 1,
+      "total_articles": 398,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 2,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 1,
+        "short_content_count": 32,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 182,
+        "resolved": 122,
+        "resolution_rate": 0.6703,
+        "unresolved_examples": []
+      },
+      "health_score": 0.2387
+    },
+    {
+      "section": "Sporting",
+      "year": 2024,
+      "issue": 2,
+      "total_articles": 398,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 2,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 1,
+        "short_content_count": 32,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 183,
+        "resolved": 123,
+        "resolution_rate": 0.6721,
+        "unresolved_examples": []
+      },
+      "health_score": 0.2387
+    },
+    {
+      "section": "Sporting",
+      "year": 2024,
+      "issue": 3,
+      "total_articles": 404,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 173,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 1,
+        "short_content_count": 33,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 201,
+        "resolved": 125,
+        "resolution_rate": 0.6219,
+        "unresolved_examples": []
+      },
+      "health_score": 0.7005
+    },
+    {
+      "section": "Sporting",
+      "year": 2024,
+      "issue": 4,
+      "total_articles": 396,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 6,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 30,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 201,
+        "resolved": 127,
+        "resolution_rate": 0.6318,
+        "unresolved_examples": []
+      },
+      "health_score": 0.2778
+    },
+    {
+      "section": "Sporting",
+      "year": 2024,
+      "issue": 5,
+      "total_articles": 394,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 7,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 29,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 200,
+        "resolved": 125,
+        "resolution_rate": 0.625,
+        "unresolved_examples": []
+      },
+      "health_score": 0.2817
+    },
+    {
+      "section": "Sporting",
+      "year": 2024,
+      "issue": 6,
+      "total_articles": 400,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 6,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 31,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 200,
+        "resolved": 135,
+        "resolution_rate": 0.675,
+        "unresolved_examples": []
+      },
+      "health_score": 0.255
+    },
+    {
+      "section": "Sporting",
+      "year": 2024,
+      "issue": 7,
+      "total_articles": 405,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 7,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 1,
+        "short_content_count": 33,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 221,
+        "resolved": 136,
+        "resolution_rate": 0.6154,
+        "unresolved_examples": []
+      },
+      "health_score": 0.3111
+    },
+    {
+      "section": "Sporting",
+      "year": 2025,
+      "issue": 4,
+      "total_articles": 411,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 9,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 1,
+        "short_content_count": 30,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 217,
+        "resolved": 150,
+        "resolution_rate": 0.6912,
+        "unresolved_examples": []
+      },
+      "health_score": 0.2603
+    },
+    {
+      "section": "Sporting",
+      "year": 2025,
+      "issue": 5,
+      "total_articles": 405,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 9,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 32,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 230,
+        "resolved": 156,
+        "resolution_rate": 0.6783,
+        "unresolved_examples": []
+      },
+      "health_score": 0.284
+    },
+    {
+      "section": "Sporting",
+      "year": 2026,
+      "issue": 1,
+      "total_articles": 101,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 0,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 4,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 63,
+        "resolved": 14,
+        "resolution_rate": 0.2222,
+        "unresolved_examples": []
+      },
+      "health_score": 0.5248
+    },
+    {
+      "section": "Sporting",
+      "year": 2026,
+      "issue": 2,
+      "total_articles": 100,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 0,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 4,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 72,
+        "resolved": 14,
+        "resolution_rate": 0.1944,
+        "unresolved_examples": []
+      },
+      "health_score": 0.62
+    },
+    {
+      "section": "Sporting",
+      "year": 2026,
+      "issue": 3,
+      "total_articles": 149,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 0,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 8,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 89,
+        "resolved": 17,
+        "resolution_rate": 0.191,
+        "unresolved_examples": []
+      },
+      "health_score": 0.5369
+    },
+    {
+      "section": "Sporting",
+      "year": 2026,
+      "issue": 4,
+      "total_articles": 150,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 0,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 8,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 84,
+        "resolved": 16,
+        "resolution_rate": 0.1905,
+        "unresolved_examples": []
+      },
+      "health_score": 0.5067
+    },
+    {
+      "section": "Sporting",
+      "year": 2026,
+      "issue": 5,
+      "total_articles": 149,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 0,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 9,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 89,
+        "resolved": 17,
+        "resolution_rate": 0.191,
+        "unresolved_examples": []
+      },
+      "health_score": 0.5436
+    },
+    {
+      "section": "Sporting",
+      "year": 2026,
+      "issue": 6,
+      "total_articles": 100,
+      "orphans": {
+        "count": 4,
+        "rate": 0.04,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 4,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 3,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 87,
+        "resolved": 17,
+        "resolution_rate": 0.1954,
+        "unresolved_examples": []
+      },
+      "health_score": 0.81
+    },
+    {
+      "section": "Technical",
+      "year": 2023,
+      "issue": 1,
+      "total_articles": 307,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 48,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 28,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 122,
+        "resolved": 57,
+        "resolution_rate": 0.4672,
+        "unresolved_examples": []
+      },
+      "health_score": 0.4593
+    },
+    {
+      "section": "Technical",
+      "year": 2023,
+      "issue": 2,
+      "total_articles": 313,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 48,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 29,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 123,
+        "resolved": 58,
+        "resolution_rate": 0.4715,
+        "unresolved_examples": []
+      },
+      "health_score": 0.4537
+    },
+    {
+      "section": "Technical",
+      "year": 2023,
+      "issue": 3,
+      "total_articles": 313,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 48,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 30,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 127,
+        "resolved": 62,
+        "resolution_rate": 0.4882,
+        "unresolved_examples": []
+      },
+      "health_score": 0.4569
+    },
+    {
+      "section": "Technical",
+      "year": 2023,
+      "issue": 4,
+      "total_articles": 314,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 48,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 30,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 118,
+        "resolved": 61,
+        "resolution_rate": 0.5169,
+        "unresolved_examples": []
+      },
+      "health_score": 0.4299
+    },
+    {
+      "section": "Technical",
+      "year": 2023,
+      "issue": 5,
+      "total_articles": 314,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 48,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 29,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 118,
+        "resolved": 57,
+        "resolution_rate": 0.4831,
+        "unresolved_examples": []
+      },
+      "health_score": 0.4395
+    },
+    {
+      "section": "Technical",
+      "year": 2023,
+      "issue": 6,
+      "total_articles": 314,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 48,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 29,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 112,
+        "resolved": 59,
+        "resolution_rate": 0.5268,
+        "unresolved_examples": []
+      },
+      "health_score": 0.414
+    },
+    {
+      "section": "Technical",
+      "year": 2023,
+      "issue": 7,
+      "total_articles": 314,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 48,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 29,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 115,
+        "resolved": 61,
+        "resolution_rate": 0.5304,
+        "unresolved_examples": []
+      },
+      "health_score": 0.4172
+    },
+    {
+      "section": "Technical",
+      "year": 2024,
+      "issue": 1,
+      "total_articles": 314,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 48,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 29,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 116,
+        "resolved": 61,
+        "resolution_rate": 0.5259,
+        "unresolved_examples": []
+      },
+      "health_score": 0.4204
+    },
+    {
+      "section": "Technical",
+      "year": 2024,
+      "issue": 2,
+      "total_articles": 314,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 48,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 29,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 117,
+        "resolved": 63,
+        "resolution_rate": 0.5385,
+        "unresolved_examples": []
+      },
+      "health_score": 0.4172
+    },
+    {
+      "section": "Technical",
+      "year": 2024,
+      "issue": 3,
+      "total_articles": 314,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 48,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 30,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 110,
+        "resolved": 63,
+        "resolution_rate": 0.5727,
+        "unresolved_examples": []
+      },
+      "health_score": 0.3981
+    },
+    {
+      "section": "Technical",
+      "year": 2024,
+      "issue": 4,
+      "total_articles": 316,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 48,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 31,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 114,
+        "resolved": 62,
+        "resolution_rate": 0.5439,
+        "unresolved_examples": []
+      },
+      "health_score": 0.4146
+    },
+    {
+      "section": "Technical",
+      "year": 2024,
+      "issue": 5,
+      "total_articles": 315,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 48,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 30,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 118,
+        "resolved": 61,
+        "resolution_rate": 0.5169,
+        "unresolved_examples": []
+      },
+      "health_score": 0.4286
+    },
+    {
+      "section": "Technical",
+      "year": 2024,
+      "issue": 6,
+      "total_articles": 315,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 48,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 29,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 118,
+        "resolved": 61,
+        "resolution_rate": 0.5169,
+        "unresolved_examples": []
+      },
+      "health_score": 0.4254
+    },
+    {
+      "section": "Technical",
+      "year": 2024,
+      "issue": 7,
+      "total_articles": 315,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 48,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 29,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 120,
+        "resolved": 61,
+        "resolution_rate": 0.5083,
+        "unresolved_examples": []
+      },
+      "health_score": 0.4317
+    },
+    {
+      "section": "Technical",
+      "year": 2024,
+      "issue": 8,
+      "total_articles": 315,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 48,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 29,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 118,
+        "resolved": 61,
+        "resolution_rate": 0.5169,
+        "unresolved_examples": []
+      },
+      "health_score": 0.4254
+    },
+    {
+      "section": "Technical",
+      "year": 2025,
+      "issue": 1,
+      "total_articles": 316,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 48,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 30,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 115,
+        "resolved": 60,
+        "resolution_rate": 0.5217,
+        "unresolved_examples": []
+      },
+      "health_score": 0.4209
+    },
+    {
+      "section": "Technical",
+      "year": 2025,
+      "issue": 2,
+      "total_articles": 315,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 48,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 29,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 124,
+        "resolved": 63,
+        "resolution_rate": 0.5081,
+        "unresolved_examples": []
+      },
+      "health_score": 0.4381
+    },
+    {
+      "section": "Technical",
+      "year": 2025,
+      "issue": 3,
+      "total_articles": 316,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 48,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 30,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 122,
+        "resolved": 62,
+        "resolution_rate": 0.5082,
+        "unresolved_examples": []
+      },
+      "health_score": 0.4367
+    },
+    {
+      "section": "Technical",
+      "year": 2026,
+      "issue": 9,
+      "total_articles": 454,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 29,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 38,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 162,
+        "resolved": 79,
+        "resolution_rate": 0.4877,
+        "unresolved_examples": []
+      },
+      "health_score": 0.3304
+    },
+    {
+      "section": "Technical",
+      "year": 2026,
+      "issue": 10,
+      "total_articles": 445,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 1438,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 30,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 161,
+        "resolved": 77,
+        "resolution_rate": 0.4783,
+        "unresolved_examples": []
+      },
+      "health_score": 3.4876
+    },
+    {
+      "section": "Technical",
+      "year": 2026,
+      "issue": 11,
+      "total_articles": 439,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 15,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 29,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 164,
+        "resolved": 70,
+        "resolution_rate": 0.4268,
+        "unresolved_examples": []
+      },
+      "health_score": 0.3144
+    },
+    {
+      "section": "Technical",
+      "year": 2026,
+      "issue": 12,
+      "total_articles": 449,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 113,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 34,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 164,
+        "resolved": 77,
+        "resolution_rate": 0.4695,
+        "unresolved_examples": []
+      },
+      "health_score": 0.5212
+    },
+    {
+      "section": "Technical",
+      "year": 2026,
+      "issue": 13,
+      "total_articles": 449,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 15,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 33,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 148,
+        "resolved": 67,
+        "resolution_rate": 0.4527,
+        "unresolved_examples": []
+      },
+      "health_score": 0.2873
+    },
+    {
+      "section": "Technical",
+      "year": 2026,
+      "issue": 14,
+      "total_articles": 452,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 16,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 34,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 142,
+        "resolved": 69,
+        "resolution_rate": 0.4859,
+        "unresolved_examples": []
+      },
+      "health_score": 0.2721
+    },
+    {
+      "section": "Technical",
+      "year": 2026,
+      "issue": 15,
+      "total_articles": 450,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 17,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 35,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 149,
+        "resolved": 71,
+        "resolution_rate": 0.4765,
+        "unresolved_examples": []
+      },
+      "health_score": 0.2889
+    },
+    {
+      "section": "Technical",
+      "year": 2026,
+      "issue": 16,
+      "total_articles": 445,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 17,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 32,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 144,
+        "resolved": 70,
+        "resolution_rate": 0.4861,
+        "unresolved_examples": []
+      },
+      "health_score": 0.2764
+    },
+    {
+      "section": "Technical",
+      "year": 2026,
+      "issue": 17,
+      "total_articles": 443,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 17,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 32,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 137,
+        "resolved": 69,
+        "resolution_rate": 0.5036,
+        "unresolved_examples": []
+      },
+      "health_score": 0.2641
+    },
+    {
+      "section": "Technical",
+      "year": 2026,
+      "issue": 18,
+      "total_articles": 444,
+      "orphans": {
+        "count": 0,
+        "rate": 0.0,
+        "codes": []
+      },
+      "numbering_gaps": {
+        "count": 17,
+        "details": []
+      },
+      "toc_contamination": {
+        "toc_suspect_count": 0,
+        "short_content_count": 33,
+        "toc_codes": [],
+        "short_codes": []
+      },
+      "xref_resolution": {
+        "mentions": 140,
+        "resolved": 71,
+        "resolution_rate": 0.5071,
+        "unresolved_examples": []
+      },
+      "health_score": 0.268
+    }
+  ]
+}

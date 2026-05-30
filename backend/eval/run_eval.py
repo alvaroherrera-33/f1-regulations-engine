@@ -57,6 +57,12 @@ class QueryResult:
     response_time_ms: int
     research_steps: int
     answer_length: int
+    # Structural assertions (Fase 5) — default to a complete pass when the
+    # query declares no structural expectations, so this is backward-compatible.
+    expected_subtree: list[str] = field(default_factory=list)
+    subtree_complete: float = 1.0     # fraction of expected subtree codes retrieved
+    expected_xrefs: list[str] = field(default_factory=list)
+    xref_resolved: float = 1.0        # fraction of expected cross-refs retrieved
     error: Optional[str] = None
 
 
@@ -72,6 +78,8 @@ class EvalReport:
     avg_retrieval_precision: float = 0.0
     avg_retrieval_recall: float = 0.0
     avg_fact_accuracy: float = 0.0
+    avg_subtree_complete: float = 0.0
+    avg_xref_resolved: float = 0.0
     avg_response_time_ms: float = 0.0
     # By difficulty
     metrics_by_difficulty: dict = field(default_factory=dict)
@@ -169,6 +177,24 @@ def run_query(client: httpx.Client, url: str, query_data: dict) -> QueryResult:
 
     research_steps = data.get("research_steps", [])
 
+    # --- Structural assertions (Fase 5) ---
+    # subtree_complete: of the expected ancestor+leaf chain, how much was returned.
+    # xref_resolved: of the expected cross-referenced articles, how many came along.
+    expected_subtree = query_data.get("expected_subtree", [])
+    expected_xrefs = query_data.get("expected_xrefs", [])
+
+    if expected_subtree:
+        norm_sub = {_normalize_code(c) for c in expected_subtree}
+        subtree_complete = len(norm_sub & norm_retrieved) / len(norm_sub)
+    else:
+        subtree_complete = 1.0
+
+    if expected_xrefs:
+        norm_xref = {_normalize_code(c) for c in expected_xrefs}
+        xref_resolved = len(norm_xref & norm_retrieved) / len(norm_xref)
+    else:
+        xref_resolved = 1.0
+
     return QueryResult(
         id=query_data["id"],
         query=query,
@@ -183,24 +209,33 @@ def run_query(client: httpx.Client, url: str, query_data: dict) -> QueryResult:
         response_time_ms=elapsed,
         research_steps=len(research_steps),
         answer_length=len(answer),
+        expected_subtree=list(expected_subtree),
+        subtree_complete=round(subtree_complete, 4),
+        expected_xrefs=list(expected_xrefs),
+        xref_resolved=round(xref_resolved, 4),
     )
 
 
 def aggregate_metrics(results: list[QueryResult]) -> dict:
     """Compute average metrics from a list of results."""
     if not results:
-        return {"precision": 0, "recall": 0, "fact_accuracy": 0, "avg_time_ms": 0, "count": 0}
+        return {"precision": 0, "recall": 0, "fact_accuracy": 0,
+                "subtree_complete": 0, "xref_resolved": 0, "avg_time_ms": 0, "count": 0}
 
     successful = [r for r in results if r.error is None]
     if not successful:
-        return {"precision": 0, "recall": 0, "fact_accuracy": 0, "avg_time_ms": 0, "count": 0}
+        return {"precision": 0, "recall": 0, "fact_accuracy": 0,
+                "subtree_complete": 0, "xref_resolved": 0, "avg_time_ms": 0, "count": 0}
 
+    n = len(successful)
     return {
-        "precision": round(sum(r.retrieval_precision for r in successful) / len(successful), 4),
-        "recall": round(sum(r.retrieval_recall for r in successful) / len(successful), 4),
-        "fact_accuracy": round(sum(r.fact_accuracy for r in successful) / len(successful), 4),
-        "avg_time_ms": int(sum(r.response_time_ms for r in successful) / len(successful)),
-        "count": len(successful),
+        "precision": round(sum(r.retrieval_precision for r in successful) / n, 4),
+        "recall": round(sum(r.retrieval_recall for r in successful) / n, 4),
+        "fact_accuracy": round(sum(r.fact_accuracy for r in successful) / n, 4),
+        "subtree_complete": round(sum(r.subtree_complete for r in successful) / n, 4),
+        "xref_resolved": round(sum(r.xref_resolved for r in successful) / n, 4),
+        "avg_time_ms": int(sum(r.response_time_ms for r in successful) / n),
+        "count": n,
     }
 
 
@@ -234,6 +269,8 @@ def build_report(results: list[QueryResult], url: str) -> EvalReport:
         avg_retrieval_precision=agg["precision"],
         avg_retrieval_recall=agg["recall"],
         avg_fact_accuracy=agg["fact_accuracy"],
+        avg_subtree_complete=agg["subtree_complete"],
+        avg_xref_resolved=agg["xref_resolved"],
         avg_response_time_ms=agg["avg_time_ms"],
         metrics_by_difficulty=by_diff,
         metrics_by_section=by_section,
@@ -284,6 +321,8 @@ def print_report(report: EvalReport):
     print(f"    Retrieval Precision:  {report.avg_retrieval_precision:.1%}")
     print(f"    Retrieval Recall:     {report.avg_retrieval_recall:.1%}")
     print(f"    Fact Accuracy:        {report.avg_fact_accuracy:.1%}")
+    print(f"    Subtree Completeness: {report.avg_subtree_complete:.1%}")
+    print(f"    Xref Resolution:      {report.avg_xref_resolved:.1%}")
     print(f"    Avg Response Time:    {report.avg_response_time_ms}ms")
     print()
 
@@ -375,7 +414,7 @@ def main():
         print(f"Backend is healthy: {health.json()}")
     except Exception as e:
         print(f"WARNING: Backend health check failed: {e}")
-        print("Continuing anyway — queries may fail.\n")
+        print("Continuing anyway \u2014 queries may fail.\n")
 
     # Run queries
     print(f"\nRunning {len(queries)} evaluation queries...\n")

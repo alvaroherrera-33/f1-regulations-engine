@@ -1,12 +1,13 @@
 """Hybrid retrieval: vector similarity + PostgreSQL full-text search + parent enrichment."""
 import asyncio
 import logging
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from sqlalchemy import and_, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Article, ArticleDB, ArticleDiff, ArticleEmbedding
+from app.config import settings
+from app.models import Article, ArticleDB, ArticleDiff, ArticleEmbedding, ArticleReference
 from ingestion.local_embeddings import get_embeddings_generator
 
 logger = logging.getLogger(__name__)
@@ -68,8 +69,15 @@ class HybridRetriever:
         self.confidence = min(1.0, top_score / max_possible)
         logger.debug("Retrieval: deduped to %d unique articles (top_k=%d, confidence=%.2f)", len(articles), top_k, self.confidence)
 
-        # Step 4: Enrich with parent articles (increases context depth)
-        articles = await self._enrich_with_parents(articles, filters)
+        # Step 4: Expand context. With the structural layer (parent_id +
+        # article_references populated by the structural pipeline) we assemble
+        # the full subtree and follow cross-references deterministically.
+        # Otherwise we fall back to the legacy single-level parent enrichment.
+        if settings.structural_parser:
+            articles = await self._assemble_subtree(articles)
+            articles = await self._expand_xrefs(articles)
+        else:
+            articles = await self._enrich_with_parents(articles, filters)
 
         # Step 5: Annotate with cross-year validity info
         articles = await self._annotate_validity(articles)
@@ -251,6 +259,108 @@ class HybridRetriever:
         logger.debug("[Parent enrichment] Added %d latest-issue parent articles", len(extra_articles))
         return articles + extra_articles
 
+    # ------------------------------------------------------------------ #
+    #  Structural assembly (Fase 4) — used when settings.structural_parser #
+    # ------------------------------------------------------------------ #
+
+    # Caps to keep the prompt (OpenRouter cost) and Render RAM bounded.
+    MAX_CONTEXT_ARTICLES = 24
+    MAX_ANCESTOR_DEPTH = 5
+
+    async def _fetch_by_ids(self, ids: List[int]) -> List[Article]:
+        """Fetch articles by primary key, preserving uniqueness."""
+        ids = [i for i in dict.fromkeys(ids) if i is not None]
+        if not ids:
+            return []
+        result = await self.db.execute(
+            select(ArticleDB).where(ArticleDB.id.in_(ids))
+        )
+        return [self._to_article(r) for r in result.scalars().all()]
+
+    async def _assemble_subtree(self, articles: List[Article]) -> List[Article]:
+        """Assemble coherent subtrees around each hit.
+
+        For every hit: climb the full ancestor chain (via parent_id) up to the
+        root so a clause is never returned without its article header, and —
+        when the hit is a header/sub-article (level 1 or 2) — pull its direct
+        children so the specific sub-clause carrying the answer comes along.
+        This is what lifts Financial recall (header hit → its D4.1/D4.2 children).
+
+        Degrades gracefully: if parent_id is unpopulated (legacy data), the
+        ancestor climb simply finds nothing and we keep the original hits.
+        """
+        by_id: Dict[int, Article] = {a.id: a for a in articles}
+
+        # 1. Climb ancestors via parent_id (bounded depth).
+        frontier = [a.parent_id for a in articles if a.parent_id]
+        depth = 0
+        while frontier and depth < self.MAX_ANCESTOR_DEPTH:
+            missing = [pid for pid in frontier if pid not in by_id]
+            fetched = await self._fetch_by_ids(missing)
+            if not fetched:
+                break
+            for art in fetched:
+                by_id[art.id] = art
+            frontier = [art.parent_id for art in fetched if art.parent_id]
+            depth += 1
+
+        # 2. Descend to direct children for header/sub-article hits.
+        header_ids = [a.id for a in articles if a.level in (1, 2)]
+        if header_ids:
+            result = await self.db.execute(
+                select(ArticleDB).where(ArticleDB.parent_id.in_(header_ids))
+            )
+            for r in result.scalars().all():
+                child = self._to_article(r)
+                by_id.setdefault(child.id, child)
+
+        assembled = list(by_id.values())
+        # Dedupe by canonical key, keeping the highest issue.
+        best: Dict[tuple, Article] = {}
+        for a in assembled:
+            key = (a.article_code, a.section, a.year)
+            if key not in best or a.issue > best[key].issue:
+                best[key] = a
+        out = list(best.values())
+        logger.debug("[Subtree] %d hits → %d articles after assembly", len(articles), len(out))
+        return out[: self.MAX_CONTEXT_ARTICLES]
+
+    async def _expand_xrefs(self, articles: List[Article]) -> List[Article]:
+        """Follow resolved cross-references one hop (deterministic, 0 LLM).
+
+        Replaces the LLM-driven cross-reference chasing inside the agentic loop:
+        if an article says "subject to Article 3.2", we bring 3.2 into context
+        directly. Respects the context budget.
+        """
+        if len(articles) >= self.MAX_CONTEXT_ARTICLES:
+            return articles
+
+        src_ids = [a.id for a in articles]
+        if not src_ids:
+            return articles
+
+        result = await self.db.execute(
+            select(ArticleReference.target_article_id)
+            .where(
+                and_(
+                    ArticleReference.source_article_id.in_(src_ids),
+                    ArticleReference.resolved.is_(True),
+                    ArticleReference.target_article_id.isnot(None),
+                )
+            )
+        )
+        target_ids = [row[0] for row in result.all()]
+        if not target_ids:
+            return articles
+
+        present = {a.id for a in articles}
+        new_ids = [tid for tid in target_ids if tid not in present]
+        budget = self.MAX_CONTEXT_ARTICLES - len(articles)
+        extra = await self._fetch_by_ids(new_ids[:budget])
+        if extra:
+            logger.debug("[Xref] Added %d cross-referenced articles", len(extra))
+        return articles + extra
+
     async def _annotate_validity(self, articles: List[Article]) -> List[Article]:
         """
         Batch-fetch cross-year validity from article_diffs and annotate each article.
@@ -323,6 +433,7 @@ class HybridRetriever:
             issue=db_row.issue,
             level=db_row.level,
             parent_code=db_row.parent_code,
+            parent_id=getattr(db_row, "parent_id", None),
         )
 
 

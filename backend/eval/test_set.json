@@ -2,14 +2,19 @@
   "metadata": {
     "version": "1.1",
     "created": "2026-05-07",
-    "updated": "2026-05-14",
+    "updated": "2026-05-30",
     "description": "Evaluation test set for F1 Regulations RAG Engine. Each query has expected article codes and key facts to verify retrieval quality and answer accuracy.",
     "coverage": {
       "technical": 8,
       "sporting": 6,
       "financial": 6,
       "total": 20
-    }
+    },
+    "structural_cases": [
+      "fin_01",
+      "fin_04",
+      "fin_05"
+    ]
   },
   "queries": [
     {
@@ -17,8 +22,13 @@
       "query": "What is the minimum weight of an F1 car in 2026?",
       "expected_section": "Technical",
       "expected_year": 2026,
-      "expected_articles": ["4.1"],
-      "key_facts": ["weight", "kg"],
+      "expected_articles": [
+        "4.1"
+      ],
+      "key_facts": [
+        "weight",
+        "kg"
+      ],
       "difficulty": "easy",
       "notes": "Direct lookup, single article"
     },
@@ -27,8 +37,15 @@
       "query": "What are the fundamental dimensions and coordinate conventions in the F1 Technical Regulations?",
       "expected_section": "Technical",
       "expected_year": 2026,
-      "expected_articles": ["C2", "C2.1"],
-      "key_facts": ["dimension", "coordinate", "plane"],
+      "expected_articles": [
+        "C2",
+        "C2.1"
+      ],
+      "key_facts": [
+        "dimension",
+        "coordinate",
+        "plane"
+      ],
       "difficulty": "easy",
       "notes": "Section C2 = CONVENTIONS AND FUNDAMENTAL DIMENSIONS in 2026 Technical regs"
     },
@@ -37,8 +54,15 @@
       "query": "What are the rear wing and bodywork aerodynamic regulations?",
       "expected_section": "Technical",
       "expected_year": 2026,
-      "expected_articles": ["C3", "C3.9"],
-      "key_facts": ["rear wing", "bodywork", "aerodynamic"],
+      "expected_articles": [
+        "C3",
+        "C3.9"
+      ],
+      "key_facts": [
+        "rear wing",
+        "bodywork",
+        "aerodynamic"
+      ],
       "difficulty": "medium",
       "notes": "DRS was eliminated in 2026. C3 covers bodywork. C3.9+ covers rear bodywork/wing."
     },
@@ -47,8 +71,15 @@
       "query": "What are the fuel flow rate limits for the power unit?",
       "expected_section": "Technical",
       "expected_year": null,
-      "expected_articles": ["5", "6"],
-      "key_facts": ["kg/h", "fuel flow", "rate"],
+      "expected_articles": [
+        "5",
+        "6"
+      ],
+      "key_facts": [
+        "kg/h",
+        "fuel flow",
+        "rate"
+      ],
       "difficulty": "medium",
       "notes": "Spans PU and fuel/oil articles"
     },
@@ -57,8 +88,15 @@
       "query": "Explain the regulations around the floor and diffuser aerodynamics",
       "expected_section": "Technical",
       "expected_year": null,
-      "expected_articles": ["3.5", "3.6"],
-      "key_facts": ["floor", "diffuser", "aerodynamic"],
+      "expected_articles": [
+        "3.5",
+        "3.6"
+      ],
+      "key_facts": [
+        "floor",
+        "diffuser",
+        "aerodynamic"
+      ],
       "difficulty": "medium",
       "notes": "Specific bodywork sub-sections"
     },
@@ -67,8 +105,14 @@
       "query": "What changes were introduced to the power unit regulations for 2026?",
       "expected_section": "Technical",
       "expected_year": 2026,
-      "expected_articles": ["5"],
-      "key_facts": ["power unit", "2026", "MGU"],
+      "expected_articles": [
+        "5"
+      ],
+      "key_facts": [
+        "power unit",
+        "2026",
+        "MGU"
+      ],
       "difficulty": "hard",
       "notes": "Requires understanding 2026-specific PU changes, potentially multi-step"
     },
@@ -77,8 +121,14 @@
       "query": "What are the tyre specifications and how many sets are allowed per weekend?",
       "expected_section": "Technical",
       "expected_year": null,
-      "expected_articles": ["10"],
-      "key_facts": ["tyre", "compound", "set"],
+      "expected_articles": [
+        "10"
+      ],
+      "key_facts": [
+        "tyre",
+        "compound",
+        "set"
+      ],
       "difficulty": "medium",
       "notes": "May cross-reference sporting regs for allocation"
     },
@@ -87,8 +137,16 @@
       "query": "What safety requirements must the survival cell and crash structures meet?",
       "expected_section": "Technical",
       "expected_year": 2026,
-      "expected_articles": ["C12", "C13"],
-      "key_facts": ["survival cell", "impact", "crash", "test"],
+      "expected_articles": [
+        "C12",
+        "C13"
+      ],
+      "key_facts": [
+        "survival cell",
+        "impact",
+        "crash",
+        "test"
+      ],
       "difficulty": "hard",
       "notes": "C12 = structural requirements, C13 = impact tests (C13.2 = Survival Cell Frontal Impact Test)"
     },
@@ -97,8 +155,15 @@
       "query": "How are championship points awarded after a race?",
       "expected_section": "Sporting",
       "expected_year": null,
-      "expected_articles": ["6"],
-      "key_facts": ["points", "25", "first", "classified"],
+      "expected_articles": [
+        "6"
+      ],
+      "key_facts": [
+        "points",
+        "25",
+        "first",
+        "classified"
+      ],
       "difficulty": "easy",
       "notes": "Points table is in a specific article"
     },
@@ -107,8 +172,16 @@
       "query": "What happens during a Safety Car period?",
       "expected_section": "Sporting",
       "expected_year": null,
-      "expected_articles": ["55", "56"],
-      "key_facts": ["safety car", "speed", "overtaking", "pit lane"],
+      "expected_articles": [
+        "55",
+        "56"
+      ],
+      "key_facts": [
+        "safety car",
+        "speed",
+        "overtaking",
+        "pit lane"
+      ],
       "difficulty": "medium",
       "notes": "Safety car procedures span multiple articles"
     },
@@ -117,8 +190,18 @@
       "query": "What are the qualifying format rules and how is the grid determined?",
       "expected_section": "Sporting",
       "expected_year": 2025,
-      "expected_articles": ["39", "39.1", "39.2"],
-      "key_facts": ["qualifying", "Q1", "Q2", "Q3", "eliminated"],
+      "expected_articles": [
+        "39",
+        "39.1",
+        "39.2"
+      ],
+      "key_facts": [
+        "qualifying",
+        "Q1",
+        "Q2",
+        "Q3",
+        "eliminated"
+      ],
       "difficulty": "medium",
       "notes": "2025 Sporting: Art 39 = QUALIFYING AND SPRINT QUALIFYING SESSIONS"
     },
@@ -127,8 +210,15 @@
       "query": "What penalties can stewards impose for rule violations?",
       "expected_section": "Sporting",
       "expected_year": null,
-      "expected_articles": ["54"],
-      "key_facts": ["penalty", "steward", "time", "grid"],
+      "expected_articles": [
+        "54"
+      ],
+      "key_facts": [
+        "penalty",
+        "steward",
+        "time",
+        "grid"
+      ],
       "difficulty": "medium",
       "notes": "Penalty types and procedures"
     },
@@ -137,8 +227,16 @@
       "query": "What are the pit stop regulations and speed limits in the pit lane?",
       "expected_section": "Sporting",
       "expected_year": null,
-      "expected_articles": ["34", "35"],
-      "key_facts": ["pit", "speed limit", "km/h", "unsafe release"],
+      "expected_articles": [
+        "34",
+        "35"
+      ],
+      "key_facts": [
+        "pit",
+        "speed limit",
+        "km/h",
+        "unsafe release"
+      ],
       "difficulty": "easy",
       "notes": "Pit lane rules"
     },
@@ -147,8 +245,15 @@
       "query": "How does the red flag procedure work and what happens to the race?",
       "expected_section": "Sporting",
       "expected_year": null,
-      "expected_articles": ["57"],
-      "key_facts": ["red flag", "suspended", "restart", "grid"],
+      "expected_articles": [
+        "57"
+      ],
+      "key_facts": [
+        "red flag",
+        "suspended",
+        "restart",
+        "grid"
+      ],
       "difficulty": "hard",
       "notes": "Complex procedure with multiple scenarios"
     },
@@ -157,18 +262,41 @@
       "query": "What is the cost cap limit for F1 teams?",
       "expected_section": "Financial",
       "expected_year": null,
-      "expected_articles": ["2.3", "D4.1", "D8"],
-      "key_facts": ["cost cap", "USD"],
+      "expected_articles": [
+        "2.3",
+        "D4.1",
+        "D8"
+      ],
+      "key_facts": [
+        "cost cap",
+        "USD"
+      ],
       "difficulty": "easy",
-      "notes": "2025: Art 2.3 has the cap amount. 2026: D4.1 or D8. No year filter."
+      "notes": "2025: Art 2.3 has the cap amount. 2026: D4.1 or D8. No year filter.",
+      "expected_subtree": [
+        "D4",
+        "D4.1"
+      ],
+      "expected_xrefs": [
+        "D8"
+      ]
     },
     {
       "id": "fin_02",
       "query": "What costs are excluded from the cost cap calculation?",
       "expected_section": "Financial",
       "expected_year": null,
-      "expected_articles": ["3", "D5", "D6"],
-      "key_facts": ["excluded", "cost", "driver", "marketing"],
+      "expected_articles": [
+        "3",
+        "D5",
+        "D6"
+      ],
+      "key_facts": [
+        "excluded",
+        "cost",
+        "driver",
+        "marketing"
+      ],
       "difficulty": "medium",
       "notes": "2025: Art 3/4 exclusions. 2026: D5 + D6. Accept any."
     },
@@ -177,8 +305,17 @@
       "query": "What reporting obligations do teams have under financial regulations?",
       "expected_section": "Financial",
       "expected_year": null,
-      "expected_articles": ["6", "D7", "D8"],
-      "key_facts": ["report", "submission", "audit", "deadline"],
+      "expected_articles": [
+        "6",
+        "D7",
+        "D8"
+      ],
+      "key_facts": [
+        "report",
+        "submission",
+        "audit",
+        "deadline"
+      ],
       "difficulty": "medium",
       "notes": "2025: Art 5/6. 2026: D7 + D8. Accept any."
     },
@@ -187,28 +324,66 @@
       "query": "What penalties exist for breaching the cost cap?",
       "expected_section": "Financial",
       "expected_year": null,
-      "expected_articles": ["8", "D10", "D12"],
-      "key_facts": ["breach", "penalty", "minor", "material"],
+      "expected_articles": [
+        "8",
+        "D10",
+        "D12"
+      ],
+      "key_facts": [
+        "breach",
+        "penalty",
+        "minor",
+        "material"
+      ],
       "difficulty": "medium",
-      "notes": "2025: Art 8/9. 2026: D10 + D12. Accept any."
+      "notes": "2025: Art 8/9. 2026: D10 + D12. Accept any.",
+      "expected_subtree": [
+        "D10",
+        "D12"
+      ]
     },
     {
       "id": "fin_05",
       "query": "How are related party transactions handled in the financial regulations?",
       "expected_section": "Financial",
       "expected_year": 2026,
-      "expected_articles": ["D5", "D6", "D6.1"],
-      "key_facts": ["related party", "transaction", "fair value"],
+      "expected_articles": [
+        "D5",
+        "D6",
+        "D6.1"
+      ],
+      "key_facts": [
+        "related party",
+        "transaction",
+        "fair value"
+      ],
       "difficulty": "hard",
-      "notes": "2026 Section D: D5 and D6 contain related party provisions."
+      "notes": "2026 Section D: D5 and D6 contain related party provisions.",
+      "expected_subtree": [
+        "D6",
+        "D6.1"
+      ],
+      "expected_xrefs": [
+        "D5"
+      ]
     },
     {
       "id": "fin_06",
       "query": "What are the rules around power unit cost allocation between teams and manufacturers?",
       "expected_section": "Financial",
       "expected_year": null,
-      "expected_articles": ["E2", "E3", "2", "3"],
-      "key_facts": ["power unit", "cost", "manufacturer", "supply"],
+      "expected_articles": [
+        "E2",
+        "E3",
+        "2",
+        "3"
+      ],
+      "key_facts": [
+        "power unit",
+        "cost",
+        "manufacturer",
+        "supply"
+      ],
       "difficulty": "hard",
       "notes": "2026 PU Financial: Section E (E2/E3). 2025 PU Financial: Art 2/3. Accept any."
     }
