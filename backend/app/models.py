@@ -140,6 +140,7 @@ class StatusResponse(BaseModel):
 
 # ===== Database ORM Models (SQLAlchemy) =====
 
+from pgvector.sqlalchemy import Vector
 from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 
@@ -196,7 +197,10 @@ class ArticleEmbedding(Base):
 
     id         = Column(Integer, primary_key=True)
     article_id = Column(Integer, ForeignKey("articles.id", ondelete="CASCADE"))
-    chunk_index = Column(Integer, default=0)
+    # The actual 384-dim pgvector column. Without this mapping the retriever's
+    # ArticleEmbedding.embedding.cosine_distance(...) raised AttributeError and
+    # 500'd every query. (chunk_index was a phantom column not present in the DB.)
+    embedding  = Column(Vector(384), nullable=False)
 
     article = relationship("ArticleDB", back_populates="embeddings")
 
