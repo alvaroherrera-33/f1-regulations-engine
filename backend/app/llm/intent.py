@@ -108,6 +108,9 @@ _CONVERSATIONAL_PATTERNS: list[str] = [
     r"^(ok|okay|okey|vale|entendido|entiendo|understood|got\s+it|perfecto?|genial|great|cool|nice)\b[,.\s]+\s*(ok|okay|okey|vale|entendido|entiendo|understood|gracias|thanks?|perfecto?|genial|great|cool|nice)?\s*[.!]?\s*$",
     # Identity / capability questions about the bot
     r"(quien\s+eres|who\s+are\s+you|que\s+(eres|puedes|haces)|what\s+are\s+you|what\s+can\s+you\s+do|how\s+can\s+you\s+help)",
+    # Capability / meta questions ("what topics/subjects can you answer/cover/help with")
+    r"what\s+(topics|subjects|kinds?|areas|things)\b.*\b(answer|help|cover|about|do|know)",
+    r"what\s+(can|do)\s+you\s+(answer|help|tell|cover|know|do)\b",
     # Pure help request (without technical context)
     r"^(help|ayuda|ayudame|socorro|assist\s+me)\s*[!?.]?\s*$",
     # Filler / conversation continuers

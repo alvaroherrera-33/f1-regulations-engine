@@ -209,10 +209,10 @@ async def chat(
                 feedback_token=_token(qid),
             )
 
-        # Agentic Research Loop (max 3 steps)
+        # Agentic Research Loop (max 2 steps — step 3 rarely helps, adds ~15s)
         all_retrieved_articles = []
         research_history = []
-        max_steps = 3
+        max_steps = 2
         current_step_query = expanded_query
 
         for step in range(max_steps):
@@ -224,7 +224,7 @@ async def chat(
                 year=query_year,
                 section=query_section,
                 issue=body.issue,
-                top_k=8
+                top_k=6
             )
 
             seen_codes = {a.article_code for a in all_retrieved_articles}

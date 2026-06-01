@@ -264,7 +264,7 @@ class HybridRetriever:
     # ------------------------------------------------------------------ #
 
     # Caps to keep the prompt (OpenRouter cost) and Render RAM bounded.
-    MAX_CONTEXT_ARTICLES = 24
+    MAX_CONTEXT_ARTICLES = 12  # was 24; smaller LLM context → faster steps, fewer timeouts
     MAX_ANCESTOR_DEPTH = 5
 
     async def _fetch_by_ids(self, ids: List[int]) -> List[Article]:
