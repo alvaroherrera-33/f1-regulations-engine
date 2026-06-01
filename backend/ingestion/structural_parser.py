@@ -24,8 +24,7 @@ from typing import Dict, List, Optional, Set, Tuple
 
 import fitz  # PyMuPDF
 
-from ingestion.pdf_parser import PDFParser, ParsedArticle
-
+from ingestion.pdf_parser import ParsedArticle, PDFParser
 
 # Matches cross-references in body text: "Article 3.2", "Article C4.1.a",
 # "Appendix B4". Captures the bare code so it can be resolved later.

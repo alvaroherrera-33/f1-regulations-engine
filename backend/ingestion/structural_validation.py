@@ -12,8 +12,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Sequence, Set, Tuple
-
+from typing import Dict, List, Optional, Sequence, Set
 
 # Default acceptance thresholds for the hard gate (overridable per call).
 MIN_TOC_COVERAGE = 0.95   # parsed must cover ≥95% of TOC-listed codes
