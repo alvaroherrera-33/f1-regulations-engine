@@ -156,8 +156,8 @@ class Document(Base):
     year       = Column(Integer, nullable=False)
     section    = Column(String(50), nullable=False)
     issue      = Column(Integer, nullable=False, default=1)
-    file_path  = Column(String(512))
-    created_at = Column(DateTime)
+    file_path   = Column(String(512))
+    uploaded_at = Column(DateTime, name="uploaded_at")
 
     articles = relationship("ArticleDB", back_populates="document", cascade="all, delete-orphan")
 

@@ -131,9 +131,10 @@ LLM_MODEL=openai/gpt-oss-120b
 ALLOWED_ORIGINS=http://localhost:3000
 
 # Producción (Render)
-DATABASE_URL=postgresql+asyncpg://postgres.<supabase-project-ref>:<PASSWORD>@<pooler-host>.pooler.supabase.com:5432/postgres?ssl=require
+DATABASE_URL=postgresql+asyncpg://postgres.nmftfbboxssonnvbjzef:<PASSWORD>@aws-1-eu-central-1.pooler.supabase.com:5432/postgres?ssl=require
 # IMPORTANTE: usar Session Pooler de Supabase (no el direct connection)
 # Render free tier es IPv4-only; el Session Pooler de Supabase tiene IPv4
+# Host correcto: aws-1-eu-central-1 (no aws-0)
 ```
 
 ## Cómo ejecutar en local
@@ -186,7 +187,7 @@ DATABASE_URL=postgresql+asyncpg://... python -m scripts.ingest_archives
 6. **El frontend usa inline styles** — no migrar a Tailwind/CSS modules sin razón.
 7. **Consultar docs/ y README.md** antes de implementar features nuevas.
 8. **NO cambiar el parser** sin revisar los comentarios en `ingestion/pdf_parser.py` — es frágil y hay muchos edge cases documentados.
-9. **La DB de producción está en Supabase Session Pooler** — no usar el direct connection URL (es IPv6, Render es IPv4-only).
+9. **La DB de producción está en Supabase Session Pooler** — no usar el direct connection URL (es IPv6, Render es IPv4-only). Host: `aws-1-eu-central-1.pooler.supabase.com`.
 
 ## Estado actual del proyecto
 

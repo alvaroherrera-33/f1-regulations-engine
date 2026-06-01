@@ -67,49 +67,37 @@ async def find_regulation_pdfs(archives_dir: str) -> List[Tuple[str, dict]]:
 
         # Check folder structure for 2026 (sectionB, sectionC, etc.)
         for part in pdf_file.parts:
-            if "sectionB" in part.lower():
+            part_lower = part.lower()
+            if "sectionb" in part_lower:
                 section = "Sporting"
-            elif "sectionC" in part.lower():
+            elif "sectionc" in part_lower:
                 section = "Technical"
-            elif "sectionD" in part.lower():
+            elif "sectiond" in part_lower:
                 section = "Financial"
-            elif "sectionE" in part.lower():
-                section = "Financial" # Usually Financial or related
-            elif "sectionF" in part.lower():
-                section = "Power Unit"
+            elif "sectione" in part_lower:
+                section = "Financial"  # PU Financial
+            elif "sectionf" in part_lower:
+                section = "Operational"
 
-        # Fallback to filename patterns
+        # Fallback to filename patterns (case-insensitive)
         if not section:
-            if "Technical" in filename:
+            filename_lower = filename.lower()
+            if "technical" in filename_lower:
                 section = "Technical"
-            elif "Sporting" in filename:
+            elif "sporting" in filename_lower:
                 section = "Sporting"
-            elif "Financial" in filename:
+            elif "financial" in filename_lower:
                 section = "Financial"
-            elif "Power" in filename or "PU" in filename:
+            elif "operational" in filename_lower:
+                section = "Operational"
+            elif "power" in filename_lower or "_pu_" in filename_lower or filename_lower.endswith("_pu"):
                 section = "Power Unit"
 
-        # Try to extract issue number (Support "Issue" and "Iss")
-        issue_indicators = ["Issue", "Iss"]
-        for indicator in issue_indicators:
-            if indicator in filename:
-                try:
-                    # Extract part after indicator
-                    parts = filename.split(indicator)
-                    if len(parts) > 1:
-                        issue_part = parts[-1].strip()
-                        # Take only the first continuous block of digits
-                        digits = ""
-                        for char in issue_part:
-                            if char.isdigit():
-                                digits += char
-                            elif digits:
-                                break
-                        if digits:
-                            issue = int(digits)
-                            break
-                except Exception:
-                    continue
+        # Try to extract issue number (case-insensitive, handles "Issue 3", "Iss01", "iss_13", "Iss 12")
+        import re
+        issue_match = re.search(r'iss(?:ue)?[\s_\-\.]*(\d+)', filename, re.IGNORECASE)
+        if issue_match:
+            issue = int(issue_match.group(1))
 
         if not issue:
             issue = 1
