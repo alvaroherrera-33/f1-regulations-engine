@@ -270,7 +270,11 @@ async def chat(
             })
 
             if result.get("action") == "ANSWER":
-                answer = result.get("answer")
+                answer = (result.get("answer") or "").strip()
+                if not answer:
+                    # LLM chose ANSWER but returned no text — don't 500 on a
+                    # None answer; fall through to the synthesis fallback below.
+                    break
                 citations = _citations_or_fallback(
                     llm_client._extract_citations(all_retrieved_articles, answer),
                     all_retrieved_articles,
@@ -314,10 +318,17 @@ async def chat(
                 query=body.query,
                 articles=all_retrieved_articles
             )
-        except OpenRouterError:
+        except Exception as gen_exc:
+            # Any failure here (OpenRouter down, malformed LLM JSON, etc.) must
+            # degrade gracefully to the retrieved citations — never a 500.
+            logger.warning("Final answer generation failed (graceful): %s", gen_exc)
             ms = int((time.monotonic() - t_start) * 1000)
             codes = [a.article_code for a in all_retrieved_articles]
-            await _log_query(
+            try:
+                fallback_cits = llm_client._extract_citations(all_retrieved_articles, None)
+            except Exception:
+                fallback_cits = []
+            qid = await _log_query(
                 db, query=body.query, intent="REGULATIONS",
                 year=query_year, section=query_section, answer=_AI_UNAVAILABLE,
                 retrieved_count=len(all_retrieved_articles),
@@ -326,11 +337,18 @@ async def chat(
             )
             return ChatResponse(
                 answer=_AI_UNAVAILABLE,
-                citations=llm_client._extract_citations(all_retrieved_articles),
+                citations=fallback_cits,
                 retrieved_count=len(all_retrieved_articles),
-                research_steps=research_history
+                research_steps=[],
+                query_id=qid,
+                feedback_token=_token(qid),
             )
 
+        if not (final_answer or "").strip():
+            final_answer = (
+                "I couldn't compose a definitive answer from the retrieved "
+                "articles. Please try rephrasing your question."
+            )
         ms = int((time.monotonic() - t_start) * 1000)
         codes = [a.article_code for a in all_retrieved_articles]
         qid = await _log_query(
