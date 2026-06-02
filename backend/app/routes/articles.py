@@ -76,14 +76,35 @@ async def compare_articles(
     if section and section not in _ALLOWED_SECTIONS:
         raise HTTPException(status_code=400, detail=f"Invalid section. Must be one of: {', '.join(sorted(_ALLOWED_SECTIONS))}")
 
+    # When the user picks "All sections", we must still compare the SAME section
+    # across both years — otherwise we'd compare e.g. 2025 Financial vs 2026
+    # Technical, which is meaningless. Resolve one consistent section: prefer a
+    # section that has the code in BOTH years; otherwise any that has it.
+    target_section = section
+    if target_section is None:
+        rows = (await db.execute(
+            select(ArticleDB.section, ArticleDB.year)
+            .where(ArticleDB.article_code == code, ArticleDB.year.in_([year_a, year_b]))
+            .distinct()
+        )).all()
+        secs_a = {s for s, y in rows if y == year_a}
+        secs_b = {s for s, y in rows if y == year_b}
+        pool = (secs_a & secs_b) or (secs_a | secs_b)
+        for pref in ("Technical", "Sporting", "Financial"):
+            if pref in pool:
+                target_section = pref
+                break
+        if target_section is None and pool:
+            target_section = sorted(pool)[0]
+
     async def _fetch(year: int) -> Optional[dict]:
-        stmt = (
-            select(ArticleDB)
-            .where(ArticleDB.article_code == code, ArticleDB.year == year)
+        stmt = select(ArticleDB).where(
+            ArticleDB.article_code == code, ArticleDB.year == year
         )
-        if section:
-            stmt = stmt.where(ArticleDB.section == section)
-        stmt = stmt.order_by(desc(ArticleDB.issue)).limit(1)
+        if target_section:
+            stmt = stmt.where(ArticleDB.section == target_section)
+        # Prefer a real (non-stub) version, then the highest issue.
+        stmt = stmt.order_by(ArticleDB.is_stub.asc(), desc(ArticleDB.issue)).limit(1)
         result = await db.execute(stmt)
         art = result.scalar_one_or_none()
         if not art:
@@ -130,14 +151,35 @@ async def explain_article_diff(
     if section and section not in _ALLOWED_SECTIONS:
         raise HTTPException(status_code=400, detail=f"Invalid section. Must be one of: {', '.join(sorted(_ALLOWED_SECTIONS))}")
 
+    # When the user picks "All sections", we must still compare the SAME section
+    # across both years — otherwise we'd compare e.g. 2025 Financial vs 2026
+    # Technical, which is meaningless. Resolve one consistent section: prefer a
+    # section that has the code in BOTH years; otherwise any that has it.
+    target_section = section
+    if target_section is None:
+        rows = (await db.execute(
+            select(ArticleDB.section, ArticleDB.year)
+            .where(ArticleDB.article_code == code, ArticleDB.year.in_([year_a, year_b]))
+            .distinct()
+        )).all()
+        secs_a = {s for s, y in rows if y == year_a}
+        secs_b = {s for s, y in rows if y == year_b}
+        pool = (secs_a & secs_b) or (secs_a | secs_b)
+        for pref in ("Technical", "Sporting", "Financial"):
+            if pref in pool:
+                target_section = pref
+                break
+        if target_section is None and pool:
+            target_section = sorted(pool)[0]
+
     async def _fetch(year: int) -> Optional[dict]:
-        stmt = (
-            select(ArticleDB)
-            .where(ArticleDB.article_code == code, ArticleDB.year == year)
+        stmt = select(ArticleDB).where(
+            ArticleDB.article_code == code, ArticleDB.year == year
         )
-        if section:
-            stmt = stmt.where(ArticleDB.section == section)
-        stmt = stmt.order_by(desc(ArticleDB.issue)).limit(1)
+        if target_section:
+            stmt = stmt.where(ArticleDB.section == target_section)
+        # Prefer a real (non-stub) version, then the highest issue.
+        stmt = stmt.order_by(ArticleDB.is_stub.asc(), desc(ArticleDB.issue)).limit(1)
         result = await db.execute(stmt)
         art = result.scalar_one_or_none()
         if not art:
