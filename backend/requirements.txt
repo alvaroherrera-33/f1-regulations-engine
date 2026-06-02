@@ -12,7 +12,10 @@ python-multipart==0.0.27   # sec: CVE-2026-24486, CVE-2026-40347, CVE-2026-42561
 aiofiles==23.2.1
 pgvector==0.2.4
 numpy==1.26.4
-huggingface-hub==1.17.0    # sec: transformers 5.9.0 requires >=1.5.0
-sentence-transformers==5.5.1  # sec: compatible with transformers 5.x
-transformers==5.9.0        # sec: latest stable, resolves CVE-2026-1839 and PYSEC-2025-*
+huggingface-hub==1.17.0    # downloads the ONNX model + tokenizer (cached in HF_HOME)
+# Embeddings run on ONNX Runtime instead of torch+sentence-transformers: the
+# torch runtime overflowed the 512MB free tier on model load. Same all-MiniLM
+# model (Xenova ONNX export) → same 384-dim vector space, no re-ingestion.
+onnxruntime==1.23.2
+tokenizers==0.23.1
 slowapi==0.1.9
