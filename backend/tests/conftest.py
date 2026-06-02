@@ -17,7 +17,7 @@ def _stub(*names):
 
 
 # 1. Stub heavy external deps (ML, PDF, DB drivers)
-_stub("sentence_transformers", "fitz", "asyncpg")
+_stub("onnxruntime", "tokenizers", "huggingface_hub", "fitz", "asyncpg")
 _stub("pgvector", "pgvector.sqlalchemy")
 sys.modules["pgvector.sqlalchemy"].Vector = lambda dim: None
 
