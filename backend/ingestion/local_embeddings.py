@@ -83,6 +83,11 @@ class LocalEmbeddingsGenerator:
         so = ort.SessionOptions()
         so.intra_op_num_threads = 1
         so.inter_op_num_threads = 1
+        # Memory-frugal: don't pre-allocate the CPU arena or memory pattern
+        # buffers. Keeps the cold-load peak under the 512MB free-tier limit
+        # (tiny speed cost on a model this small).
+        so.enable_cpu_mem_arena = False
+        so.enable_mem_pattern = False
         self.session = ort.InferenceSession(
             model_path, sess_options=so, providers=["CPUExecutionProvider"]
         )
