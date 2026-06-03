@@ -212,8 +212,8 @@ class ArticleDiff(Base):
     id            = Column(Integer, primary_key=True)
     article_code  = Column(String(50), nullable=False)
     section       = Column(String(50))
-    year_a        = Column(Integer, nullable=False)
-    year_b        = Column(Integer, nullable=False)
+    year_from     = Column(Integer, nullable=False)
+    year_to       = Column(Integer, nullable=False)
     similarity    = Column(Float)
     change_type   = Column(String(20))
 

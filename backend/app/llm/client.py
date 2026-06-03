@@ -155,7 +155,12 @@ class LLMClient:
                 },
                 timeout=20.0,
             )
-            result = json.loads(data["choices"][0]["message"]["content"])
+            content = data["choices"][0]["message"]["content"]
+            if not content:
+                raise ValueError("LLM returned empty content for prepare_search")
+            # Some models wrap JSON in markdown fences; strip them before parsing.
+            stripped = re.sub(r"^```(?:json)?\s*|\s*```$", "", content.strip())
+            result = json.loads(stripped)
             year = result.get("year")
             section = result.get("section")
             search_query = result.get("search_query", "").strip() or query

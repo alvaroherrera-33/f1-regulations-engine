@@ -142,7 +142,7 @@ async def warmup():
     try:
         gen = get_embeddings_generator()
         # A tiny embed call to force the model weights into RAM
-        gen.generate(["warmup"])
+        await gen.generate(["warmup"])
         return {"status": "warm", "model": "all-MiniLM-L6-v2"}
     except Exception as exc:
         logger.warning("Warmup failed: %s", exc)
