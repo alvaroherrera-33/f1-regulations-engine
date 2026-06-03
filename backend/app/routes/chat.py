@@ -56,12 +56,16 @@ def _is_debug_request(debug: bool, admin_key: str | None) -> bool:
 
 def _citations_or_fallback(citations, all_retrieved_articles):
     """
-    If the LLM returned 0 parsed citations, fall back to the top-3 retrieved articles.
-    This ensures the user always gets relevant article references.
+    If the LLM returned 0 parsed citations, fall back to the top-3 retrieved articles
+    as proper Citation objects (not raw Article objects which fail Pydantic validation).
     """
     if citations:
         return citations
-    return list(all_retrieved_articles[:3])
+    # Build Citation objects from the retrieved articles rather than returning
+    # raw Article objects — passing Articles into ChatResponse.citations raises a
+    # Pydantic ValidationError and causes HTTP 500.
+    from app.llm.client import LLMClient
+    return [LLMClient._make_citation(a) for a in all_retrieved_articles[:3]]
 
 
 async def _log_query(

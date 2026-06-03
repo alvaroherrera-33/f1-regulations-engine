@@ -6,21 +6,22 @@ from app.config import settings
 
 # Create async engine
 # Pool notes for Render free tier (single asyncio worker):
-# - pool_size=2: two connections cover the concurrent requests that asyncio can
-#   interleave; >2 is unnecessary and wastes Supabase Session Pooler slots.
-# - max_overflow=0: never go above 2; queue instead of opening extra connections.
-# - pool_pre_ping=True: validate connection health before use so a connection
-#   left in a bad state by an asyncio.wait_for cancellation is discarded
-#   instead of handed to the next request (root cause of intermittent 500s).
-# - pool_recycle=300: recycle connections every 5 minutes to avoid Supabase
-#   session-pooler idle timeouts (default 30 min but conservative is safer).
+# - pool_size=2 / max_overflow=0: two connections cover concurrent asyncio coroutines
+#   on the single worker; avoids opening excess Supabase Session Pooler slots.
+# - pool_recycle=300: recycle connections every 5 min to avoid Supabase idle timeouts.
+# - pool_pre_ping intentionally omitted: with asyncpg, pre_ping fires during the
+#   session's lazy connection provisioning phase.  If a second coroutine hits
+#   execute() while the ping is in flight, SQLAlchemy raises
+#   "This session is provisioning a new connection; concurrent operations are not
+#   permitted" — a warning that degrades FTS quality.  The sequential retrieval
+#   (no asyncio.gather) already prevents true concurrency on the same session, so
+#   pre_ping provides no additional safety here.
 engine = create_async_engine(
     settings.database_url.replace("postgresql://", "postgresql+asyncpg://"),
     echo=settings.sql_echo,
     future=True,
     pool_size=2,
     max_overflow=0,
-    pool_pre_ping=True,
     pool_recycle=300,
 )
 
