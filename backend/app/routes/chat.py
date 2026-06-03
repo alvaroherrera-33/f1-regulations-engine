@@ -196,6 +196,21 @@ async def chat(
         )
         retrieval_confidence = _retriever.confidence
 
+        # If the year=2026 default filtered out all results (e.g. the query uses
+        # 2024/2025 terminology not present in 2026-indexed articles), retry without
+        # the year filter so older-year articles can still be found.
+        if not articles and query_year == 2026 and not body.year:
+            logger.info("No articles with year=2026 default; retrying without year filter.")
+            query_year = None
+            _retriever = HybridRetriever(db)
+            articles = await _retriever.retrieve(
+                query=expanded_query,
+                year=None,
+                section=query_section,
+                issue=body.issue,
+            )
+            retrieval_confidence = _retriever.confidence
+
         if not articles:
             ms = int((time.monotonic() - t_start) * 1000)
             no_results_msg = "I couldn't find specific regulations matching your query. Could you please clarify your question or adjust the filters (year, section, etc.)?"
