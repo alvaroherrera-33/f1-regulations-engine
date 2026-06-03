@@ -456,4 +456,3 @@ async def retrieve_articles(
     """
     retriever = HybridRetriever(db)
     return await retriever.retrieve(query, year, section, issue, top_k)
-               
