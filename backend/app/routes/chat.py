@@ -182,7 +182,7 @@ async def chat(
                 research_steps=[]
             )
 
-        query_year = body.year or prepared.get("year")
+        query_year = body.year or prepared.get("year") or 2026  # default to latest season
         query_section = body.section or prepared.get("section")
         expanded_query = prepared.get("search_query", body.query)
 
