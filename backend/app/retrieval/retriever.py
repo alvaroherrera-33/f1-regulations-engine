@@ -1,5 +1,4 @@
 """Hybrid retrieval: vector similarity + PostgreSQL full-text search + parent enrichment."""
-import asyncio
 import logging
 from typing import Dict, List, Optional
 
@@ -51,13 +50,17 @@ class HybridRetriever:
         if issue:
             filters.append(ArticleDB.issue == issue)
 
-        # Step 2: Run both retrieval passes with a broad candidate set
-        # We fetch up to 30 candidates from each to ensure we find the latest issues
-        candidate_k = 30
-        vector_articles, fts_articles = await asyncio.gather(
-            self._retrieve_by_vector(query, filters, candidate_k, section=section),
-            self._retrieve_by_fulltext(query, filters, candidate_k),
-        )
+        # Step 2: Run both retrieval passes sequentially on the same AsyncSession.
+        # asyncio.gather would run them concurrently on the same self.db session,
+        # which violates SQLAlchemy's requirement that an AsyncSession is not used
+        # concurrently — causing intermittent InvalidRequestError / MissingGreenlet
+        # 500s when two HTTP requests overlap on the single Render worker.
+        # Sequential execution adds <200ms (negligible vs LLM latency of 5-30s).
+        # candidate_k reduced from 30 to 20: corpus grew to 22k articles so 20 is
+        # still more than enough candidates for the RRF merge while cutting DB scan time.
+        candidate_k = 20
+        vector_articles = await self._retrieve_by_vector(query, filters, candidate_k, section=section)
+        fts_articles    = await self._retrieve_by_fulltext(query, filters, candidate_k)
 
         # Step 3: Merge & deduplicate (prefer latest issue and vector results)
         articles, top_score = self._merge_and_deduplicate(
@@ -453,3 +456,4 @@ async def retrieve_articles(
     """
     retriever = HybridRetriever(db)
     return await retriever.retrieve(query, year, section, issue, top_k)
+               

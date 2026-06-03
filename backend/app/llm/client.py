@@ -161,6 +161,12 @@ class LLMClient:
             search_query = result.get("search_query", "").strip() or query
             if section not in ("Technical", "Sporting", "Financial"):
                 section = None
+            # Default to the most recent indexed season when the user doesn't
+            # specify a year.  Without this, the vector search can return the
+            # 2024 version of an article (more embeddings, higher similarity)
+            # even though a 2026 update exists.
+            if not year:
+                year = 2026
             logger.debug("prepare_search: year=%s section=%s query='%s'", year, section, search_query)
             return {"year": year, "section": section, "search_query": search_query}
         except OpenRouterError:
