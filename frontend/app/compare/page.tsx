@@ -241,4 +241,5 @@ const styles: Record<string, React.CSSProperties> = {
     explanationHeader: { display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.65rem' },
     explanationLabel: { fontSize: '0.72rem', color: '#eb0000', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' },
     explanationMeta: { fontSize: '0.7rem', color: '#444', marginLeft: 'auto' },
-    explanationText: { fontSize: '0.85rem', color: '#aaa', lineHeight: 1
+    explanationText: { fontSize: '0.85rem', color: '#aaa', lineHeight: 1.75 },
+};
