@@ -56,7 +56,10 @@ async def startup_checks():
     """Validate critical configuration at startup."""
     errors = []
 
-    if not settings.openrouter_api_key or settings.openrouter_api_key.startswith("sk-or-REPLACE"):
+    # API key only required for hosted providers (OpenRouter). Keyless local
+    # servers like Ollama don't need one.
+    _is_openrouter = "openrouter.ai" in settings.llm_base_url
+    if _is_openrouter and (not settings.openrouter_api_key or settings.openrouter_api_key.startswith("sk-or-REPLACE")):
         errors.append("OPENROUTER_API_KEY is missing or placeholder.")
 
     if not settings.database_url:

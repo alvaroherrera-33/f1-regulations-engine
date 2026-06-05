@@ -22,8 +22,9 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@db:5432/f1_regs
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-      - LLM_MODEL=openai/gpt-oss-120b
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - LLM_MODEL=${LLM_MODEL:-openai/gpt-oss-120b}
+      - LLM_BASE_URL=${LLM_BASE_URL:-https://openrouter.ai/api/v1}
       - ALLOWED_ORIGINS=http://localhost:3000
       - ADMIN_API_KEY=${ADMIN_API_KEY:-}
       - PYTHONUNBUFFERED=1
@@ -42,9 +43,4 @@ services:
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:8000
     volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
-
-volumes:
-  pgdata:
+      

@@ -70,7 +70,9 @@ class LLMClient:
     def __init__(self):
         self.api_key = settings.openrouter_api_key
         self.model = settings.llm_model
-        self.base_url = "https://openrouter.ai/api/v1"
+        # OpenAI-compatible base URL — OpenRouter by default, or e.g. Ollama
+        # (http://localhost:11434/v1) for a fully local, free setup.
+        self.base_url = settings.llm_base_url.rstrip("/")
 
     # ------------------------------------------------------------------
     # Private helpers
@@ -84,13 +86,13 @@ class LLMClient:
         last_exc: Exception = RuntimeError("No attempt made")
         for attempt in range(len(_RETRY_DELAYS) + 1):
             try:
+                headers = {"Content-Type": "application/json"}
+                if self.api_key:  # omitted for keyless local servers (e.g. Ollama)
+                    headers["Authorization"] = f"Bearer {self.api_key}"
                 async with httpx.AsyncClient(timeout=timeout) as client:
                     response = await client.post(
                         f"{self.base_url}/chat/completions",
-                        headers={
-                            "Authorization": f"Bearer {self.api_key}",
-                            "Content-Type": "application/json",
-                        },
+                        headers=headers,
                         json=payload,
                     )
                     response.raise_for_status()

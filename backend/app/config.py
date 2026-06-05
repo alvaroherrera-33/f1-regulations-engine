@@ -10,9 +10,13 @@ class Settings(BaseSettings):
     # Database
     database_url: str
 
-    # OpenRouter
-    openrouter_api_key: str
+    # LLM provider (OpenAI-compatible). Defaults to OpenRouter, but any
+    # OpenAI-compatible endpoint works — e.g. a local Ollama server:
+    #   LLM_BASE_URL=http://localhost:11434/v1   LLM_MODEL=llama3.1
+    # When pointing at a keyless local server, OPENROUTER_API_KEY may be left empty.
+    openrouter_api_key: str = ""
     llm_model: str = "openai/gpt-oss-120b"
+    llm_base_url: str = "https://openrouter.ai/api/v1"
 
     # CORS
     allowed_origins: str = "http://localhost:3000"
