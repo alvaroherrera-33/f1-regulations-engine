@@ -8,7 +8,7 @@
 ![Next.js](https://img.shields.io/badge/Next.js-14-black?logo=next.js)
 ![CI](https://github.com/alvaroherrera-33/f1-regulations-engine/actions/workflows/ci.yml/badge.svg)
 
-Ask questions about Formula 1 regulations in plain language and receive precise, citation-backed answers sourced directly from official FIA documents. Every response references the exact article it draws from — no hallucinations, no guessing.
+Ask questions about Formula 1 regulations in plain language and receive precise, citation-backed answers grounded in official FIA documents. Every response references the exact articles it draws from, so you can verify each claim against the source. Always confirm critical decisions against the official regulation.
 
 Live demo: [f1-regulations-engine-project.vercel.app](https://f1-regulations-engine-project.vercel.app)
 
@@ -24,7 +24,7 @@ Live demo: [f1-regulations-engine-project.vercel.app](https://f1-regulations-eng
 - **Agentic research loop** — Up to three search-reason cycles, following cross-references between articles before committing to an answer.
 - **Mandatory citations** — Every answer includes exact article codes, section, year, and issue. No answer is returned without a verifiable source.
 - **Local embeddings** — `all-MiniLM-L6-v2` runs on the backend; no third-party embedding API is called.
-- **Multi-year coverage** — Technical, Sporting, and Financial regulations for 2023 through 2026 (19,000+ articles indexed).
+- **Multi-year coverage** — Technical, Sporting, and Financial regulations across multiple seasons (2023–2026).
 - **Multilingual queries** — Accepts questions in English, Spanish, French, German, and Italian.
 - **Feedback loop** — Thumbs up/down on each answer feeds a `query_logs` table for ongoing quality monitoring.
 
@@ -167,13 +167,7 @@ curl -X POST https://f1-regulations-engine.onrender.com/api/chat \
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `OPENROUTER_API_KEY` | Yes | OpenRouter API key |
-| `DATABASE_URL` | Yes | Async PostgreSQL URL (`postgresql+asyncpg://...`) |
-| `LLM_MODEL` | No | Model via OpenRouter (default: `openai/gpt-oss-120b`) |
-| `ALLOWED_ORIGINS` | No | CORS origins, comma-separated (default: `http://localhost:3000`) |
-
----
-
-## License
-
-MIT. Built by [Álvaro Herrera](https://github.com/alvaroherrera-33).
+| `POSTGRES_PASSWORD` | Yes (docker) | Password for the bundled Postgres container |
+| `OPENROUTER_API_KEY` | For chat answers | LLM API key (not needed with a keyless local server) |
+| `LLM_BASE_URL` | No | OpenAI-compatible endpoint (default: OpenRouter; e.g. `http://ollama:11434/v1`) |
+| `LLM_MODEL` | No | Model name (defa

@@ -12,8 +12,8 @@ const FEATURES = [
         desc: 'Query 2023 through 2026 side by side. The engine flags articles that have changed, been added, or removed.',
     },
     {
-        title: '19,000+ articles indexed',
-        desc: 'Full coverage of Technical, Sporting, and Financial regulations across four seasons.',
+        title: 'Every article, indexed',
+        desc: 'Full coverage of Technical, Sporting, and Financial regulations across multiple seasons.',
     },
 ];
 
@@ -41,7 +41,7 @@ export default function Home() {
                     <span style={styles.accent}>AI-powered precision</span>
                 </h1>
                 <p style={styles.subtitle}>
-                    Ask anything in plain language. Get exact answers backed by official FIA article citations — no guessing, no hallucinations.
+                    Ask anything in plain language. Get answers backed by official FIA article citations you can verify yourself.
                 </p>
                 <div style={styles.cta}>
                     <Link href="/chat" style={styles.primaryBtn}>
