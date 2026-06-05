@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 
-// Compare uses a Next.js API route that queries Supabase directly — no backend needed
-const COMPARE_API = '/api/compare';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const COMPARE_API = `${API_BASE}/api/compare`;
 interface ArticleVersion {
     article_code: string;
     title: string;
@@ -56,7 +56,7 @@ export default function ComparePage() {
         setExplainError('');
         setExplanation(null);
         try {
-            let url = `/api/compare/explain?code=${encodeURIComponent(code.trim())}&year_a=${yearA}&year_b=${yearB}`;
+            let url = `${API_BASE}/api/compare/explain?code=${encodeURIComponent(code.trim())}&year_a=${yearA}&year_b=${yearB}`;
             if (section) url += `&section=${encodeURIComponent(section)}`;
             const res = await fetch(url, { method: 'POST' });
             if (!res.ok) {
@@ -241,5 +241,4 @@ const styles: Record<string, React.CSSProperties> = {
     explanationHeader: { display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.65rem' },
     explanationLabel: { fontSize: '0.72rem', color: '#eb0000', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' },
     explanationMeta: { fontSize: '0.7rem', color: '#444', marginLeft: 'auto' },
-    explanationText: { fontSize: '0.85rem', color: '#aaa', lineHeight: 1.75 },
-};
+    explanationText: { fontSize: '0.85rem', color: '#aaa', lineHeight: 1
