@@ -19,8 +19,8 @@ Un sistema RAG (Retrieval-Augmented Generation) que permite consultar las regula
 | Backend | FastAPI (Python 3.11) | Async, uvicorn |
 | Frontend | Next.js 14 (TypeScript) | App router, inline styles |
 | Base de datos | PostgreSQL + pgvector (Supabase) | Vectores 384-dim, búsqueda híbrida |
-| Embeddings | sentence-transformers/all-MiniLM-L6-v2 | LOCAL en el backend, no API externa |
-| LLM | OpenRouter API | Modelo configurable via `LLM_MODEL` |
+| Embeddings | all-MiniLM-L6-v2 vía ONNX Runtime (modelo vendorizado en `backend/models/`) | LOCAL, sin torch ni descarga; 384-dim |
+| LLM | Endpoint OpenAI-compatible | OpenRouter por defecto; configurable via `LLM_BASE_URL` + `LLM_MODEL` (p. ej. Ollama local) |
 | Deploy backend | Render (free tier) | `f1-regulations-engine.onrender.com` |
 | Deploy frontend | Vercel | `f1-regulations-engine-project.vercel.app` |
 | Deploy DB | Supabase | PostgreSQL + pgvector managed |
@@ -66,7 +66,7 @@ PDF → PyMuPDF → texto completo (TODAS las páginas juntas, no por página)
     → regex extract articles → 3 niveles (Article/Sub/Clause)
     → filtrar entradas de TOC y contenido trivial
     → crear stubs para artículos padre faltantes
-    → sentence-transformers embed → PostgreSQL (articles + article_embeddings)
+    → ONNX embed (all-MiniLM-L6-v2, modelo vendorizado) → PostgreSQL (articles + article_embeddings)
 ```
 
 **IMPORTANTE:** El parser procesa el documento completo como un stream continuo (no página a página). Esto es crítico para artículos que cruzan saltos de página.
@@ -98,7 +98,7 @@ backend/
       upload.py          ← POST /api/upload
   ingestion/
     pdf_parser.py        ← Extrae artículos de PDFs (ver sección de bugs conocidos)
-    local_embeddings.py  ← Genera embeddings con all-MiniLM-L6-v2
+    local_embeddings.py  ← Embeddings con all-MiniLM-L6-v2 vía ONNX Runtime (modelo vendorizado en backend/models/)
     pipeline.py          ← Orquesta: parse → embed → store
   database/schema.sql    ← DDL: documents, articles, article_embeddings, query_logs
   scripts/ingest_archives.py ← Ingestión masiva de PDFs de archives/
@@ -191,8 +191,4 @@ DATABASE_URL=postgresql+asyncpg://... python -m scripts.ingest_archives
 
 ## Estado actual del proyecto
 
-Consultar `docs/` para documentación pública y el historial de commits para decisiones técnicas.
-
-## Plan estratégico
-
-El roadmap de features y mejoras se gestiona en el historial de issues/PRs del repo.
+Consultar `docs/` para docu

@@ -51,10 +51,14 @@ postgresql+asyncpg://postgres.PROJECT_ID:PASSWORD@aws-1-REGION.pooler.supabase.c
 | Variable | Value |
 |----------|-------|
 | `DATABASE_URL` | Session Pooler URL from step 1.4 |
-| `OPENROUTER_API_KEY` | Your OpenRouter key |
+| `OPENROUTER_API_KEY` | Your OpenRouter key (used to generate chat answers) |
 | `ALLOWED_ORIGINS` | Your Vercel frontend URL (e.g. `https://your-app.vercel.app`) |
+| `ADMIN_API_KEY` | Random secret (protects upload/admin endpoints) |
 
-**2.4 Deploy** — Render will build and start the service. The first build takes 5–10 minutes because it installs PyTorch CPU.
+**2.4 Deploy** — Render will build and start the service. The build only installs the
+Python dependencies (a couple of minutes): embeddings use ONNX Runtime with the model
+vendored in `backend/models/`, so there is no PyTorch install or model download at
+runtime — which keeps the service within the 512MB free-tier limit.
 
 **2.5 Verify**
 
@@ -90,12 +94,4 @@ No configuration is needed — the workflow runs automatically once the repo is 
 
 ## 5. Ingesting Regulation PDFs
 
-After deployment, ingest data by running the ingestion script locally, pointed at the production database:
-
-```bash
-cd backend
-pip install -r requirements.txt
-DATABASE_URL=<production-session-pooler-url> python -m scripts.ingest_archives
-```
-
-See [docs/ARCHIVE_SETUP.md](ARCHIVE_SETUP.md) for the expected PDF naming convention.
+After deployment, ingest data 
