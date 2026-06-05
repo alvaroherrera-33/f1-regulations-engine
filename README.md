@@ -72,29 +72,35 @@ PostgreSQL + pgvector  (Supabase)
 
 ## Quick Start
 
-Requires Docker and Docker Compose, plus an [OpenRouter](https://openrouter.ai) API key.
+Requires Docker and Docker Compose. An [OpenRouter](https://openrouter.ai) API key is
+needed only for generating chat answers — retrieval, the demo, and the Compare view
+work without one (embeddings run locally, no API or GPU needed).
+
+### Fastest: run the built-in demo (no PDFs required)
 
 ```bash
-# Clone
 git clone https://github.com/alvaroherrera-33/f1-regulations-engine.git
 cd f1-regulations-engine
-
-# Configure
-cp .env.example .env
-# Edit .env and set OPENROUTER_API_KEY
-
-# Start all services (db + backend + frontend)
-docker-compose up --build
-
-# Ingest the regulation PDFs
-docker-compose exec backend python -m scripts.ingest_archives
-
-# Open
-#   Frontend:  http://localhost:3000
-#   API docs:  http://localhost:8000/docs
+cp .env.example .env          # set POSTGRES_PASSWORD (and OPENROUTER_API_KEY for chat answers)
+make demo                     # builds, starts everything, and loads a sample dataset
+# → Frontend: http://localhost:3000   ·   API docs: http://localhost:8000/docs
 ```
 
-See [docs/QUICKSTART.md](docs/QUICKSTART.md) for detailed setup and [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for production deployment to Render + Supabase + Vercel.
+`make demo` seeds ~30 illustrative sample articles **with real embeddings**, so search and
+Compare work immediately. Run `make help` to see all commands.
+
+### Full setup: ingest your own regulation PDFs
+
+```bash
+docker-compose up --build                 # or: make up
+# Place FIA regulation PDFs under archives/ (see docs/ARCHIVE_SETUP.md), then:
+docker-compose exec backend python -m scripts.ingest_archives   # or: make ingest
+```
+
+The PDFs are **not** distributed with this repo (you provide your own). Embeddings are
+generated locally with a vendored ONNX model (`backend/models/`) — no HuggingFace download
+or torch at runtime. See [docs/QUICKSTART.md](docs/QUICKSTART.md) for details and
+[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for production deployment (Render + Supabase + Vercel).
 
 ---
 
