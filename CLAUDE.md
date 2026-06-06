@@ -131,7 +131,7 @@ LLM_MODEL=openai/gpt-oss-120b
 ALLOWED_ORIGINS=http://localhost:3000
 
 # Producción (Render)
-DATABASE_URL=postgresql+asyncpg://postgres.nmftfbboxssonnvbjzef:<PASSWORD>@aws-1-eu-central-1.pooler.supabase.com:5432/postgres?ssl=require
+DATABASE_URL=postgresql+asyncpg://postgres.<project-ref>:<PASSWORD>@aws-1-eu-central-1.pooler.supabase.com:5432/postgres?ssl=require
 # IMPORTANTE: usar Session Pooler de Supabase (no el direct connection)
 # Render free tier es IPv4-only; el Session Pooler de Supabase tiene IPv4
 # Host correcto: aws-1-eu-central-1 (no aws-0)
@@ -191,4 +191,9 @@ DATABASE_URL=postgresql+asyncpg://... python -m scripts.ingest_archives
 
 ## Estado actual del proyecto
 
-Consultar `docs/` para docu
+Consultar `docs/` para documentación pública y el historial de commits para decisiones técnicas.
+
+## Plan estratégico
+
+El roadmap de features y mejoras se gestiona en el historial de issues/PRs del repo.
+       
