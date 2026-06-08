@@ -189,11 +189,7 @@ DATABASE_URL=postgresql+asyncpg://... python -m scripts.ingest_archives
 8. **NO cambiar el parser** sin revisar los comentarios en `ingestion/pdf_parser.py` — es frágil y hay muchos edge cases documentados.
 9. **La DB de producción está en Supabase Session Pooler** — no usar el direct connection URL (es IPv6, Render es IPv4-only). Host: `aws-1-eu-central-1.pooler.supabase.com`.
 
-## Estado actual del proyecto
+## Aprendizajes y gotchas (post-0.1) — LEER antes de tocar embeddings/infra
 
-Consultar `docs/` para documentación pública y el historial de commits para decisiones técnicas.
-
-## Plan estratégico
-
-El roadmap de features y mejoras se gestiona en el historial de issues/PRs del repo.
-       
+**Embeddings (¡no reintroducir torch!).**
+- Corren con **ONNX Runtime** y el modelo **vendorizado** en `backend/models/model_quantized.onnx` (+ `tokenizer.json
