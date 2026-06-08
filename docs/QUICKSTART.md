@@ -69,4 +69,21 @@ curl -X POST http://localhost:8000/api/upload \
 curl http://localhost:8000/status          # document/article/embedding counts
 curl -X POST http://localhost:8000/api/chat \
   -H "Content-Type: application/json" \
-  
+  -d '{"query": "What is the minimum car weight?"}'
+```
+
+## Tests
+
+```bash
+make test          # or, without Docker:
+cd backend && pip install -r requirements.txt pytest ruff && pytest tests/ -q
+```
+
+## Troubleshooting
+
+- **`POSTGRES_PASSWORD is required`** — set it in `.env` (compose needs it).
+- **Chat answers fail but search works** — the LLM endpoint isn't configured. Set
+  `OPENROUTER_API_KEY`, or use the Ollama setup above. Retrieval/Compare don't need it.
+- **Queries return no results after ingesting** — make sure your PDFs are under `archives/`
+  with the expected naming (see ARCHIVE_SETUP.md), then re-run `make ingest`.
+- **Port conflict** — change the published ports in `docker-compose.yml` (3000 / 8000).

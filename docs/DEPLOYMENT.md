@@ -94,4 +94,12 @@ No configuration is needed — the workflow runs automatically once the repo is 
 
 ## 5. Ingesting Regulation PDFs
 
-After deployment, ingest data 
+After deployment, ingest data by running the ingestion script locally, pointed at the production database:
+
+```bash
+cd backend
+pip install -r requirements.txt
+DATABASE_URL=<production-session-pooler-url> python -m scripts.ingest_archives
+```
+
+See [docs/ARCHIVE_SETUP.md](ARCHIVE_SETUP.md) for the expected PDF naming convention.

@@ -82,4 +82,11 @@ run_ingest.ps1
 
 # Eval result JSONs (keep scripts and test_set.json)
 backend/eval/eval_*.json
-backend/ev
+backend/eval_baseline.json
+
+# Stale deployment configs
+backend/railway.json
+frontend/railway.json
+
+# Stray root-level package-lock (real one is in frontend/)
+/package-lock.json

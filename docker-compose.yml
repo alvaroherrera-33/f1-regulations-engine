@@ -43,4 +43,22 @@ services:
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:8000
     volumes:
-      
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+
+  # Optional fully-local, free LLM (no OpenRouter key needed).
+  # Start with:  docker compose --profile ollama up
+  # Then in .env set:  LLM_BASE_URL=http://ollama:11434/v1  and  LLM_MODEL=llama3.1
+  # and pull a model:  docker compose exec ollama ollama pull llama3.1
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["ollama"]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+
+volumes:
+  pgdata:
+  ollama:
