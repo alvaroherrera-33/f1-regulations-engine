@@ -12,6 +12,12 @@ Ask questions about Formula 1 regulations in plain language and receive precise,
 
 Live demo: [f1-regulations-engine-project.vercel.app](https://f1-regulations-engine-project.vercel.app)
 
+> **Why this is different from a generic RAG:** regulations aren't flat text — they're a
+> numbered, cross-referenced tree where the hierarchy *is* the meaning. This engine models
+> that tree explicitly (Article → Sub-article → Clause), retrieves whole **subtrees** instead
+> of loose chunks, and follows cross-references deterministically — so a clause never arrives
+> without its header, and "subject to Article 3.2" pulls 3.2 into context.
+
 ---
 
 ![F1 Regulations Engine — chat interface showing a question about minimum car weight with cited article](docs/screenshot.png)
@@ -20,11 +26,13 @@ Live demo: [f1-regulations-engine-project.vercel.app](https://f1-regulations-eng
 
 ## Features
 
+- **Structure-aware retrieval** — Models the regulation hierarchy (Article → Sub-article → Clause) with an explicit cross-reference graph; assembles full subtrees and follows references one hop (optional, `STRUCTURAL_PARSER=true`).
 - **Hybrid search** — Combines vector similarity (pgvector) and full-text search (PostgreSQL), merged with Reciprocal Rank Fusion (RRF) for best-of-both recall and precision.
-- **Agentic research loop** — Up to three search-reason cycles, following cross-references between articles before committing to an answer.
-- **Mandatory citations** — Every answer includes exact article codes, section, year, and issue. No answer is returned without a verifiable source.
-- **Local embeddings** — `all-MiniLM-L6-v2` runs on the backend; no third-party embedding API is called.
-- **Multi-year coverage** — Technical, Sporting, and Financial regulations across multiple seasons (2023–2026).
+- **Agentic research loop** — Search-reason cycles that follow cross-references between articles before committing to an answer.
+- **Mandatory citations** — Every answer includes exact article codes, section, year, and issue, and declines out-of-scope questions instead of fabricating them.
+- **Compare across seasons** — See how a given article changed between years.
+- **Local, free embeddings** — `all-MiniLM-L6-v2` via ONNX Runtime, vendored in the repo. No torch, no GPU, no third-party embedding API.
+- **Self-host for free** — One-command demo (`make demo`); optional local LLM via Ollama, so the whole stack can run with no paid API.
 - **Multilingual queries** — Accepts questions in English, Spanish, French, German, and Italian.
 - **Feedback loop** — Thumbs up/down on each answer feeds a `query_logs` table for ongoing quality monitoring.
 
@@ -170,4 +178,26 @@ curl -X POST https://f1-regulations-engine.onrender.com/api/chat \
 | `POSTGRES_PASSWORD` | Yes (docker) | Password for the bundled Postgres container |
 | `OPENROUTER_API_KEY` | For chat answers | LLM API key (not needed with a keyless local server) |
 | `LLM_BASE_URL` | No | OpenAI-compatible endpoint (default: OpenRouter; e.g. `http://ollama:11434/v1`) |
-| `LLM_MODEL` | No | Model name (defa
+| `LLM_MODEL` | No | Model name (default: `openai/gpt-oss-120b`) |
+| `DATABASE_URL` | No (docker) | Async PostgreSQL URL; built automatically by docker-compose |
+| `ALLOWED_ORIGINS` | No | CORS origins, comma-separated (default: `http://localhost:3000`) |
+| `STRUCTURAL_PARSER` | No | Enable TOC-aware parsing + subtree retrieval (default: `false`) |
+
+See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the pipeline works and
+[CONTRIBUTING.md](CONTRIBUTING.md) to run the tests and contribute.
+
+---
+
+## Disclaimer
+
+This is an independent, unofficial project. It is **not affiliated with, endorsed by,
+or associated with the FIA or Formula 1**. "Formula 1", "F1", and related marks belong
+to their respective owners. The tool is for informational purposes only, may contain
+errors, and is **not legal advice** — always verify against the official FIA regulations.
+Regulation PDFs are not distributed with this repository; you supply your own.
+
+---
+
+## License
+
+MIT. Built by [Álvaro Herrera](https://github.com/alvaroherrera-33).
