@@ -192,4 +192,40 @@ DATABASE_URL=postgresql+asyncpg://... python -m scripts.ingest_archives
 ## Aprendizajes y gotchas (post-0.1) — LEER antes de tocar embeddings/infra
 
 **Embeddings (¡no reintroducir torch!).**
-- Corren con **ONNX Runtime** y el modelo **vendorizado** en `backend/models/model_quantized.onnx` (+ `tokenizer.json
+- Corren con **ONNX Runtime** y el modelo **vendorizado** en `backend/models/model_quantized.onnx` (+ `tokenizer.json`). NADA de torch ni sentence-transformers en runtime.
+- Pipeline exacto: tokenizar (truncate 256, pad) → inferencia ONNX → **mean-pooling ponderado por attention mask** → **normalización L2**. Si cambias esto, los vectores dejan de casar con los ya almacenados.
+- `requirements.txt` debe tener `onnxruntime` + `tokenizers` (NO `sentence-transformers`/`transformers`/`torch`). **Si falta `onnxruntime`, el worker peta al importar → 502 en todo.** (Fue la causa real de la saga de 502, no la RAM.)
+- El build de Render **ya no instala PyTorch**; el modelo va en el repo, sin descarga de HuggingFace en runtime.
+
+**ORM (`app/models.py`) — minas conocidas.**
+- `ArticleEmbedding.embedding` debe ser `Column(Vector(384))` (pgvector). Sin esto, el retriever lanza AttributeError → 500 en cada query.
+- `validity` y `latest_year` **NO** son columnas de BD: se calculan en Python (`_annotate_validity`). No mapearlas como `Column`.
+- `ArticleDiff` (ORM) usa `year_a/year_b` pero la tabla tiene `year_from/year_to` → las insignias de "validity" cruzada están **muertas** (capturado en try/except, no rompe). Pendiente de alinear si se quiere esa feature.
+
+**Retrieval / Compare.**
+- `STRUCTURAL_PARSER=true` activa el parser estructural (ingesta) **y** el retrieval por subárbol + expansión de cross-refs. En prod los datos están backfilleados por SQL (`parent_id`, `article_references`).
+- `/api/compare` debe comparar la **misma sección** en ambos años y evitar stubs (`is_stub`).
+
+**LLM.**
+- Endpoint **OpenAI-compatible** configurable con `LLM_BASE_URL` (+ `LLM_MODEL`). Soporta Ollama local; el header `Authorization` se omite si no hay key.
+
+**Calidad de datos.**
+- El parser a veces titula mal artículos (p. ej. título `"1"`). Se han borrado códigos basura (4 dígitos tipo año, y los que empiezan por `0`). Si reingestas, vuelve a limpiar.
+
+**Demo / seed.**
+- `make demo` + `backend/database/seed.sql` (ids de doc `9001-9003`, artículos `900001+`) dejan la web usable **sin PDFs**, con embeddings ONNX reales. Idempotente.
+- **NUNCA** commitear PDFs de la FIA ni su texto literal (copyright). El seed es paráfrasis ilustrativa.
+
+**Git en este mount Windows (frágil).**
+- Los `*.lock` de `.git` no se pueden borrar (`Operation not permitted`). Para commitear de forma fiable: usar un índice temporal (`GIT_INDEX_FILE=/tmp/idx`), `git read-tree HEAD` -> `git update-index --add` -> `git write-tree` -> `git commit-tree` -> escribir el SHA en `.git/refs/heads/main` -> `git push`.
+- Los writes del editor a veces **truncan el archivo o inyectan bytes nulos** a mitad de sincronizacion. Tras editar archivos grandes, verificar con `ast.parse` / contar `\x00` y stripear nulos.
+
+**Ramas:** trunk-based, borrar al mergear. Ver `CONTRIBUTING.md` -> "Branching & releases".
+
+## Estado actual del proyecto
+
+Consultar `docs/` para documentación pública y el historial de commits para decisiones técnicas.
+
+## Plan estratégico
+
+El roadmap de features y mejoras se gestiona en el historial de issues/PRs del repo.
