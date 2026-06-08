@@ -69,3 +69,24 @@ See `docs/ARCHITECTURE.md` for how the pipeline fits together.
 Unit tests stub the heavy ML/PDF/DB libraries (see `backend/tests/conftest.py`), so they
 run fast without a database or model. Add tests for new deterministic logic
 (parsing, validation, retrieval helpers).
+
+## Branching & releases
+
+Trunk-based, single long-lived branch. Keep the tree minimal.
+
+- **`main`** is the only permanent branch. It must always be green (CI passes) and
+  deployable — Render and Vercel deploy from it automatically. Don't push broken commits.
+- **Work on short-lived branches** off `main`, one per change, named by type:
+  `feat/<slug>`, `fix/<slug>`, `docs/<slug>`, `chore/<slug>`, `refactor/<slug>`.
+- **Lifecycle:** branch → commit → open a PR to `main` → CI green → squash-merge →
+  **delete the branch immediately.** A branch exists only while its PR is open.
+- **When to close (delete) a branch:**
+  - *Merged* → delete now (enable repo setting *Automatically delete head branches*).
+  - *Stale* (no unique commits vs `main`, or untouched for ~2 weeks) → delete.
+  - *Abandoned/superseded* → delete; revive from `main` later if needed.
+  - Only keep it open if it has unmerged work you're actively using; rebase it on `main`
+    regularly so it doesn't drift.
+- **No long-lived `develop`/`release`/experiment branches.** Releases are git **tags**
+  (`v0.1.0`, …), not branches. Keep throwaway experiments local, or delete them promptly.
+- A quick audit any time: `git branch -a --merged main` lists branches fully contained in
+  `main` — those are always safe to delete.
